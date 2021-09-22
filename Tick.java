@@ -2,22 +2,24 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
+import java.util.concurrent.locks.Lock;
 
 public class Tick extends TimerTask {
 	WorldServer worldServer;
 	int tickCount = 0;
 	Config config;
+	Lock lock;
 
-	public Tick(WorldServer worldServer, Integer t, Config config) {
+	public Tick(WorldServer worldServer, Integer t, Config config, Lock lock) {
 		this.worldServer = worldServer;
+		this.lock = lock;
 	}
 
 	@Override
 	// Tick calculates new frame, notifies users
 	public void run() {
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			TickCalculate();
-
 			TickSend();
 		}
 

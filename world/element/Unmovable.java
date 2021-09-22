@@ -1,9 +1,6 @@
 package world.element;
 
-import helper.Position;
-
 public class Unmovable extends WorldElement {
-	public Position position = new Position(0, 0);
 	public ObjectType type;
 	public long created = -1;
 	public long destroy = -1;

@@ -1,3 +1,5 @@
+package world.element;
+
 public class Animation {
 	long state;
 	long stateDelayTick;

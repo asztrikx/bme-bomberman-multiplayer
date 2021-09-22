@@ -1,6 +1,14 @@
+package server;
+
 import java.util.Timer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import helper.Auth;
+import helper.AutoClosableLock;
+import helper.Position;
+import user.User;
+import user.UserManager;
 
 public class Server {
 	UserManager<UserServer> userManager = new UserManager<>();

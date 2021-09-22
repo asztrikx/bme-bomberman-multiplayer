@@ -1,3 +1,8 @@
+package user;
+
+import helper.Auth;
+import helper.Key;
+
 public class User {
 	public boolean[] keys = new boolean[Key.KeyType.KeyLength];
 	public String name;

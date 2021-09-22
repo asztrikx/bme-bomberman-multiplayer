@@ -1,4 +1,8 @@
-public class Moving {
+import helper.Key;
+import helper.Position;
+import server.UserServer;
+
+public class Movable extends WorldElement {
 	Position position = new Position(0, 0);
 	CharacterType type;
 	int velocity = 0;

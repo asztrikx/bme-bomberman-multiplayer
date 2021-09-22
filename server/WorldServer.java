@@ -1,3 +1,9 @@
+import Thing;
+import helper.Config;
+import helper.Position;
+import world.World;
+import world.element.Moving;
+
 public class WorldServer extends World {
 	Config config;
 	int height, width;

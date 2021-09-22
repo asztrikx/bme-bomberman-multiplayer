@@ -1,3 +1,5 @@
+package helper;
+
 public class Config {
 	int squaresize = 50;
 	int velocity = 6;

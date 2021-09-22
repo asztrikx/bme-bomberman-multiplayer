@@ -1,5 +1,9 @@
+package user;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import helper.Auth;
 
 public class UserManager<U extends User> {
 	List<U> users = new ArrayList<>();

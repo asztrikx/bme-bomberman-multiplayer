@@ -1,5 +1,6 @@
+package helper;
+
 import java.security.SecureRandom;
-import java.lang.Character;
 
 public class Auth {
 	private String value;

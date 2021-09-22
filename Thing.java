@@ -4,7 +4,7 @@ public class Thing {
 	public long created = -1;
 	public long destroy = -1;
 	public int velocity;
-	public Character owner = null;
+	public Moving owner = null;
 	public boolean bombOut = true;
 	public Animation animation = new Animation(0, 0, 0);
 

@@ -1,4 +1,4 @@
-public class Character {
+public class Moving {
 	Position position = new Position(0, 0);
 	CharacterType type;
 	int velocity = 0;

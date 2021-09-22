@@ -45,9 +45,9 @@ public class WorldServer extends World {
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Character character = new Character();
+			Moving character = new Moving();
 			character.position = SpawnGet(this, 3);
-			character.type = Character.CharacterType.CharacterTypeEnemy;
+			character.type = Moving.CharacterType.CharacterTypeEnemy;
 			character.velocity = config.velocityEnemy;
 			KeyMovementRandom(character);
 			characterList.add(character);

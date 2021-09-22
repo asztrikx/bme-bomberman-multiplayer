@@ -1,0 +1,2 @@
+- add finals
+- rename enums

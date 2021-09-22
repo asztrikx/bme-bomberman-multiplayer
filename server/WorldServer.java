@@ -1,8 +1,8 @@
-import Thing;
 import helper.Config;
 import helper.Position;
 import world.World;
-import world.element.Moving;
+import world.element.Movable;
+import world.element.Unmovable;
 
 public class WorldServer extends World {
 	Config config;
@@ -22,9 +22,9 @@ public class WorldServer extends World {
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				if (i == 0 || j == 0 || i == height - 1 || j == width - 1 || (i % 2 == 0 && j % 2 == 0)) {
-					Thing object = new Thing();
+					Unmovable object = new Unmovable();
 					object.position = new Position(i * config.squaresize, j * config.squaresize);
-					object.type = Thing.ObjectType.ObjectTypeWall;
+					object.type = Unmovable.ObjectType.ObjectTypeWall;
 					objectList.add(object);
 				}
 			}
@@ -35,25 +35,25 @@ public class WorldServer extends World {
 
 		// box generate randomly
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
-			Thing object = new Thing();
+			Unmovable object = new Unmovable();
 			object.position = SpawnGet(this, 1);
-			object.type = Thing.ObjectType.ObjectTypeBox;
+			object.type = Unmovable.ObjectType.ObjectTypeBox;
 			objectList.add(object);
 		}
 
 		// exit
-		Thing object = new Thing();
+		Unmovable object = new Unmovable();
 		object.position = objectList.get(0).position;
-		object.type = Thing.ObjectType.ObjectTypeExit;
+		object.type = Unmovable.ObjectType.ObjectTypeExit;
 		object.animation.stateDelayTickEnd = 10;
 		objectList.add(object);
 		exit = object;
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Moving character = new Moving();
+			Movable character = new Movable();
 			character.position = SpawnGet(this, 3);
-			character.type = Moving.CharacterType.CharacterTypeEnemy;
+			character.type = Movable.CharacterType.CharacterTypeEnemy;
 			character.velocity = config.velocityEnemy;
 			KeyMovementRandom(character);
 			characterList.add(character);

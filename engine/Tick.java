@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
 
-import Thing;
 import helper.AutoClosableLock;
 import helper.Config;
 import helper.Gamestate;
@@ -14,6 +13,8 @@ import helper.Key;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
+import world.element.Movable;
+import world.element.Unmovable;
 
 public class Tick extends TimerTask {
 	WorldServer worldServer;
@@ -39,28 +40,28 @@ public class Tick extends TimerTask {
 
 	// TickCalculateDestroyBomb removes bomb and creates fire in its place
 	// if object->type != ObjectTypeBomb then nothing happens
-	public void TickCalculateDestroyBomb(Thing thing) {
+	public void TickCalculateDestroyBomb(Unmovable unmovable) {
 		// fire inserts
 		int directionX[] = { 0, 1, -1, 0, 0 };
 		int directionY[] = { 0, 0, 0, 1, -1 };
 		for (int j = 0; j < 5; j++) {
-			Position position = new Position(thing.position.y + directionY[j] * config.squaresize,
-					thing.position.x + directionX[j] * config.squaresize);
+			Position position = new Position(unmovable.position.y + directionY[j] * config.squaresize,
+					unmovable.position.x + directionX[j] * config.squaresize);
 
-			List<Thing> collisionObjectS = CollisionObjectSGet(worldServer.objectList, position, thing, null);
+			List<Unmovable> collisionObjectS = CollisionObjectSGet(worldServer.objectList, position, unmovable, null);
 			boolean boxExists = collisionObjectS.isEmpty()
-					|| collisionObjectS.stream().filter(t -> t.type == Thing.ObjectType.ObjectTypeBox).count() != 0;
+					|| collisionObjectS.stream().filter(t -> t.type == Unmovable.ObjectType.ObjectTypeBox).count() != 0;
 			if (!boxExists && collisionObjectS.size() != 0) {
 				continue;
 			}
 
-			Thing objectFire = new Thing();
+			Unmovable objectFire = new Unmovable();
 			objectFire.bombOut = true;
 			objectFire.created = tickCount;
 			objectFire.destroy = tickCount + (long) (0.25 * config.tickSecond);
-			objectFire.owner = thing.owner;
+			objectFire.owner = unmovable.owner;
 			objectFire.position = position;
-			objectFire.type = Thing.ObjectType.ObjectTypeBombFire;
+			objectFire.type = Unmovable.ObjectType.ObjectTypeBombFire;
 			objectFire.animation.stateDelayTickEnd = 2;
 			objectFire.velocity = 0;
 
@@ -68,25 +69,25 @@ public class Tick extends TimerTask {
 		}
 
 		// bomb remove
-		if (thing.owner != null) {
-			thing.owner.bombCount++;
+		if (unmovable.owner != null) {
+			unmovable.owner.bombCount++;
 		}
 	}
 
 	// TickCalculateFireDestroy makes fires destroys all ObjectTypeBox and all
 	// Character in collision
 	public void TickCalculateFireDestroy() {
-		for (Thing object : worldServer.objectList) {
-			if (object.type != Thing.ObjectType.ObjectTypeBombFire) {
+		for (Unmovable object : worldServer.objectList) {
+			if (object.type != Unmovable.ObjectType.ObjectTypeBombFire) {
 				continue;
 			}
 
 			// object collision
-			List<Thing> collisionObjectS = CollisionObjectSGet(worldServer.objectList, object.position, null, null);
-			for (Thing collisionObject : collisionObjectS) {
-				if (collisionObject.type == Thing.ObjectType.ObjectTypeBox) {
+			List<Unmovable> collisionObjectS = CollisionObjectSGet(worldServer.objectList, object.position, null, null);
+			for (Unmovable collisionObject : collisionObjectS) {
+				if (collisionObject.type == Unmovable.ObjectType.ObjectTypeBox) {
 					worldServer.objectList.remove(collisionObject);
-				} else if (collisionObject.type == Thing.ObjectType.ObjectTypeBomb) {
+				} else if (collisionObject.type == Unmovable.ObjectType.ObjectTypeBomb) {
 					// chain bomb explosion
 					// -
 					// bombExplode(objectItemCurrent->object);
@@ -94,39 +95,39 @@ public class Tick extends TimerTask {
 			}
 
 			// character collision
-			List<Character> collisionCharacterS = CollisionCharacterSGet(worldServer.characterList, object.position,
+			List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, object.position,
 					null, null);
-			for (Character collisionCharacter : collisionCharacterS) {x
+			for (Movable collisionMovable : collisionMovableS) {x
 
 				// UserServer update
-				if (collisionCharacter.owner != null) {
-					collisionCharacter.owner.gamestate = Gamestate.GamestateDead;
+				if (collisionMovable.owner != null) {
+					collisionMovable.owner.gamestate = Gamestate.GamestateDead;
 				}
 
 				// remove
-				worldServer.characterList.remove(collisionCharacter);
+				worldServer.characterList.remove(collisionMovable);
 			}
 		}
 	}
 
 	// TickCalculateEnemyKillCollisionDetect is a helper function of
 	// TickCalculateEnemyKill
-	public boolean TickCalculateEnemyKillCollisionDetect(void* this, Character* that){
+	public boolean TickCalculateEnemyKillCollisionDetect(void* this, Movable that){
 		return that->type == CharacterTypeEnemy;
 	}
 
 	// TickCalculateWin checks if any CharacterTypeUser if in a winning state and
 	// removes them if so
 	public void TickCalculateWin() {
-		List<Character> collisionCharacterS = CollisionCharacterSGet(worldServer.characterList,
-				worldServer.exit.position, null, null);
-		for (List<Character> character : collisionCharacterS) {
-			if (character.type == Character.CharacterType.CharacterTypeUser && worldServer.characterList.size() == 1) {
+		List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, worldServer.exit.position,
+				null, null);
+		for (List<Movable> movable : collisionMovableS) {
+			if (movable.type == Movable.CharacterType.CharacterTypeUser && worldServer.characterList.size() == 1) {
 				// UserServer update
-				character.owner.gamestate = Gamestate.GamestateWon;
+				movable.owner.gamestate = Gamestate.GamestateWon;
 
 				// remove
-				Character listItem = ListFindItemByPointer(worldServer.characterList, character);
+				Movable listItem = ListFindItemByPointer(worldServer.characterList, movable);
 				worldServer.characterList.remove(listItem);
 			}
 		}
@@ -135,22 +136,22 @@ public class Tick extends TimerTask {
 	// TickCalculateEnemyKill checks if any CharacterTypeUser is colliding with
 	// CharacterTypeEnemy and kills them if so
 	public void TickCalculateEnemyKill() {
-		List<Character> deathS = new ArrayList<>();
-		for (Character character : worldServer.characterList) {
-			if (character.type != Character.CharacterType.CharacterTypeUser) {
+		List<Movable> deathS = new ArrayList<>();
+		for (Movable character : worldServer.characterList) {
+			if (character.type != Movable.CharacterType.CharacterTypeUser) {
 				continue;
 			}
 
-			List<Character> collisionCharacterS = CollisionCharacterSGet(worldServer.characterList, character.position,
+			List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, character.position,
 					character, TickCalculateEnemyKillCollisionDetect);
 
 			// death
-			if (collisionCharacterS.size() != 0) {
+			if (collisionMovableS.size() != 0) {
 				character.owner.gamestate = Gamestate.GamestateDead;
 				deathS.add(character);
 			}
 		}
-		for (Character character : deathS) {
+		for (Movable character : deathS) {
 			worldServer.characterList.remove(character);
 		}
 	}
@@ -158,8 +159,8 @@ public class Tick extends TimerTask {
 	// TickCalculateEnemyMovement randomly creates a new random direction for
 	// CharacterTypeEnemys
 	public void TickCalculateEnemyMovement() {
-		for (Character character : worldServer.characterList) {
-			if (character.type != Character.CharacterType.CharacterTypeEnemy) {
+		for (Movable character : worldServer.characterList) {
+			if (character.type != Movable.CharacterType.CharacterTypeEnemy) {
 				continue;
 			}
 
@@ -175,12 +176,12 @@ public class Tick extends TimerTask {
 	// TickCalculateDestroy removes items where .destroy == tickCount
 	// destroy hooks also added here
 	public void TickCalculateDestroy() {
-		for (Thing listItemCurrent : worldServer.objectList) {
+		for (Unmovable listItemCurrent : worldServer.objectList) {
 			if (tickCount != listItemCurrent.destroy) {
 				continue;
 			}
 
-			if (listItemCurrent.type == Thing.ObjectType.ObjectTypeBomb) {
+			if (listItemCurrent.type == Unmovable.ObjectType.ObjectTypeBomb) {
 				TickCalculateDestroyBomb(listItemCurrent);
 			}
 
@@ -192,7 +193,7 @@ public class Tick extends TimerTask {
 	// TickCalculateAnimate calculates next texture state from current
 	public void TickCalculateAnimate() {
 		// animate
-		for (Thing object : worldServer.objectList) {
+		for (Unmovable object : worldServer.objectList) {
 			// delay
 			object.animation.stateDelayTick++;
 			if (object.animation.stateDelayTick <= object.animation.stateDelayTickEnd) {
@@ -204,7 +205,7 @@ public class Tick extends TimerTask {
 			object.animation.state++;
 			object.animation.state %= TextureSSObject[object.type].length;
 		}
-		for (Character character : worldServer.characterList) {
+		for (Movable character : worldServer.characterList) {
 			boolean moving = false;
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 				if (character.keys[i]) {
@@ -244,7 +245,7 @@ public class Tick extends TimerTask {
 		// this should be calculated before TickCalculateFireDestroy() otherwise player
 		// would be in fire for 1 tick
 		// if 2 character is racing for the same spot the first in list wins
-		for (Character character : worldServer.characterList) {
+		for (Movable character : worldServer.characterList) {
 			if (character.keys[Key.KeyType.KeyBomb]) {
 				KeyBombPlace(character, worldServer, tickCount);
 			}
@@ -274,9 +275,9 @@ public class Tick extends TimerTask {
 			}
 
 			// alter user character to be identifiable
-			Character character = CharacterFind(userServer);
+			Movable character = CharacterFind(userServer);
 			if (character != null) {
-				character.type = Character.CharacterType.CharacterTypeYou;
+				character.type = Movable.CharacterType.CharacterTypeYou;
 			}
 
 			// send
@@ -284,7 +285,7 @@ public class Tick extends TimerTask {
 
 			// remove character alter
 			if (character != null) {
-				character.type = Character.CharacterType.CharacterTypeUser;
+				character.type = Movable.CharacterType.CharacterTypeUser;
 			}
 
 			// remove exit remove

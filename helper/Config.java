@@ -1,17 +1,17 @@
 package helper;
 
 public class Config {
-	int squaresize = 50;
-	int velocity = 6;
-	int velocityEnemy = 2;
-	int windowHeight = 480;
-	int windowWidth = 640;
-	int worldHeight = 9;
-	int worldWidth = 13;
-	double boxRatio = 0.25;
-	double enemyRatio = 0.05;
-	double enemyKeyChangePossibility = 0.015;
-	long tickRate = 1000 / 58;
-	long tickSecond = 1000 / tickRate; // tick count in one second
-	int authLength = 26;
+	public int squaresize = 50;
+	public int velocity = 6;
+	public int velocityEnemy = 2;
+	public int windowHeight = 480;
+	public int windowWidth = 640;
+	public int worldHeight = 9;
+	public int worldWidth = 13;
+	public double boxRatio = 0.25;
+	public double enemyRatio = 0.05;
+	public double enemyKeyChangePossibility = 0.015;
+	public long tickRate = 1000 / 58;
+	public long tickSecond = 1000 / tickRate; // tick count in one second
+	public int authLength = 26;
 }

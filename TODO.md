@@ -1,2 +1,4 @@
 - add finals
 - rename enums
+- add proper accessibility
+- rename lot of things (Thing, ...)

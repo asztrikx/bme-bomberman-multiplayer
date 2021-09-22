@@ -31,12 +31,17 @@ public class Auth {
 		Auth auth = (Auth) object;
 
 		// timing attack safe compare
+		// the length of auth is not a secret
 		boolean diff = false;
-		for (int i = 0; i < 26; i++) {
+		for (int i = 0; i < Math.min(auth.value.length(), value.length()); i++) {
 			if (auth.value.codePointAt(i) != value.codePointAt(i)) {
 				diff = true;
 			}
 		}
 		return diff;
+	}
+
+	public int length() {
+		return value.length();
 	}
 }

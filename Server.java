@@ -1,16 +1,18 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
 
-public class Server {
+public class Server extends TimerTask {
 	UserManager<UserServer> userManager = new UserManager<>();
 	Lock mutex = new ReentrantLock();
 	Config config;
 	Logger logger;
 	WorldServer worldServer;
 	long tickCount = 0;
-	long tickId = 0;
+	Timer timer = null;
 	boolean stopped = true;
 
 	public Server(Logger logger, Config config) {
@@ -23,17 +25,14 @@ public class Server {
 		stopped = false;
 
 		// key press
-		SDL_AddEventWatch(EventKey, NULL);
+		SDL_AddEventWatch(EventKey, null);
 
 		// network start
 		NetworkServerStart();
 
 		// tick start: world calc, connected user update
-		tickId = SDL_AddTimer(tickRate, Tick, NULL);
-		if (tickId == 0) {
-			SDL_Log("SDL_AddTimer: %s", SDL_GetError());
-			exit(1);
-		}
+		timer = new Timer();
+		timer.schedule(this, config.tickRate);
 	}
 
 	// TickCalculateDestroyBomb removes bomb and creates fire in its place
@@ -110,7 +109,7 @@ public class Server {
 
 	// TickCalculateEnemyKillCollisionDetect is a helper function of
 	// TickCalculateEnemyKill
-	public bool TickCalculateEnemyKillCollisionDetect(void* this, Character* that){
+	public boolean TickCalculateEnemyKillCollisionDetect(void* this, Character* that){
 		return that->type == CharacterTypeEnemy;
 	}
 
@@ -290,16 +289,16 @@ public class Server {
 		}
 	}
 
+	@Override
 	// Tick calculates new frame, notifies users
-	Uint32 Tick(Uint32 interval, void *param){
+	public void run() {
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
 			TickCalculate();
-	
-			TickSend();	
+
+			TickSend();
 		}
 
 		tickCount++;
-		return interval;
 	}
 
 	// EventKey handles WorldServer saving
@@ -329,8 +328,7 @@ public class Server {
 			// auth validate
 			// auth's length validation
 			// -
-			int length = userServerUnsafe.auth.length();
-			if (length != 26) {
+			if (userServerUnsafe.auth.length() != config.authLength) {
 				return;
 			}
 			// auth's length validation
@@ -352,12 +350,12 @@ public class Server {
 				userServer.name = userServerUnsafe.name;
 			}
 
-			// keyS's length validation
+			// keys's length validation
 			// -
 
-			// keyS copy
-			for (int i = 0; i < KeyLength; i++) {
-				character.keyS[i] = userServerUnsafe.keyS[i];
+			// keys copy
+			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
+				character.keys[i] = userServerUnsafe.keys[i];
 			}
 		}
 	}
@@ -370,70 +368,54 @@ public class Server {
 		}
 
 		// wait timers to finish
-		if (SDL_LockMutex(mutex) != 0) {
-			SDL_Log("ServerStop: SDL_LockMutex: %s", SDL_GetError());
-			exit(1);
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
+			// need to be called before NetworkServerStop as incoming message may already be
+			// coming which
+			// could get stuck if SDL_DestroyMutex happens before SDL_LockMutex
+			stopped = true;
+
+			NetworkServerStop();
 		}
-
-		// need to be called before NetworkServerStop as incoming message may already be
-		// coming which
-		// could get stuck if SDL_DestroyMutex happens before SDL_LockMutex
-		stopped = true;
-
-		NetworkServerStop();
-
-		SDL_DestroyMutex(mutex);
 	}
 
 	// ServerConnect register new connection user, returns it with auth
 	// userServerUnsafe is not used after return
-	void ServerConnect(UserServer userServerUnsafe){
-		if (SDL_LockMutex(mutex) != 0){
-			SDL_Log("ServerConnect: SDL_LockMutex: %s", SDL_GetError());
-			exit(1);
-		}
+	void ServerConnect(UserServer userServerUnsafe) {
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
+			// userServer copy
+			UserServer userServer = new UserServer();
+			// TODO java max 15 length
+			userServer.name = userServerUnsafe.name;
+			userServer.state = User.State.Playing;
 
-		//userServer copy
-		UserServer userServer = new UserServer();
-		// TODO java max 15 length
-		userServer.name = userServerUnsafe.name;
-		userServer.gamestate = Gamestate.GamestateRunning;
+			// userServer insert
+			userManager.add(userServer);
 
-		//userServer insert
-		userManager.add(userServer);
+			// id generate
+			while (true) {
+				Auth auth = new Auth(config.authLength);
 
-		//id generate
-		while (true){
-			Auth auth = new Auth();
-			
-			//id exists
-			if(userManager.findByAuth(auth) == null){
-				userServer.auth = auth;
-				break;
+				// id exists
+				if (userManager.findByAuth(auth) == null) {
+					userServer.auth = auth;
+					break;
+				}
 			}
-		}
 
-		//spawn
-		Position position = SpawnGet(worldServer, 3);
+			// spawn
+			Position position = SpawnGet(worldServer, 3);
 
-		//character insert
-		Character character = new Character();
-		character.bombCount = 1;
-		character.owner = userServer;
-		character.position = new Position(
-			position.y,
-			position.x,
-		);
-		character.type = Character.CharacterType.CharacterTypeUser;
-		character.velocity = velocity;
-		worldServer.characterList = character;
+			// character insert
+			Character character = new Character();
+			character.bombCount = 1;
+			character.owner = userServer;
+			character.position = new Position(position.y, position.x);
+			character.type = Character.CharacterType.CharacterTypeUser;
+			character.velocity = config.velocity;
+			worldServer.characterList.add(character);
 
-		//reply
-		userServerUnsafe.auth = userServer.auth;
-
-		if(SDL_UnlockMutex(mutex) < 0){
-			SDL_Log("ServerConnect: mutex unlock: %s", SDL_GetError());
-			exit(1);
+			// reply
+			userServerUnsafe.auth = userServer.auth;
 		}
 	}
 

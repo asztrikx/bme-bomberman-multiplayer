@@ -16,9 +16,9 @@ public class WorldServer extends World {
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				if (i == 0 || j == 0 || i == height - 1 || j == width - 1 || (i % 2 == 0 && j % 2 == 0)) {
-					Object object = new Object();
+					Thing object = new Thing();
 					object.position = new Position(i * config.squaresize, j * config.squaresize);
-					object.type = Object.ObjectType.ObjectTypeWall;
+					object.type = Thing.ObjectType.ObjectTypeWall;
 					objectList.add(object);
 				}
 			}
@@ -29,16 +29,16 @@ public class WorldServer extends World {
 
 		// box generate randomly
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
-			Object object = new Object();
+			Thing object = new Thing();
 			object.position = SpawnGet(this, 1);
-			object.type = Object.ObjectType.ObjectTypeBox;
+			object.type = Thing.ObjectType.ObjectTypeBox;
 			objectList.add(object);
 		}
 
 		// exit
-		Object object = new Object();
+		Thing object = new Thing();
 		object.position = objectList.get(0).position;
-		object.type = Object.ObjectType.ObjectTypeExit;
+		object.type = Thing.ObjectType.ObjectTypeExit;
 		object.animation.stateDelayTickEnd = 10;
 		objectList.add(object);
 		exit = object;

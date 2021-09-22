@@ -9,6 +9,7 @@ public class Config {
 	double boxRatio = 0.25;
 	double enemyRatio = 0.05;
 	double enemyKeyChangePossibility = 0.015;
-	int tickRate = 1000 / 58;
+	long tickRate = 1000 / 58;
 	long tickSecond = 1000 / tickRate; // tick count in one second
+	int authLength = 26;
 }

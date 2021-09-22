@@ -22,8 +22,6 @@ public class MainServer {
 				ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 
 				String message = (String) objectInputStream.readObject();
-				String message = (String) objectInputStream.readObject();
-				String message = (String) objectInputStream.readObject();
 				System.out.println(message);
 
 				objectInputStream.close();

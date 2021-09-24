@@ -10,6 +10,17 @@ public class Unmovable extends WorldElement {
 	public Animation animation = new Animation(0, 0, 0);
 
 	public enum ObjectType {
-		ObjectTypeBomb, ObjectTypeBombFire, ObjectTypeWall, ObjectTypeBox, ObjectTypeExit,
+		ObjectTypeBomb(0), ObjectTypeBombFire(1), ObjectTypeWall(2), ObjectTypeBox(3), ObjectTypeExit(4);
+
+		// https://stackoverflow.com/a/8157790/4404911
+		private final int value;
+
+		private ObjectType(int value) {
+			this.value = value;
+		}
+
+		public int getValue() {
+			return value;
+		}
 	}
 }

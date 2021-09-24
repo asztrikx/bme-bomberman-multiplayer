@@ -1,3 +1,5 @@
+package server;
+
 import engine.Collision;
 import helper.Config;
 import helper.Logger;
@@ -61,7 +63,7 @@ public class WorldServer extends World {
 			character.position = SpawnGet(this, 3);
 			character.type = Movable.CharacterType.CharacterTypeEnemy;
 			character.velocity = config.velocityEnemy;
-			KeyMovementRandom(character);
+			character.KeyMovementRandom();
 			characterList.add(character);
 		}
 	}

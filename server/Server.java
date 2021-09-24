@@ -12,6 +12,7 @@ import helper.Logger;
 import helper.Position;
 import user.User;
 import user.UserManager;
+import world.element.Movable;
 
 public class Server {
 	UserManager<UserServer> userManager = new UserManager<>();
@@ -78,7 +79,7 @@ public class Server {
 			if (userServer == null) {
 				return;
 			}
-			Character character = CharacterFind(userServer);
+			Movable character = CharacterFind(userServer);
 
 			// alive
 			if (character == null) {
@@ -147,11 +148,11 @@ public class Server {
 			Position position = SpawnGet(worldServer, 3);
 
 			// character insert
-			Character character = new Character();
+			Movable character = new Movable(config, logger);
 			character.bombCount = 1;
 			character.owner = userServer;
 			character.position = new Position(position.y, position.x);
-			character.type = Character.CharacterType.CharacterTypeUser;
+			character.type = Movable.CharacterType.CharacterTypeUser;
 			character.velocity = config.velocity;
 			worldServer.characterList.add(character);
 

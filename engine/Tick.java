@@ -201,7 +201,7 @@ public class Tick extends TimerTask {
 
 			// state next
 			object.animation.state++;
-			object.animation.state %= TextureSSObject[object.type].length;
+			object.animation.state %= TextureSSObject[object.type.getValue()].length;
 		}
 		for (Movable character : worldServer.characterList) {
 			boolean moving = false;
@@ -226,7 +226,7 @@ public class Tick extends TimerTask {
 
 			// state next
 			character.animation.state++;
-			character.animation.state %= TextureSSCharacter[character.type].length;
+			character.animation.state %= TextureSSCharacter[character.type.getValue()].length;
 		}
 	}
 
@@ -244,10 +244,10 @@ public class Tick extends TimerTask {
 		// would be in fire for 1 tick
 		// if 2 character is racing for the same spot the first in list wins
 		for (Movable character : worldServer.characterList) {
-			if (character.keys[Key.KeyType.KeyBomb]) {
-				KeyBombPlace(character, worldServer, tickCount);
+			if (character.keys[Key.KeyType.KeyBomb.getValue()]) {
+				character.KeyBombPlace(worldServer, tickCount);
 			}
-			KeyMovement(character, worldServer);
+			character.KeyMovement(worldServer);
 		}
 
 		// should be before any destroy

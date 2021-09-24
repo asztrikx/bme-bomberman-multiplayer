@@ -29,28 +29,40 @@ public class Movable extends WorldElement {
 		this.collision = new Collision(config, logger);
 	}
 
-	public enum CharacterType {
-		CharacterTypeUser, CharacterTypeEnemy, CharacterTypeYou,
+	// TODO for all enum: static?
+	public static enum CharacterType {
+		CharacterTypeUser(0), CharacterTypeEnemy(1), CharacterTypeYou(2);
+
+		// https://stackoverflow.com/a/8157790/4404911
+		private final int value;
+
+		private CharacterType(int value) {
+			this.value = value;
+		}
+
+		public int getValue() {
+			return value;
+		}
 	}
 
 	// KeyMovement moves character based on it's pressed keys
-	void KeyMovement(Movable character, WorldServer worldServer) {
-		Position positionNew = character.position;
-		if (character.keys[Key.KeyType.KeyUp]) {
-			positionNew.y -= character.velocity;
+	public void KeyMovement(WorldServer worldServer) {
+		Position positionNew = position;
+		if (keys[Key.KeyType.KeyUp.getValue()]) {
+			positionNew.y -= velocity;
 		}
-		if (character.keys[Key.KeyType.KeyLeft]) {
-			positionNew.x -= character.velocity;
+		if (keys[Key.KeyType.KeyLeft.getValue()]) {
+			positionNew.x -= velocity;
 		}
-		if (character.keys[Key.KeyType.KeyDown]) {
-			positionNew.y += character.velocity;
+		if (keys[Key.KeyType.KeyDown.getValue()]) {
+			positionNew.y += velocity;
 		}
-		if (character.keys[Key.KeyType.KeyRight]) {
-			positionNew.x += character.velocity;
+		if (keys[Key.KeyType.KeyRight.getValue()]) {
+			positionNew.x += velocity;
 		}
 
 		// collision
-		positionNew = collision.CollisionLinePositionGet(worldServer, character.position, positionNew, character,
+		positionNew = collision.CollisionLinePositionGet(worldServer, position, positionNew, this,
 				(Movable characterRelative, Unmovable object) -> {
 					return object.type == Unmovable.ObjectType.ObjectTypeWall
 							|| object.type == Unmovable.ObjectType.ObjectTypeBox
@@ -66,21 +78,21 @@ public class Movable extends WorldElement {
 
 		// enemy new one way direction
 		SecureRandom secureRandom = new SecureRandom();
-		if (character.type == Movable.CharacterType.CharacterTypeEnemy && character.position.equals(positionNew)) {
+		if (type == Movable.CharacterType.CharacterTypeEnemy && position.equals(positionNew)) {
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-				character.keys[i] = false;
+				keys[i] = false;
 			}
 
-			character.keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
+			keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
 		}
-		character.position = positionNew;
+		position = positionNew;
 
 		// moved out from a bomb with !bombOut
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
 		for (Unmovable object : worldServer.objectList) {
-			if (object.type == Unmovable.ObjectType.ObjectTypeBomb && object.owner == character && !object.bombOut
-					&& !collision.doCollide(character.position, object.position)) {
+			if (object.type == Unmovable.ObjectType.ObjectTypeBomb && object.owner == this && !object.bombOut
+					&& !collision.doCollide(position, object.position)) {
 				object.bombOut = true;
 			}
 		}
@@ -88,28 +100,27 @@ public class Movable extends WorldElement {
 
 	// KeyBombPlace places a bomb to the nearest square in the grid relative to the
 	// character
-	void KeyBombPlace(Movable character, WorldServer worldServer, long tickCount) {
+	public void KeyBombPlace(WorldServer worldServer, long tickCount) {
 		// bomb available
-		if (character.bombCount == 0) {
+		if (bombCount == 0) {
 			return;
 		}
 
-		Position positionNew = character.position;
+		Position positionNew = position;
 
 		// position
 		positionNew.y -= positionNew.y % config.squaresize;
 		positionNew.x -= positionNew.x % config.squaresize;
-		if (character.position.y % config.squaresize > config.squaresize / 2) {
+		if (position.y % config.squaresize > config.squaresize / 2) {
 			positionNew.y += config.squaresize;
 		}
-		if (character.position.x % config.squaresize > config.squaresize / 2) {
+		if (position.x % config.squaresize > config.squaresize / 2) {
 			positionNew.x += config.squaresize;
 		}
 
 		// collision
 		List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, positionNew, null, null);
-		List<Movable> collisionCharacterS = collision.collisionsGet(worldServer.characterList, positionNew, character,
-				null);
+		List<Movable> collisionCharacterS = collision.collisionsGet(worldServer.characterList, positionNew, this, null);
 
 		if (collisionCharacterS.size() != 0 || collisionObjectS.size() != 0) {
 			return;
@@ -123,22 +134,22 @@ public class Movable extends WorldElement {
 		object.type = Unmovable.ObjectType.ObjectTypeBomb;
 		object.velocity = 0;
 		object.bombOut = false;
-		object.owner = character;
+		object.owner = this;
 		object.animation.stateDelayTickEnd = 15;
 		worldServer.objectList.add(object);
 
 		// bomb decrease
-		character.bombCount--;
+		bombCount--;
 	}
 
 	// KeyMovementRandom sets randomly one key to be active
-	void KeyMovementRandom(Movable character) {
+	public void KeyMovementRandom() {
 		SecureRandom secureRandom = new SecureRandom();
 
 		for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-			character.keys[i] = false;
+			keys[i] = false;
 		}
-		character.keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
+		keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
 	}
 
 }

@@ -1,8 +1,8 @@
 package client;
 
-import helper.Gamestate;
+import user.User.State;
 import world.World;
 
 public class WorldClient extends World {
-	Gamestate gamestate;
+	public State state;
 }

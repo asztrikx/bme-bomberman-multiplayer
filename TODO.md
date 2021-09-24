@@ -3,3 +3,5 @@
 - add proper accessibility
 - rename lot of things (Thing, ...)
 - move pos,... to WorldElement
+- DI pattern
+- builder pattern

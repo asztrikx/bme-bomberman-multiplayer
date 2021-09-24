@@ -8,23 +8,26 @@ import java.util.concurrent.locks.Lock;
 
 import helper.AutoClosableLock;
 import helper.Config;
-import helper.Gamestate;
 import helper.Key;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
+import user.User;
 import world.element.Movable;
 import world.element.Unmovable;
+import world.element.WorldElement;
 
 public class Tick extends TimerTask {
 	WorldServer worldServer;
 	int tickCount = 0;
 	Config config;
 	Lock lock;
+	Collision collision;
 
-	public Tick(WorldServer worldServer, Integer t, Config config, Lock lock) {
+	public Tick(WorldServer worldServer, Integer t, Config config, Lock lock, Collision collision) {
 		this.worldServer = worldServer;
 		this.lock = lock;
+		this.collision = collision;
 	}
 
 	@Override
@@ -48,7 +51,8 @@ public class Tick extends TimerTask {
 			Position position = new Position(unmovable.position.y + directionY[j] * config.squaresize,
 					unmovable.position.x + directionX[j] * config.squaresize);
 
-			List<Unmovable> collisionObjectS = CollisionObjectSGet(worldServer.objectList, position, unmovable, null);
+			List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, position, unmovable,
+					null);
 			boolean boxExists = collisionObjectS.isEmpty()
 					|| collisionObjectS.stream().filter(t -> t.type == Unmovable.ObjectType.ObjectTypeBox).count() != 0;
 			if (!boxExists && collisionObjectS.size() != 0) {
@@ -83,7 +87,8 @@ public class Tick extends TimerTask {
 			}
 
 			// object collision
-			List<Unmovable> collisionObjectS = CollisionObjectSGet(worldServer.objectList, object.position, null, null);
+			List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, object.position, null,
+					null);
 			for (Unmovable collisionObject : collisionObjectS) {
 				if (collisionObject.type == Unmovable.ObjectType.ObjectTypeBox) {
 					worldServer.objectList.remove(collisionObject);
@@ -95,13 +100,12 @@ public class Tick extends TimerTask {
 			}
 
 			// character collision
-			List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, object.position,
-					null, null);
-			for (Movable collisionMovable : collisionMovableS) {x
-
+			List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, object.position, null,
+					null);
+			for (Movable collisionMovable : collisionMovableS) {
 				// UserServer update
 				if (collisionMovable.owner != null) {
-					collisionMovable.owner.gamestate = Gamestate.GamestateDead;
+					collisionMovable.owner.state = User.State.Dead;
 				}
 
 				// remove
@@ -110,25 +114,18 @@ public class Tick extends TimerTask {
 		}
 	}
 
-	// TickCalculateEnemyKillCollisionDetect is a helper function of
-	// TickCalculateEnemyKill
-	public boolean TickCalculateEnemyKillCollisionDetect(void* this, Movable that){
-		return that->type == CharacterTypeEnemy;
-	}
-
 	// TickCalculateWin checks if any CharacterTypeUser if in a winning state and
 	// removes them if so
 	public void TickCalculateWin() {
-		List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, worldServer.exit.position,
+		List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, worldServer.exit.position,
 				null, null);
-		for (List<Movable> movable : collisionMovableS) {
+		for (Movable movable : collisionMovableS) {
 			if (movable.type == Movable.CharacterType.CharacterTypeUser && worldServer.characterList.size() == 1) {
 				// UserServer update
-				movable.owner.gamestate = Gamestate.GamestateWon;
+				movable.owner.state = User.State.Won;
 
 				// remove
-				Movable listItem = ListFindItemByPointer(worldServer.characterList, movable);
-				worldServer.characterList.remove(listItem);
+				worldServer.characterList.remove(movable);
 			}
 		}
 	}
@@ -142,12 +139,13 @@ public class Tick extends TimerTask {
 				continue;
 			}
 
-			List<Movable> collisionMovableS = CollisionCharacterSGet(worldServer.characterList, character.position,
-					character, TickCalculateEnemyKillCollisionDetect);
-
+			List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, character.position,
+					character, (WorldElement worldElementRelative, Movable that) -> {
+						return that.type == Movable.CharacterType.CharacterTypeEnemy;
+					});
 			// death
 			if (collisionMovableS.size() != 0) {
-				character.owner.gamestate = Gamestate.GamestateDead;
+				character.owner.state = User.State.Dead;
 				deathS.add(character);
 			}
 		}

@@ -1,19 +1,25 @@
 package engine;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
 import helper.Config;
+import helper.Logger;
 import helper.Position;
 import server.WorldServer;
+import world.element.Movable;
+import world.element.Unmovable;
 import world.element.WorldElement;
 
 public class Collision {
 	Config config;
+	Logger logger;
 
-	public Collision(Config config) {
+	public Collision(Config config, Logger logger) {
 		this.config = config;
+		this.logger = logger;
 	}
 
 	// Collision tells whether there's a collision between objects at positions
@@ -31,8 +37,8 @@ public class Collision {
 	// collisionDecideObjectFunction decides for each object whether it should be
 	// taking into account
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	public <E extends WorldElement> List<E> collisionsGet(List<E> worldElements, Position position,
-			WorldElement worldElementRelative, BiFunction<WorldElement,E, Boolean> collisionDecide) {
+	public <E extends WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
+			Position position, E2 worldElementRelative, BiFunction<E2, E, Boolean> collisionDecide) {
 		List<E> listCollision = new ArrayList<>();
 
 		for (E worldElement : worldElements) {
@@ -60,107 +66,91 @@ public class Collision {
 	// we can be NULL
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
 	// if collisionDecideCharacterFunction is NULL then it's treated as always true
-	Position CollisionLinePositionGet(
-		WorldServer worldServer,
-		Position from,
-		Position to,
-		void* we,
-		CollisionDecideObjectFunction collisionDecideObjectFunction,
-		CollisionDecideCharacterFunction collisionDecideCharacterFunction
-	){
-		//position difference in abs is always same for y and x coordinate if none of them is zero
-		int step = abs(to.y - from.y);
-		if (step == 0){
-			step = abs(to.x - from.x);
+	public <E extends WorldElement> Position CollisionLinePositionGet(WorldServer worldServer, Position from,
+			Position to, E we, BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
+			BiFunction<E, Movable, Boolean> collisionDecideCharacterFunction) {
+		// position difference in abs is always same for y and x coordinate if none of
+		// them is zero
+		int step = Math.abs(to.y - from.y);
+		if (step == 0) {
+			step = Math.abs(to.x - from.x);
 		}
 		Position current = from;
 
-		//stays in place
-		if(step == 0){
+		// stays in place
+		if (step == 0) {
 			return from;
 		}
 
-		//walk by discretely with unit vector as there are scenarios where
-		//the collision would misbehave if we would only check the arrival position
-		//eg: too fast speed would make it able to cross walls
-		//eg: squaresize pixel wide diagonal is crossable this way
-		Position unit = (Position){
-			.y = 0,
-			.x = 0,
-		};
-		if(to.y - from.y != 0){
-			unit.y = (to.y - from.y) / abs(to.y - from.y);
+		// walk by discretely with unit vector as there are scenarios where
+		// the collision would misbehave if we would only check the arrival position
+		// eg: too fast speed would make it able to cross walls
+		// eg: squaresize pixel wide diagonal is crossable this way
+		Position unit = new Position(0, 0);
+		if (to.y - from.y != 0) {
+			unit.y = (to.y - from.y) / Math.abs(to.y - from.y);
 		}
-		if(to.x - from.x != 0){
-			unit.x = (to.x - from.x) / abs(to.x - from.x);
+		if (to.x - from.x != 0) {
+			unit.x = (to.x - from.x) / Math.abs(to.x - from.x);
 		}
-		for(int i=0; i<step; i++){
-			//step y
+		for (int i = 0; i < step; i++) {
+			// step y
 			current.y += unit.y;
 
-			List* collisionObjectS = CollisionObjectSGet(worldServer->objectList, current, we, collisionDecideObjectFunction);
-			List* collisionCharacterS = CollisionCharacterSGet(worldServer->characterList, current, we, collisionDecideCharacterFunction);
-			if(
-				collisionObjectS->length != 0 ||
-				collisionCharacterS->length != 0
-			){
+			List<Unmovable> collisionObjectS = collisionsGet(worldServer.objectList, current, we,
+					collisionDecideObjectFunction);
+			List<Movable> collisionCharacterS = collisionsGet(worldServer.characterList, current, we,
+					collisionDecideCharacterFunction);
+			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
 				current.y -= unit.y;
 			}
-			ListDelete(collisionObjectS, NULL);
-			ListDelete(collisionCharacterS, NULL);
 
-			//step x
+			// step x
 			current.x += unit.x;
 
-			collisionObjectS = CollisionObjectSGet(worldServer->objectList, current, we, collisionDecideObjectFunction);
-			collisionCharacterS = CollisionCharacterSGet(worldServer->characterList, current, we, collisionDecideCharacterFunction);
-			if(
-				collisionObjectS->length != 0 ||
-				collisionCharacterS->length != 0
-			){
+			collisionObjectS = collisionsGet(worldServer.objectList, current, we, collisionDecideObjectFunction);
+			collisionCharacterS = collisionsGet(worldServer.characterList, current, we,
+					collisionDecideCharacterFunction);
+			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
 				current.x -= unit.x;
 			}
-			ListDelete(collisionObjectS, NULL);
-			ListDelete(collisionCharacterS, NULL);
 		}
 
 		return current;
 	}
 
-	static bool** collisionFreeCountObjectGetMemory;
-	//CollisionFreeCountObjectGetRecursion is a helper function of CollisionFreeCountObjectGet
-	static int CollisionFreeCountObjectGetRecursion(WorldServer* worldServer, Position positionCompress){
-		Position position;
-		position.y = positionCompress.y * squaresize;
-		position.x = positionCompress.x * squaresize;
+	private boolean[][] collisionFreeCountObjectGetMemory;
 
-		//in calculation or already calculated
-		if(collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x]){
+	// CollisionFreeCountObjectGetRecursion is a helper function of
+	// CollisionFreeCountObjectGet
+	public int CollisionFreeCountObjectGetRecursion(WorldServer worldServer, Position positionCompress) {
+		Position position = new Position(positionCompress.y * config.squaresize,
+				positionCompress.x * config.squaresize);
+
+		// in calculation or already calculated
+		if (collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x]) {
 			return 0;
 		}
 
-		//because of map border there will be no overindexing
-		//mark invalid positions also to save collision recalculation
+		// because of map border there will be no overindexing
+		// mark invalid positions also to save collision recalculation
 		collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x] = true;
 
-		//position is valid
-		List* collisionObjectS = CollisionObjectSGet(worldServer->objectList, position, NULL, NULL);
-		int collisionCount = collisionObjectS->length;
-		ListDelete(collisionObjectS, NULL);
+		// position is valid
+		List<Unmovable> collisionObjectS = collisionsGet(worldServer.objectList, position, null, null);
+		int collisionCount = collisionObjectS.size();
 
-		if(collisionCount != 0){
+		if (collisionCount != 0) {
 			return 0;
 		}
 
-		//neighbour positions
-		int collisionFreeCountObject = 1; //current position
-		int directionY[] = {1, -1, 0, 0};
-		int directionX[] = {0, 0, 1, -1};
-		for(int i=0; i < 4; i++){
-			Position positionCompressNew = (Position){
-				.y = positionCompress.y + directionY[i],
-				.x = positionCompress.x + directionX[i],
-			};
+		// neighbour positions
+		int collisionFreeCountObject = 1; // current position
+		int directionY[] = { 1, -1, 0, 0 };
+		int directionX[] = { 0, 0, 1, -1 };
+		for (int i = 0; i < 4; i++) {
+			Position positionCompressNew = new Position(positionCompress.y + directionY[i],
+					positionCompress.x + directionX[i]);
 			collisionFreeCountObject += CollisionFreeCountObjectGetRecursion(worldServer, positionCompressNew);
 		}
 
@@ -169,82 +159,57 @@ public class Collision {
 
 	// CollisionFreeCountObjectGet returns how many square sized object-free area is
 	// reachable from (position - position % squaresize)
-	int CollisionFreeCountObjectGet(WorldServer* worldServer, Position position){
-		//memory alloc
-		collisionFreeCountObjectGetMemory = (bool**) malloc(worldServer->height * sizeof(bool*));
-		collisionFreeCountObjectGetMemory[0] = (bool*) calloc(worldServer->height * worldServer->width, sizeof(bool));
-		for(int i=1; i<worldServer->height; i++){
-			collisionFreeCountObjectGetMemory[i] = collisionFreeCountObjectGetMemory[0] + i * worldServer->width;
-		}
+	public int CollisionFreeCountObjectGet(WorldServer worldServer, Position position) {
+		// memory alloc
+		collisionFreeCountObjectGetMemory = new boolean[config.worldHeight][config.windowWidth];
 
-		//recursion
-		Position positionCompress;
-		positionCompress.y = position.y / squaresize;
-		positionCompress.x = position.x / squaresize;
+		// recursion
+		Position positionCompress = new Position(position.y / config.squaresize, position.x / config.squaresize);
 		int count = CollisionFreeCountObjectGetRecursion(worldServer, positionCompress);
-
-		//memory free
-		free(collisionFreeCountObjectGetMemory[0]);
-		free(collisionFreeCountObjectGetMemory);
 
 		return count;
 	}
 
 	// SpawnGet return a position where there's at least 3 free space reachable
 	// without action so player does not die instantly
-	Position SpawnGet(WorldServer* worldServer, int collisionFreeCountObjectMin){
-		//random max check
-		if(
-			RAND_MAX != INT32_MAX && (
-				RAND_MAX + 1 < worldServer->height ||
-				RAND_MAX + 1 < worldServer->width
-			)
-		){
-			SDL_Log("WorldGenerate: map is too big");
-			exit(1);
-		}
+	public Position SpawnGet(WorldServer worldServer, int collisionFreeCountObjectMin) {
+		// random max check
+		// as it is already in int there is no need to check
 
-		//position find
-		Position positionCompressed;
-		Position position;
+		// position find
+		Position positionCompressed = new Position(0, 0);
+		Position position = new Position(0, 0);
 		int collisionCountCharacter;
 		int collisionFreeCountObject;
-		bool near = false;
+		boolean near = false;
+		SecureRandom secureRandom = new SecureRandom();
 		do {
-			//random position in world
-			//this could be a bit optimized but it's more error prone
-			positionCompressed.y = rand() % worldServer->height;
-			positionCompressed.x = rand() % worldServer->width;
+			// random position in world
+			// this could be a bit optimized but it's more error prone
+			positionCompressed.y = secureRandom.nextInt(config.worldHeight);
+			positionCompressed.x = secureRandom.nextInt(config.worldWidth);
 
-			//decompress
-			position.y = positionCompressed.y * squaresize;
-			position.x = positionCompressed.x * squaresize;
+			// decompress
+			position.y = positionCompressed.y * config.squaresize;
+			position.x = positionCompressed.x * config.squaresize;
 
-			//collision check
-			List* collisionCharacterS = CollisionCharacterSGet(worldServer->characterList, position, NULL, NULL);
-			collisionCountCharacter = collisionCharacterS->length;
-			ListDelete(collisionCharacterS, NULL);
+			// collision check
+			List<Movable> collisionCharacterS = collisionsGet(worldServer.characterList, position, null, null);
+			collisionCountCharacter = collisionCharacterS.size();
 
-			//distance check
+			// distance check
 			near = false;
-			for(ListItem* item = worldServer->characterList->head; item != NULL; item = item->next){
-				Character* character = item->data;
-				if(
-					abs(position.y - character->position.y) < 3 * squaresize &&
-					abs(position.x - character->position.x) < 3 * squaresize
-				){
+			for (Movable movable : worldServer.characterList) {
+				if (Math.abs(position.y - movable.position.y) < 3 * config.squaresize
+						&& Math.abs(position.x - movable.position.x) < 3 * config.squaresize) {
 					near = true;
 					break;
 				}
 			}
 
-			//position valid
+			// position valid
 			collisionFreeCountObject = CollisionFreeCountObjectGet(worldServer, position);
-		} while (
-			collisionCountCharacter != 0 ||
-			collisionFreeCountObject < collisionFreeCountObjectMin ||
-			near
-		);
+		} while (collisionCountCharacter != 0 || collisionFreeCountObject < collisionFreeCountObjectMin || near);
 
 		return position;
 	}

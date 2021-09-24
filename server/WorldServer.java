@@ -1,15 +1,21 @@
+import engine.Collision;
 import helper.Config;
+import helper.Logger;
 import helper.Position;
 import world.World;
 import world.element.Movable;
 import world.element.Unmovable;
 
 public class WorldServer extends World {
-	Config config;
-	int height, width;
+	private Config config;
+	private int height, width;
+	private Collision collision;
+	private Logger logger;
 
-	public WorldServer(Config config) {
+	public WorldServer(Config config, Logger logger) {
 		this.config = config;
+		this.logger = logger;
+		this.collision = new Collision(config, logger);
 
 		if (config.worldHeight % 2 != 1 || config.worldWidth % 2 != 1 || config.worldHeight < 5
 				|| config.worldWidth < 5) {
@@ -30,7 +36,7 @@ public class WorldServer extends World {
 			}
 		}
 
-		int collisionFreeCountObject = CollisionFreeCountObjectGet(this,
+		int collisionFreeCountObject = collision.CollisionFreeCountObjectGet(this,
 				new Position(config.squaresize, config.squaresize));
 
 		// box generate randomly
@@ -51,7 +57,7 @@ public class WorldServer extends World {
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Movable character = new Movable();
+			Movable character = new Movable(config, logger);
 			character.position = SpawnGet(this, 3);
 			character.type = Movable.CharacterType.CharacterTypeEnemy;
 			character.velocity = config.velocityEnemy;

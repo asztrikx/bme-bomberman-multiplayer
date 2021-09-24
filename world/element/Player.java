@@ -1,5 +1,10 @@
 package world.element;
 
-public class Player extends Movable {
+import helper.Config;
+import helper.Logger;
 
+public class Player extends Movable {
+	public Player(Config config, Logger logger) {
+		super(config, logger);
+	}
 }

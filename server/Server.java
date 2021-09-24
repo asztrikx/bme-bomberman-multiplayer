@@ -25,7 +25,7 @@ public class Server {
 	public Server(Logger logger, Config config) {
 		this.logger = logger;
 		this.config = config;
-		worldServer = new WorldServer(config); // not critical section
+		worldServer = new WorldServer(config, logger); // not critical section
 	}
 
 	public void Listen() {

@@ -1,6 +1,7 @@
 import java.io.IOException;
 
 import client.Client;
+import engine.Collision;
 import helper.Config;
 import helper.Logger;
 import server.Server;
@@ -14,7 +15,9 @@ public class Main {
 			System.exit(1);
 		}
 
-		Config config = new Config();
+		Config.Injected = new Config();
+		Logger.Injected = new Logger(System.out);
+		Collision.Injected = new Collision();
 		System.out.println(Config.class.getSimpleName());
 		AnimationStore animationStore = new AnimationStore();
 		animationStore.addPath("resource/movable/");
@@ -23,10 +26,10 @@ public class Main {
 
 		switch (args[0]) {
 			case "--server":
-				serverMode(config);
+				serverMode();
 				break;
 			case "--client":
-				clientMode(config);
+				clientMode();
 				break;
 			default:
 				System.exit(1);
@@ -34,11 +37,10 @@ public class Main {
 		}
 	}
 
-	public static void serverMode(Config config) {
-		Logger logger = new Logger(System.out);
-		Server server = new Server(config, logger);
+	public static void serverMode() {
+		Server server = new Server();
 		try {
-			server.Listen(config.port);
+			server.Listen(Config.Injected.port);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -46,8 +48,8 @@ public class Main {
 		}
 	}
 
-	public static void clientMode(Config config) {
+	public static void clientMode() {
 		Client client = new Client();
-		client.connect(config.ip);
+		client.connect(Config.Injected.ip);
 	}
 }

@@ -7,9 +7,7 @@ import java.util.concurrent.locks.Lock;
 
 import client.WorldClient;
 import helper.AutoClosableLock;
-import helper.Config;
 import helper.Key;
-import helper.Logger;
 import network.Listen;
 import server.UserServer;
 import server.WorldServer;
@@ -25,21 +23,16 @@ import world.movable.Player;
 public class Tick extends TimerTask {
 	WorldServer worldServer;
 	long tickCount = 0;
-	Logger logger;
-	Config config;
 	Lock lock;
-	Collision collision;
+	private Collision collision = Collision.Injected;
 	Listen listen;
 	UserManager<UserServer> userManager;
 
-	public Tick(WorldServer worldServer, Config config, Logger logger, Lock lock, Listen listen,
-			UserManager<UserServer> usermanager) {
+	public Tick(WorldServer worldServer, Lock lock, Listen listen, UserManager<UserServer> usermanager) {
 		this.worldServer = worldServer;
 		this.lock = lock;
-		this.logger = logger;
 		this.listen = listen;
 		this.userManager = usermanager;
-		this.collision = new Collision(config, logger);
 	}
 
 	@Override
@@ -112,7 +105,7 @@ public class Tick extends TimerTask {
 		List<Unmovable> deletelist = new ArrayList<>();
 		for (Unmovable listItemCurrent : worldServer.unmovables) {
 			if (listItemCurrent.shouldDestroy(tickCount)) {
-				listItemCurrent.destroy(config, logger, worldServer);
+				listItemCurrent.destroy(worldServer);
 				deletelist.add(listItemCurrent);
 			}
 		}
@@ -144,7 +137,7 @@ public class Tick extends TimerTask {
 		// fire tick
 		for (Unmovable unmovable : worldServer.unmovables) {
 			if (unmovable instanceof BombFire) {
-				unmovable.tick(config, logger, worldServer);
+				unmovable.tick(worldServer);
 			}
 		}
 
@@ -152,7 +145,7 @@ public class Tick extends TimerTask {
 		List<Movable> deaths = new ArrayList<>();
 		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Player) {
-				movable.tick(config, logger, worldServer);
+				movable.tick(worldServer);
 				if (movable.owner.state == User.State.Dead) {
 					deaths.add(movable);
 				}

@@ -4,13 +4,14 @@ import java.security.SecureRandom;
 
 import helper.Config;
 import helper.Key;
-import helper.Logger;
 import server.WorldServer;
 import world.element.Animation;
 
 public class Enemy extends Movable {
-	public Enemy(Config config, Logger logger) {
-		super(config, logger, new Animation(10, Enemy.class.getSimpleName()));
+	private Config config = Config.Injected;
+
+	public Enemy() {
+		super(new Animation(10, Enemy.class.getSimpleName()));
 	}
 
 	@Override
@@ -36,10 +37,10 @@ public class Enemy extends Movable {
 	}
 
 	@Override
-	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	public void destroy(WorldServer worldServer) {
 	}
 
 	@Override
-	public void tick(Config config, Logger logger, WorldServer worldServer) {
+	public void tick(WorldServer worldServer) {
 	}
 }

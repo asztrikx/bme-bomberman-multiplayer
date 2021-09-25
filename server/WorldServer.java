@@ -5,7 +5,6 @@ import java.util.List;
 
 import engine.Collision;
 import helper.Config;
-import helper.Logger;
 import helper.Position;
 import world.World;
 import world.element.unmovable.Box;
@@ -15,15 +14,10 @@ import world.movable.Enemy;
 import world.movable.Movable;
 
 public class WorldServer extends World {
-	private Collision collision;
-	private Config config;
-	private Logger logger;
+	private Collision collision = Collision.Injected;
+	private Config config = Config.Injected;
 
-	public WorldServer(Config config, Logger logger) {
-		this.collision = new Collision(config, logger);
-		this.config = config;
-		this.logger = logger;
-
+	public WorldServer() {
 		if (config.worldHeight % 2 != 1 || config.worldWidth % 2 != 1 || config.worldHeight < 5
 				|| config.worldWidth < 5) {
 			// TODO java custom exception
@@ -62,7 +56,7 @@ public class WorldServer extends World {
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Enemy enemy = new Enemy(config, logger);
+			Enemy enemy = new Enemy();
 			enemy.position = getSpawn(0);
 			enemy.velocity = config.velocityEnemy;
 			// character.KeyMovementRandom();
@@ -73,8 +67,6 @@ public class WorldServer extends World {
 	// SpawnGet return a position where there's at least 3 free space reachable
 	// without action so player does not die instantly
 	public Position getSpawn(int minSpawnSquareFreeSpace) {
-		Collision collision = new Collision(config, logger);
-
 		// position find
 		Position positionCompressed;
 		Position position;

@@ -2,13 +2,14 @@ package helper;
 
 public class Position {
 	public int y, x;
+	Config config = Config.Injected;
 
 	public Position(int y, int x) {
 		this.y = y;
 		this.x = x;
 	}
 
-	public Position getSquare(Config config) {
+	public Position getSquare() {
 		return new Position(y % config.squaresize, x % config.squaresize);
 	}
 

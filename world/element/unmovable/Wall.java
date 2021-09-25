@@ -1,7 +1,5 @@
 package world.element.unmovable;
 
-import helper.Config;
-import helper.Logger;
 import server.WorldServer;
 import world.element.Animation;
 
@@ -11,10 +9,10 @@ public class Wall extends Unmovable {
 	}
 
 	@Override
-	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	public void destroy(WorldServer worldServer) {
 	}
 
 	@Override
-	public void tick(Config config, Logger logger, WorldServer worldServer) {
+	public void tick(WorldServer worldServer) {
 	}
 }

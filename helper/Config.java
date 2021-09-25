@@ -21,4 +21,6 @@ public class Config {
 	public int bombCountStart = 1;
 	public int spawnSquareDistanceFromOthers = 3;
 	public int spawnPlayerSquareFreeSpace = 3;
+
+	public static Config Injected;
 }

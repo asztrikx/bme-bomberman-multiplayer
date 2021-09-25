@@ -4,20 +4,21 @@ import java.util.List;
 
 import engine.Collision;
 import helper.Config;
-import helper.Logger;
 import helper.Position;
 import server.WorldServer;
 import world.element.Animation;
 
 public class Bomb extends Unmovable {
+	private Config config = Config.Injected;
+	private Collision collision = Collision.Injected;
+
 	public Bomb() {
 		super(new Animation(15, Bomb.class.getSimpleName()));
 	}
 
 	@Override
-	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	public void destroy(WorldServer worldServer) {
 		long tickCount = destroyTick;
-		Collision collision = new Collision(config, logger);
 
 		// fire inserts
 		int directionX[] = { 0, 1, -1, 0, 0 };
@@ -53,7 +54,7 @@ public class Bomb extends Unmovable {
 	}
 
 	@Override
-	public void tick(Config config, Logger logger, WorldServer worldServer) {
+	public void tick(WorldServer worldServer) {
 	}
 
 }

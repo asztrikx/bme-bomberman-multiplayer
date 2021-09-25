@@ -16,3 +16,4 @@
 - world field rename
 - replace objects, characters
 - fix exit send
+- private static Logger logger = Logger.getDefaultLogger(class).

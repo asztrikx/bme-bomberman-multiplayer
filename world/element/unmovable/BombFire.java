@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import engine.Collision;
-import helper.Config;
-import helper.Logger;
 import server.WorldServer;
 import user.User;
 import world.element.Animation;
@@ -13,19 +11,19 @@ import world.element.WorldElement;
 import world.movable.Movable;
 
 public class BombFire extends Unmovable {
+	private Collision collision = Collision.Injected;
+
 	public BombFire() {
 		super(new Animation(2, BombFire.class.getSimpleName()));
 	}
 
 	@Override
-	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	public void destroy(WorldServer worldServer) {
 	}
 
 	@Override
 	// destroys all ObjectTypeBox and all Character in collision
-	public void tick(Config config, Logger logger, WorldServer worldServer) {
-		Collision collision = new Collision(config, logger);
-
+	public void tick(WorldServer worldServer) {
 		List<WorldElement> worldElements = new ArrayList<>();
 		worldElements.addAll(worldServer.unmovables);
 		worldElements.addAll(worldServer.movables);

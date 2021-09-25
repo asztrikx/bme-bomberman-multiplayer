@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import helper.Config;
-import helper.Logger;
 import helper.Position;
 import server.WorldServer;
 import world.element.WorldElement;
@@ -13,13 +12,8 @@ import world.element.unmovable.Unmovable;
 import world.movable.Movable;
 
 public class Collision {
-	Config config;
-	Logger logger;
-
-	public Collision(Config config, Logger logger) {
-		this.config = config;
-		this.logger = logger;
-	}
+	private Config config = Config.Injected;
+	public static Collision Injected;
 
 	// Collision tells whether there's a collision between objects at positions
 	public boolean doCollide(Position position1, Position position2) {

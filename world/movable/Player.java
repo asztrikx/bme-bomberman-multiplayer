@@ -2,8 +2,7 @@ package world.movable;
 
 import java.util.List;
 
-import helper.Config;
-import helper.Logger;
+import engine.Collision;
 import server.WorldServer;
 import user.User;
 import world.element.Animation;
@@ -12,18 +11,20 @@ import world.element.WorldElement;
 public class Player extends Movable {
 	public boolean you = false;
 
-	public Player(Config config, Logger logger) {
-		super(config, logger, new Animation(10, Player.class.getSimpleName()));
+	private Collision collision = Collision.Injected;
+
+	public Player() {
+		super(new Animation(10, Player.class.getSimpleName()));
 	}
 
 	@Override
-	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	public void destroy(WorldServer worldServer) {
 		return;
 	}
 
 	@Override
 	// checks if colliding with Enemy and kills them if so
-	public void tick(Config config, Logger logger, WorldServer worldServer) {
+	public void tick(WorldServer worldServer) {
 		List<Movable> collisionMovableS = collision.getCollisions(worldServer.movables, position, this,
 				(WorldElement worldElementRelative, Movable that) -> {
 					return that instanceof Enemy;

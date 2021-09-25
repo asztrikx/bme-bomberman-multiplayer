@@ -5,7 +5,6 @@ import java.util.List;
 import engine.Collision;
 import helper.Config;
 import helper.Key;
-import helper.Logger;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
@@ -22,16 +21,11 @@ public abstract class Movable extends WorldElement {
 	public UserServer owner;
 	public boolean[] keys = new boolean[Key.KeyType.KeyLength];
 
-	Config config;
-	Logger logger;
-	Collision collision;
+	private Config config = Config.Injected;
+	private Collision collision = Collision.Injected;
 
-	public Movable(Config config, Logger logger, Animation animation) {
+	public Movable(Animation animation) {
 		super(animation);
-
-		this.logger = logger;
-		this.config = config;
-		this.collision = new Collision(config, logger);
 	}
 
 	// TODO for all enum: static?
@@ -112,7 +106,7 @@ public abstract class Movable extends WorldElement {
 			return;
 		}
 
-		Position positionSquare = position.getSquare(config);
+		Position positionSquare = position.getSquare();
 
 		// position
 		Position positionNew = position.sub(positionSquare);

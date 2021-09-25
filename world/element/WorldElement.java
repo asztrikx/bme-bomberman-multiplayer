@@ -1,7 +1,5 @@
 package world.element;
 
-import helper.Config;
-import helper.Logger;
 import helper.Position;
 import server.WorldServer;
 
@@ -19,8 +17,8 @@ public abstract class WorldElement {
 		return tickCount == destroyTick;
 	}
 
-	public abstract void destroy(Config config, Logger logger, WorldServer worldServer);
+	public abstract void destroy(WorldServer worldServer);
 
-	public abstract void tick(Config config, Logger logger, WorldServer worldServer);
+	public abstract void tick(WorldServer worldServer);
 
 }

@@ -28,18 +28,16 @@ import world.movable.Player;
 public class Server {
 	UserManager<UserServer> userManager = new UserManager<>();
 	Lock mutex = new ReentrantLock();
-	Config config;
-	Logger logger;
+	private Config config = Config.Injected;
+	private Logger logger = Logger.Injected;
 	WorldServer worldServer;
 	Timer timer = null;
 	Listen listen = null;
 	Tick tick;
 
-	public Server(Config config, Logger logger) {
-		this.logger = logger;
-		this.config = config;
-		this.worldServer = new WorldServer(config, logger); // not critical section
-		this.tick = new Tick(worldServer, config, logger, mutex, listen, userManager);
+	public Server() {
+		this.worldServer = new WorldServer(); // not critical section
+		this.tick = new Tick(worldServer, mutex, listen, userManager);
 	}
 
 	public void Listen(int port) throws InterruptedException {
@@ -101,7 +99,7 @@ public class Server {
 			Position position = worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
 
 			// character insert
-			Player player = new Player(config, logger);
+			Player player = new Player();
 			player.bombCount = config.bombCountStart;
 			player.owner = userServer;
 			player.position = position;

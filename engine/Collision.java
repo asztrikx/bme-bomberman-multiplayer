@@ -1,6 +1,5 @@
 package engine;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -168,49 +167,4 @@ public class Collision {
 
 		return count;
 	}
-
-	// SpawnGet return a position where there's at least 3 free space reachable
-	// without action so player does not die instantly
-	public Position getSpawn(WorldServer worldServer) {
-		// random max check
-		// as it is already in int there is no need to check
-
-		// position find
-		Position positionCompressed = new Position(0, 0);
-		Position position = new Position(0, 0);
-		int collisionCountCharacter;
-		int collisionFreeCountObject;
-		boolean near = false;
-		SecureRandom secureRandom = new SecureRandom();
-		do {
-			// random position in world
-			// this could be a bit optimized but it's more error prone
-			positionCompressed.y = secureRandom.nextInt(config.worldHeight);
-			positionCompressed.x = secureRandom.nextInt(config.worldWidth);
-
-			// decompress
-			position.y = positionCompressed.y * config.squaresize;
-			position.x = positionCompressed.x * config.squaresize;
-
-			// collision check
-			List<Movable> collisionCharacterS = getCollisions(worldServer.movables, position, null, null);
-			collisionCountCharacter = collisionCharacterS.size();
-
-			// distance check
-			near = false;
-			for (Movable movable : worldServer.movables) {
-				if (Math.abs(position.y - movable.position.y) < 3 * config.squaresize
-						&& Math.abs(position.x - movable.position.x) < 3 * config.squaresize) {
-					near = true;
-					break;
-				}
-			}
-
-			// position valid
-			collisionFreeCountObject = getFreeSpaceCount(worldServer, position);
-		} while (collisionCountCharacter != 0 || collisionFreeCountObject < config.spawnSquareFreeSpace || near);
-
-		return position;
-	}
-
 }

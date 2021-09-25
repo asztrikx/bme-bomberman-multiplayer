@@ -20,5 +20,5 @@ public class Config {
 	public int nameMaxLength = 15;
 	public int bombCountStart = 1;
 	public int spawnSquareDistanceFromOthers = 3;
-	public int spawnSquareFreeSpace = 3;
+	public int spawnPlayerSquareFreeSpace = 3;
 }

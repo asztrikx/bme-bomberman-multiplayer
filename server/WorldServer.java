@@ -16,9 +16,13 @@ import world.movable.Movable;
 
 public class WorldServer extends World {
 	private Collision collision;
+	private Config config;
+	private Logger logger;
 
 	public WorldServer(Config config, Logger logger) {
 		this.collision = new Collision(config, logger);
+		this.config = config;
+		this.logger = logger;
 
 		if (config.worldHeight % 2 != 1 || config.worldWidth % 2 != 1 || config.worldHeight < 5
 				|| config.worldWidth < 5) {
@@ -45,7 +49,7 @@ public class WorldServer extends World {
 		// box generate randomly
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
 			Box box = new Box();
-			box.position = collision.getSpawn(this);
+			box.position = getSpawn(0);
 			unmovables.add(box);
 		}
 
@@ -59,7 +63,7 @@ public class WorldServer extends World {
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
 			Enemy enemy = new Enemy(config, logger);
-			enemy.position = collision.getSpawn(this);
+			enemy.position = getSpawn(0);
 			enemy.velocity = config.velocityEnemy;
 			// character.KeyMovementRandom();
 			movables.add(enemy);
@@ -68,7 +72,7 @@ public class WorldServer extends World {
 
 	// SpawnGet return a position where there's at least 3 free space reachable
 	// without action so player does not die instantly
-	public Position getSpawn(Config config, Logger logger) {
+	public Position getSpawn(int minSpawnSquareFreeSpace) {
 		Collision collision = new Collision(config, logger);
 
 		// position find
@@ -94,9 +98,9 @@ public class WorldServer extends World {
 			// distance check
 			near = false;
 			for (Movable movable : movables) {
-				int maxDistance = config.spawnSquareDistanceFromOthers * config.squaresize;
-				if (Math.abs(position.y - movable.position.y) < maxDistance
-						&& Math.abs(position.x - movable.position.x) < maxDistance) {
+				int minDistance = config.spawnSquareDistanceFromOthers * config.squaresize;
+				if (Math.abs(position.y - movable.position.y) < minDistance
+						&& Math.abs(position.x - movable.position.x) < minDistance) {
 					near = true;
 					break;
 				}
@@ -104,7 +108,7 @@ public class WorldServer extends World {
 
 			// position valid
 			spawnSquareFreeSpace = collision.getFreeSpaceCount(this, position);
-		} while (collisionCountCharacter != 0 || spawnSquareFreeSpace < config.spawnSquareFreeSpace || near);
+		} while (collisionCountCharacter != 0 || spawnSquareFreeSpace < minSpawnSquareFreeSpace || near);
 
 		return position;
 	}

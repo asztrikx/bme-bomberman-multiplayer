@@ -98,7 +98,7 @@ public class Server {
 			}
 
 			// spawn
-			Position position = worldServer.getSpawn(config, logger);
+			Position position = worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
 
 			// character insert
 			Player player = new Player(config, logger);

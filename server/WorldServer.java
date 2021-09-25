@@ -10,13 +10,11 @@ import helper.Position;
 import world.World;
 import world.element.unmovable.Box;
 import world.element.unmovable.Exit;
-import world.element.unmovable.Unmovable;
 import world.element.unmovable.Wall;
 import world.movable.Enemy;
 import world.movable.Movable;
 
 public class WorldServer extends World {
-	private int height, width;
 	private Collision collision;
 
 	public WorldServer(Config config, Logger logger) {
@@ -30,12 +28,13 @@ public class WorldServer extends World {
 		}
 
 		// wall generate
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				if (i == 0 || j == 0 || i == height - 1 || j == width - 1 || (i % 2 == 0 && j % 2 == 0)) {
-					Unmovable object = new Wall();
-					object.position = new Position(i * config.squaresize, j * config.squaresize);
-					unmovables.add(object);
+		for (int i = 0; i < config.worldHeight; i++) {
+			for (int j = 0; j < config.worldWidth; j++) {
+				if (i == 0 || j == 0 || i == config.worldHeight - 1 || j == config.worldWidth - 1
+						|| (i % 2 == 0 && j % 2 == 0)) {
+					Wall wall = new Wall();
+					wall.position = new Position(i * config.squaresize, j * config.squaresize);
+					unmovables.add(wall);
 				}
 			}
 		}
@@ -45,25 +44,25 @@ public class WorldServer extends World {
 
 		// box generate randomly
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
-			Unmovable object = new Box();
-			object.position = collision.getSpawn(this);
-			unmovables.add(object);
+			Box box = new Box();
+			box.position = collision.getSpawn(this);
+			unmovables.add(box);
 		}
 
 		// exit
-		Unmovable object = new Exit();
-		object.position = unmovables.get(0).position;
-		object.animation.stateDelayTickEnd = 10;
-		unmovables.add(object);
-		exit = object;
+		Exit exit = new Exit();
+		exit.position = unmovables.get(0).position;
+		exit.animation.stateDelayTickEnd = 10;
+		unmovables.add(exit);
+		this.exit = exit;
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Movable character = new Enemy(config, logger);
-			character.position = collision.getSpawn(this);
-			character.velocity = config.velocityEnemy;
+			Enemy enemy = new Enemy(config, logger);
+			enemy.position = collision.getSpawn(this);
+			enemy.velocity = config.velocityEnemy;
 			// character.KeyMovementRandom();
-			movables.add(character);
+			movables.add(enemy);
 		}
 	}
 
@@ -94,10 +93,10 @@ public class WorldServer extends World {
 
 			// distance check
 			near = false;
-			for (Movable character : movables) {
+			for (Movable movable : movables) {
 				int maxDistance = config.spawnSquareDistanceFromOthers * config.squaresize;
-				if (Math.abs(position.y - character.position.y) < maxDistance
-						&& Math.abs(position.x - character.position.x) < maxDistance) {
+				if (Math.abs(position.y - movable.position.y) < maxDistance
+						&& Math.abs(position.x - movable.position.x) < maxDistance) {
 					near = true;
 					break;
 				}

@@ -10,7 +10,20 @@
             "request": "launch",
             "mainClass": "Main",
             "projectName": "NHF_efc2c572",
-            "args": "--server"
+            "args": "--server",
+            "stepFilters": {
+                "classNameFilters": [
+                    "java.*",
+                    "javax.*",
+                    "com.sun.*",
+                    "sun.*",
+                    "sunw.*",
+                    "org.omg.*"
+                ],
+                "skipSynthetics": false,
+                "skipStaticInitializers": false,
+                "skipConstructors": false
+            }
         },
     ]
 }

@@ -19,7 +19,7 @@ public class Main {
 		animationStore.addPath("resource/movable/");
 		animationStore.addPath("resource/unmovable/");
 
-		switch (args[1]) {
+		switch (args[0]) {
 			case "--server":
 				serverMode(config);
 				break;

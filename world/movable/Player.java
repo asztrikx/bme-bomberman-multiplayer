@@ -23,7 +23,7 @@ public class Player extends Movable {
 	@Override
 	// checks if colliding with Enemy and kills them if so
 	public void tick(Config config, Logger logger, WorldServer worldServer) {
-		List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, position, this,
+		List<Movable> collisionMovableS = collision.getCollisions(worldServer.movables, position, this,
 				(WorldElement worldElementRelative, Movable that) -> {
 					return that instanceof Enemy;
 				});

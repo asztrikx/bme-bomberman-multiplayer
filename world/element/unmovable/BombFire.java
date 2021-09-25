@@ -23,10 +23,10 @@ public class BombFire extends Unmovable {
 		Collision collision = new Collision(config, logger);
 
 		List<WorldElement> worldElements = new ArrayList<>();
-		worldElements.addAll(worldServer.objectList);
-		worldElements.addAll(worldServer.characterList);
+		worldElements.addAll(worldServer.unmovables);
+		worldElements.addAll(worldServer.movables);
 
-		List<WorldElement> collisionWorldElements = collision.collisionsGet(worldElements, position, null, null);
+		List<WorldElement> collisionWorldElements = collision.getCollisions(worldElements, position, null, null);
 		List<WorldElement> deletelist = new ArrayList<>();
 		for (WorldElement collisionWorldElement : collisionWorldElements) {
 			if (collisionWorldElement instanceof Box) {
@@ -46,7 +46,7 @@ public class BombFire extends Unmovable {
 				deletelist.add(movable);
 			}
 		}
-		worldServer.objectList.removeAll(deletelist);
-		worldServer.characterList.removeAll(deletelist);
+		worldServer.unmovables.removeAll(deletelist);
+		worldServer.movables.removeAll(deletelist);
 	}
 }

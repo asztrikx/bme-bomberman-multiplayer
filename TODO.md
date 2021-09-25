@@ -13,3 +13,4 @@
 - exit, stacktrace to logger and idk try catch?
 - todo make exit computed value
 - world field rename
+- replace objects, characters

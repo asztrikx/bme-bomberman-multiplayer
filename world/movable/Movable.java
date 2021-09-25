@@ -65,7 +65,7 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		positionNew = collision.CollisionLinePositionGet(worldServer, position, positionNew, this,
+		positionNew = collision.getValidPositionOnLine(worldServer, position, positionNew, this,
 				(Movable characterRelative, Unmovable object) -> {
 					return object instanceof Wall || object instanceof Box
 							|| (object instanceof Bomb && (object.owner != characterRelative || object.bombOut));
@@ -92,7 +92,7 @@ public abstract class Movable extends WorldElement {
 		// moved out from a bomb with !bombOut
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
-		for (Unmovable object : worldServer.objectList) {
+		for (Unmovable object : worldServer.unmovables) {
 			if (object instanceof Bomb && object.owner == this && !object.bombOut
 					&& !collision.doCollide(position, object.position)) {
 				object.bombOut = true;
@@ -125,8 +125,8 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, positionNew, null, null);
-		List<Movable> collisionCharacterS = collision.collisionsGet(worldServer.characterList, positionNew, this, null);
+		List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, positionNew, null, null);
+		List<Movable> collisionCharacterS = collision.getCollisions(worldServer.movables, positionNew, this, null);
 
 		if (collisionCharacterS.size() != 0 || collisionObjectS.size() != 0) {
 			return;
@@ -141,7 +141,7 @@ public abstract class Movable extends WorldElement {
 		object.bombOut = false;
 		object.owner = this;
 		object.animation.stateDelayTickEnd = 15;
-		worldServer.objectList.add(object);
+		worldServer.unmovables.add(object);
 
 		// bomb decrease
 		bombCount--;

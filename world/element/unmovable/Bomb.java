@@ -22,7 +22,7 @@ public class Bomb extends Unmovable {
 			Position positionFire = new Position(position.y + directionY[j] * config.squaresize,
 					position.x + directionX[j] * config.squaresize);
 
-			List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, positionFire, this,
+			List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, positionFire, this,
 					null);
 			boolean boxExists = collisionObjectS.isEmpty()
 					|| collisionObjectS.stream().filter(t -> t instanceof Box).count() != 0;
@@ -39,7 +39,7 @@ public class Bomb extends Unmovable {
 			objectFire.animation.stateDelayTickEnd = 2;
 			objectFire.velocity = 0;
 
-			worldServer.objectList.add(objectFire);
+			worldServer.unmovables.add(objectFire);
 		}
 
 		// give back bomb to user

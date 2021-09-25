@@ -106,7 +106,7 @@ public class Server {
 			player.owner = userServer;
 			player.position = position;
 			player.velocity = config.velocity;
-			worldServer.characterList.add(player);
+			worldServer.movables.add(player);
 		}
 
 		// reply
@@ -137,7 +137,7 @@ public class Server {
 			}
 
 			// get Player
-			List<Movable> movables = worldServer.characterList.stream()
+			List<Movable> movables = worldServer.movables.stream()
 					.filter((Movable movable) -> movable.owner == userServer).collect(Collectors.toList());
 			// has to be alive
 			if (movables.size() == 0) {

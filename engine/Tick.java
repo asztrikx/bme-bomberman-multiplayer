@@ -60,23 +60,23 @@ public class Tick extends TimerTask {
 	// checks if any CharacterTypeUser if in a winning state and removes them if so
 	public boolean nextStateWin() {
 		List<Player> players = new ArrayList<>();
-		for (Movable movable : worldServer.characterList) {
+		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Player) {
 				players.add((Player) movable);
 			}
 		}
 
 		// can't win until all enemies are dead
-		if (worldServer.characterList.size() - players.size() != 0) {
+		if (worldServer.movables.size() - players.size() != 0) {
 			return false;
 		}
 
 		// set user state, remove player
-		List<Player> playersAtExit = collision.collisionsGet(players, worldServer.exit.position, null, null);
+		List<Player> playersAtExit = collision.getCollisions(players, worldServer.exit.position, null, null);
 		for (Player player : playersAtExit) {
 			player.owner.state = User.State.Won;
 		}
-		worldServer.characterList.removeAll(playersAtExit);
+		worldServer.movables.removeAll(playersAtExit);
 
 		return playersAtExit.size() != 0;
 	}
@@ -84,7 +84,7 @@ public class Tick extends TimerTask {
 	// TickCalculateAnimate calculates next texture state from current
 	public void nextStateAnimate() {
 		// animate
-		for (Unmovable unmovable : worldServer.objectList) {
+		for (Unmovable unmovable : worldServer.unmovables) {
 			// delay
 			unmovable.animation.stateDelayTick++;
 			if (unmovable.animation.stateDelayTick <= unmovable.animation.stateDelayTickEnd) {
@@ -96,7 +96,7 @@ public class Tick extends TimerTask {
 			unmovable.animation.state++;
 			unmovable.animation.state %= TextureSSObject[unmovable.type.getValue()].length;
 		}
-		for (Movable movable : worldServer.characterList) {
+		for (Movable movable : worldServer.movables) {
 			boolean moving = false;
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 				if (movable.keys[i]) {
@@ -128,16 +128,16 @@ public class Tick extends TimerTask {
 		// this should be calculated first as these objects should not exists in this
 		// tick
 		List<Unmovable> deletelist = new ArrayList<>();
-		for (Unmovable listItemCurrent : worldServer.objectList) {
+		for (Unmovable listItemCurrent : worldServer.unmovables) {
 			if (listItemCurrent.shouldDestroy(tickCount)) {
 				listItemCurrent.destroy(config, logger, worldServer);
 				deletelist.add(listItemCurrent);
 			}
 		}
-		worldServer.objectList.removeAll(deletelist);
+		worldServer.unmovables.removeAll(deletelist);
 
 		// must be before character movement as that fixes bumping into wall TODO ?
-		for (Movable movable : worldServer.characterList) {
+		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Enemy) {
 				movable.move(worldServer, tickCount);
 			}
@@ -147,7 +147,7 @@ public class Tick extends TimerTask {
 		// this should be calculated before TickCalculateFireDestroy() otherwise player
 		// would be in fire for 1 tick
 		// if 2 character is racing for the same spot the first in list wins
-		for (Movable movable : worldServer.characterList) {
+		for (Movable movable : worldServer.movables) {
 			if (!(movable instanceof Enemy)) {
 				movable.move(worldServer, tickCount);
 			}
@@ -160,7 +160,7 @@ public class Tick extends TimerTask {
 		}
 
 		// fire tick
-		for (Unmovable unmovable : worldServer.objectList) {
+		for (Unmovable unmovable : worldServer.unmovables) {
 			if (unmovable instanceof BombFire) {
 				unmovable.tick(config, logger, worldServer);
 			}
@@ -168,7 +168,7 @@ public class Tick extends TimerTask {
 
 		// player tick
 		List<Movable> deaths = new ArrayList<>();
-		for (Movable movable : worldServer.characterList) {
+		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Player) {
 				movable.tick(config, logger, worldServer);
 				if (movable.owner.state == User.State.Dead) {
@@ -177,7 +177,7 @@ public class Tick extends TimerTask {
 			}
 		}
 		for (Movable movable : deaths) {
-			worldServer.characterList.remove(movable);
+			worldServer.movables.remove(movable);
 		}
 
 		nextStateAnimate();
@@ -188,25 +188,25 @@ public class Tick extends TimerTask {
 		WorldClient worldClient = new WorldClient();
 
 		// remove exit if behind box
-		List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, worldServer.exit.position,
+		List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, worldServer.exit.position,
 				worldServer.exit, null);
 		if (collisionObjectS.size() == 0) {
 			worldClient.exit = worldServer.exit;
 		}
 
 		// unmovables
-		for (Unmovable unmovable : worldServer.objectList) {
+		for (Unmovable unmovable : worldServer.unmovables) {
 			// don't add exit
 			if (unmovable instanceof Exit && worldServer.exit == null) {
 				continue;
 			}
 
-			worldClient.objectList.add(unmovable);
+			worldClient.unmovables.add(unmovable);
 		}
 
 		// movables
-		for (Movable movables : worldServer.characterList) {
-			worldClient.characterList.add(movables);
+		for (Movable movables : worldServer.movables) {
+			worldClient.movables.add(movables);
 		}
 
 		for (UserServer userServer : userManager.getList()) {
@@ -215,7 +215,7 @@ public class Tick extends TimerTask {
 
 			// alter user character to be identifiable
 			Player playerYou = null;
-			for (Movable movable : worldServer.characterList) {
+			for (Movable movable : worldServer.movables) {
 				if (!(movable instanceof Player)) {
 					continue;
 				}

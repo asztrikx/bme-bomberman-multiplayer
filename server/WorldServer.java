@@ -35,7 +35,7 @@ public class WorldServer extends World {
 				if (i == 0 || j == 0 || i == height - 1 || j == width - 1 || (i % 2 == 0 && j % 2 == 0)) {
 					Unmovable object = new Wall();
 					object.position = new Position(i * config.squaresize, j * config.squaresize);
-					objectList.add(object);
+					unmovables.add(object);
 				}
 			}
 		}
@@ -47,14 +47,14 @@ public class WorldServer extends World {
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
 			Unmovable object = new Box();
 			object.position = collision.getSpawn(this);
-			objectList.add(object);
+			unmovables.add(object);
 		}
 
 		// exit
 		Unmovable object = new Exit();
-		object.position = objectList.get(0).position;
+		object.position = unmovables.get(0).position;
 		object.animation.stateDelayTickEnd = 10;
-		objectList.add(object);
+		unmovables.add(object);
 		exit = object;
 
 		// enemy generate randomly
@@ -63,7 +63,7 @@ public class WorldServer extends World {
 			character.position = collision.getSpawn(this);
 			character.velocity = config.velocityEnemy;
 			// character.KeyMovementRandom();
-			characterList.add(character);
+			movables.add(character);
 		}
 	}
 
@@ -89,12 +89,12 @@ public class WorldServer extends World {
 			position = new Position(positionCompressed.y * config.squaresize, positionCompressed.x * config.squaresize);
 
 			// collision check
-			List<Movable> collisionCharacterS = collision.collisionsGet(characterList, position, null, null);
+			List<Movable> collisionCharacterS = collision.getCollisions(movables, position, null, null);
 			collisionCountCharacter = collisionCharacterS.size();
 
 			// distance check
 			near = false;
-			for (Movable character : characterList) {
+			for (Movable character : movables) {
 				int maxDistance = config.spawnSquareDistanceFromOthers * config.squaresize;
 				if (Math.abs(position.y - character.position.y) < maxDistance
 						&& Math.abs(position.x - character.position.x) < maxDistance) {

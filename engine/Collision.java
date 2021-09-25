@@ -37,7 +37,7 @@ public class Collision {
 	// collisionDecideObjectFunction decides for each object whether it should be
 	// taking into account
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	public <E extends WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
+	public <E extends WorldElement, E2 extends WorldElement> List<E> getCollisions(List<E> worldElements,
 			Position position, E2 worldElementRelative, BiFunction<E2, E, Boolean> collisionDecide) {
 		List<E> listCollision = new ArrayList<>();
 
@@ -66,8 +66,8 @@ public class Collision {
 	// we can be NULL
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
 	// if collisionDecideCharacterFunction is NULL then it's treated as always true
-	public <E extends WorldElement> Position CollisionLinePositionGet(WorldServer worldServer, Position from,
-			Position to, E we, BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
+	public <E extends WorldElement> Position getValidPositionOnLine(WorldServer worldServer, Position from, Position to,
+			E we, BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
 			BiFunction<E, Movable, Boolean> collisionDecideCharacterFunction) {
 		// position difference in abs is always same for y and x coordinate if none of
 		// them is zero
@@ -97,9 +97,9 @@ public class Collision {
 			// step y
 			current.y += unit.y;
 
-			List<Unmovable> collisionObjectS = collisionsGet(worldServer.objectList, current, we,
+			List<Unmovable> collisionObjectS = getCollisions(worldServer.unmovables, current, we,
 					collisionDecideObjectFunction);
-			List<Movable> collisionCharacterS = collisionsGet(worldServer.characterList, current, we,
+			List<Movable> collisionCharacterS = getCollisions(worldServer.movables, current, we,
 					collisionDecideCharacterFunction);
 			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
 				current.y -= unit.y;
@@ -108,9 +108,8 @@ public class Collision {
 			// step x
 			current.x += unit.x;
 
-			collisionObjectS = collisionsGet(worldServer.objectList, current, we, collisionDecideObjectFunction);
-			collisionCharacterS = collisionsGet(worldServer.characterList, current, we,
-					collisionDecideCharacterFunction);
+			collisionObjectS = getCollisions(worldServer.unmovables, current, we, collisionDecideObjectFunction);
+			collisionCharacterS = getCollisions(worldServer.movables, current, we, collisionDecideCharacterFunction);
 			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
 				current.x -= unit.x;
 			}
@@ -137,7 +136,7 @@ public class Collision {
 		collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x] = true;
 
 		// position is valid
-		List<Unmovable> collisionObjectS = collisionsGet(worldServer.objectList, position, null, null);
+		List<Unmovable> collisionObjectS = getCollisions(worldServer.unmovables, position, null, null);
 		int collisionCount = collisionObjectS.size();
 
 		if (collisionCount != 0) {
@@ -194,12 +193,12 @@ public class Collision {
 			position.x = positionCompressed.x * config.squaresize;
 
 			// collision check
-			List<Movable> collisionCharacterS = collisionsGet(worldServer.characterList, position, null, null);
+			List<Movable> collisionCharacterS = getCollisions(worldServer.movables, position, null, null);
 			collisionCountCharacter = collisionCharacterS.size();
 
 			// distance check
 			near = false;
-			for (Movable movable : worldServer.characterList) {
+			for (Movable movable : worldServer.movables) {
 				if (Math.abs(position.y - movable.position.y) < 3 * config.squaresize
 						&& Math.abs(position.x - movable.position.x) < 3 * config.squaresize) {
 					near = true;

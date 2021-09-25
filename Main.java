@@ -8,21 +8,22 @@ import world.element.AnimationStore;
 
 public class Main {
 	public static void main(String[] args) throws IOException {
-		if (args.length != 2) {
+		if (args.length != 1) {
 			// TODO
 			System.exit(1);
 		}
 
 		Config config = new Config();
+		System.out.println(Config.class.getSimpleName());
 		AnimationStore animationStore = new AnimationStore();
 		animationStore.addPath("resource/movable/");
 		animationStore.addPath("resource/unmovable/");
 
 		switch (args[1]) {
-			case "server":
+			case "--server":
 				serverMode(config);
 				break;
-			case "client":
+			case "--client":
 				clientMode(config);
 				break;
 			default:

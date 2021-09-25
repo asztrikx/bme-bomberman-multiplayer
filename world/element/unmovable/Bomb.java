@@ -36,7 +36,6 @@ public class Bomb extends Unmovable {
 			objectFire.destroyTick = tickCount + (long) (0.25 * config.tickSecond);
 			objectFire.owner = owner;
 			objectFire.position = positionFire;
-			objectFire.type = Unmovable.ObjectType.ObjectTypeBombFire;
 			objectFire.animation.stateDelayTickEnd = 2;
 			objectFire.velocity = 0;
 

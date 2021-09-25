@@ -12,10 +12,11 @@ import server.UserServer;
 import server.WorldServer;
 import world.element.WorldElement;
 import world.element.unmovable.Bomb;
+import world.element.unmovable.Box;
 import world.element.unmovable.Unmovable;
+import world.element.unmovable.Wall;
 
 public abstract class Movable extends WorldElement {
-	public CharacterType type;
 	public int velocity = 0;
 	public int bombCount = 0;
 	public UserServer owner;
@@ -66,21 +67,20 @@ public abstract class Movable extends WorldElement {
 		// collision
 		positionNew = collision.CollisionLinePositionGet(worldServer, position, positionNew, this,
 				(Movable characterRelative, Unmovable object) -> {
-					return object.type == Unmovable.ObjectType.ObjectTypeWall
-							|| object.type == Unmovable.ObjectType.ObjectTypeBox
-							|| (object.type == Unmovable.ObjectType.ObjectTypeBomb
-									&& (object.owner != characterRelative || object.bombOut));
+					return object instanceof Wall || object instanceof Box
+							|| (object instanceof Bomb && (object.owner != characterRelative || object.bombOut));
 				}, (Movable objectRelative, Movable movable) -> {
 					// CharacterTypeUser is solid for CharacterTypeUser
 					// CharacterTypeEnemy is not solid for CharacterTypeUser
 					// vice versa with CharacterTypeEnemy
 					// so only same type character is solid
-					return movable.type == objectRelative.type;
+					return !(movable instanceof Player && objectRelative instanceof Player
+							|| movable instanceof Enemy && objectRelative instanceof Enemy);
 				});
 
 		// enemy new one way direction
 		SecureRandom secureRandom = new SecureRandom();
-		if (type == Movable.CharacterType.CharacterTypeEnemy && position.equals(positionNew)) {
+		if (this instanceof Enemy && position.equals(positionNew)) {
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 				keys[i] = false;
 			}
@@ -93,7 +93,7 @@ public abstract class Movable extends WorldElement {
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
 		for (Unmovable object : worldServer.objectList) {
-			if (object.type == Unmovable.ObjectType.ObjectTypeBomb && object.owner == this && !object.bombOut
+			if (object instanceof Bomb && object.owner == this && !object.bombOut
 					&& !collision.doCollide(position, object.position)) {
 				object.bombOut = true;
 			}
@@ -137,7 +137,6 @@ public abstract class Movable extends WorldElement {
 		object.createdTick = tickCount;
 		object.destroyTick = tickCount + 2 * config.tickSecond;
 		object.position = positionNew;
-		object.type = Unmovable.ObjectType.ObjectTypeBomb;
 		object.velocity = 0;
 		object.bombOut = false;
 		object.owner = this;

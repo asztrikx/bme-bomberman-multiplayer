@@ -1,6 +1,5 @@
 package engine;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
@@ -9,255 +8,177 @@ import java.util.concurrent.locks.Lock;
 import helper.AutoClosableLock;
 import helper.Config;
 import helper.Key;
-import helper.Position;
+import helper.Logger;
+import network.Listen;
 import server.UserServer;
 import server.WorldServer;
 import user.User;
+import user.UserManager;
+import world.element.Enemy;
 import world.element.Movable;
-import world.element.Unmovable;
-import world.element.WorldElement;
+import world.element.Player;
+import world.element.unmovable.BombFire;
+import world.element.unmovable.Unmovable;
 
 public class Tick extends TimerTask {
 	WorldServer worldServer;
-	int tickCount = 0;
+	long tickCount = 0;
+	Logger logger;
 	Config config;
 	Lock lock;
 	Collision collision;
+	Listen listen;
+	UserManager<UserServer> userManager;
 
-	public Tick(WorldServer worldServer, Integer t, Config config, Lock lock, Collision collision) {
+	public Tick(WorldServer worldServer, Config config, Lock lock, Logger logger, Listen listen,
+			UserManager<UserServer> usermanager) {
 		this.worldServer = worldServer;
 		this.lock = lock;
-		this.collision = collision;
+		this.logger = logger;
+		this.listen = listen;
+		this.userManager = usermanager;
+		this.collision = new Collision(config, logger);
 	}
 
 	@Override
 	// Tick calculates new frame, notifies users
 	public void run() {
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-			TickCalculate();
-			TickSend();
+		try {
+			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+				nextState();
+				listen.send(worldServer, userManager);
+			}
+		} catch (Exception e) {
+			System.exit(1);
 		}
 
 		tickCount++;
 	}
 
-	// TickCalculateDestroyBomb removes bomb and creates fire in its place
-	// if object->type != ObjectTypeBomb then nothing happens
-	public void TickCalculateDestroyBomb(Unmovable unmovable) {
-		// fire inserts
-		int directionX[] = { 0, 1, -1, 0, 0 };
-		int directionY[] = { 0, 0, 0, 1, -1 };
-		for (int j = 0; j < 5; j++) {
-			Position position = new Position(unmovable.position.y + directionY[j] * config.squaresize,
-					unmovable.position.x + directionX[j] * config.squaresize);
-
-			List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, position, unmovable,
-					null);
-			boolean boxExists = collisionObjectS.isEmpty()
-					|| collisionObjectS.stream().filter(t -> t.type == Unmovable.ObjectType.ObjectTypeBox).count() != 0;
-			if (!boxExists && collisionObjectS.size() != 0) {
-				continue;
-			}
-
-			Unmovable objectFire = new Unmovable();
-			objectFire.bombOut = true;
-			objectFire.created = tickCount;
-			objectFire.destroy = tickCount + (long) (0.25 * config.tickSecond);
-			objectFire.owner = unmovable.owner;
-			objectFire.position = position;
-			objectFire.type = Unmovable.ObjectType.ObjectTypeBombFire;
-			objectFire.animation.stateDelayTickEnd = 2;
-			objectFire.velocity = 0;
-
-			worldServer.objectList.add(objectFire);
-		}
-
-		// bomb remove
-		if (unmovable.owner != null) {
-			unmovable.owner.bombCount++;
-		}
-	}
-
-	// TickCalculateFireDestroy makes fires destroys all ObjectTypeBox and all
-	// Character in collision
-	public void TickCalculateFireDestroy() {
-		for (Unmovable object : worldServer.objectList) {
-			if (object.type != Unmovable.ObjectType.ObjectTypeBombFire) {
-				continue;
-			}
-
-			// object collision
-			List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, object.position, null,
-					null);
-			for (Unmovable collisionObject : collisionObjectS) {
-				if (collisionObject.type == Unmovable.ObjectType.ObjectTypeBox) {
-					worldServer.objectList.remove(collisionObject);
-				} else if (collisionObject.type == Unmovable.ObjectType.ObjectTypeBomb) {
-					// chain bomb explosion
-					// -
-					// bombExplode(objectItemCurrent->object);
-				}
-			}
-
-			// character collision
-			List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, object.position, null,
-					null);
-			for (Movable collisionMovable : collisionMovableS) {
-				// UserServer update
-				if (collisionMovable.owner != null) {
-					collisionMovable.owner.state = User.State.Dead;
-				}
-
-				// remove
-				worldServer.characterList.remove(collisionMovable);
+	// checks if any CharacterTypeUser if in a winning state and removes them if so
+	public boolean nextStateWin() {
+		List<Player> players = new ArrayList<>();
+		for (Movable movable : worldServer.characterList) {
+			if (movable instanceof Player) {
+				players.add((Player) movable);
 			}
 		}
-	}
 
-	// TickCalculateWin checks if any CharacterTypeUser if in a winning state and
-	// removes them if so
-	public void TickCalculateWin() {
-		List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, worldServer.exit.position,
-				null, null);
-		for (Movable movable : collisionMovableS) {
-			if (movable.type == Movable.CharacterType.CharacterTypeUser && worldServer.characterList.size() == 1) {
-				// UserServer update
-				movable.owner.state = User.State.Won;
-
-				// remove
-				worldServer.characterList.remove(movable);
-			}
+		// can't win until all enemies are dead
+		if (worldServer.characterList.size() - players.size() != 0) {
+			return false;
 		}
-	}
 
-	// TickCalculateEnemyKill checks if any CharacterTypeUser is colliding with
-	// CharacterTypeEnemy and kills them if so
-	public void TickCalculateEnemyKill() {
-		List<Movable> deathS = new ArrayList<>();
-		for (Movable character : worldServer.characterList) {
-			if (character.type != Movable.CharacterType.CharacterTypeUser) {
-				continue;
-			}
-
-			List<Movable> collisionMovableS = collision.collisionsGet(worldServer.characterList, character.position,
-					character, (WorldElement worldElementRelative, Movable that) -> {
-						return that.type == Movable.CharacterType.CharacterTypeEnemy;
-					});
-			// death
-			if (collisionMovableS.size() != 0) {
-				character.owner.state = User.State.Dead;
-				deathS.add(character);
-			}
+		// set user state, remove player
+		List<Player> playersAtExit = collision.collisionsGet(players, worldServer.exit.position, null, null);
+		for (Player player : playersAtExit) {
+			player.owner.state = User.State.Won;
 		}
-		for (Movable character : deathS) {
-			worldServer.characterList.remove(character);
-		}
-	}
+		worldServer.characterList.removeAll(playersAtExit);
 
-	// TickCalculateEnemyMovement randomly creates a new random direction for
-	// CharacterTypeEnemys
-	public void TickCalculateEnemyMovement() {
-		for (Movable character : worldServer.characterList) {
-			if (character.type != Movable.CharacterType.CharacterTypeEnemy) {
-				continue;
-			}
-
-			SecureRandom secureRandom = new SecureRandom();
-			if (secureRandom.nextDouble() > config.enemyKeyChangePossibility) {
-				continue;
-			}
-
-			KeyMovementRandom(character);
-		}
-	}
-
-	// TickCalculateDestroy removes items where .destroy == tickCount
-	// destroy hooks also added here
-	public void TickCalculateDestroy() {
-		for (Unmovable listItemCurrent : worldServer.objectList) {
-			if (tickCount != listItemCurrent.destroy) {
-				continue;
-			}
-
-			if (listItemCurrent.type == Unmovable.ObjectType.ObjectTypeBomb) {
-				TickCalculateDestroyBomb(listItemCurrent);
-			}
-
-			// TODO java will iterator break?
-			worldServer.objectList.remove(listItemCurrent);
-		}
+		return playersAtExit.size() != 0;
 	}
 
 	// TickCalculateAnimate calculates next texture state from current
-	public void TickCalculateAnimate() {
+	public void nextStateAnimate() {
 		// animate
-		for (Unmovable object : worldServer.objectList) {
+		for (Unmovable unmovable : worldServer.objectList) {
 			// delay
-			object.animation.stateDelayTick++;
-			if (object.animation.stateDelayTick <= object.animation.stateDelayTickEnd) {
+			unmovable.animation.stateDelayTick++;
+			if (unmovable.animation.stateDelayTick <= unmovable.animation.stateDelayTickEnd) {
 				continue;
 			}
-			object.animation.stateDelayTick = 0;
+			unmovable.animation.stateDelayTick = 0;
 
 			// state next
-			object.animation.state++;
-			object.animation.state %= TextureSSObject[object.type.getValue()].length;
+			unmovable.animation.state++;
+			unmovable.animation.state %= TextureSSObject[unmovable.type.getValue()].length;
 		}
-		for (Movable character : worldServer.characterList) {
+		for (Movable movable : worldServer.characterList) {
 			boolean moving = false;
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-				if (character.keys[i]) {
+				if (movable.keys[i]) {
 					moving = true;
 					break;
 				}
 			}
 			if (!moving) {
-				character.animation.state = 0;
-				character.animation.stateDelayTick = 0;
+				movable.animation.state = 0;
+				movable.animation.stateDelayTick = 0;
 				continue;
 			}
 
 			// delay
-			character.animation.stateDelayTick++;
-			if (character.animation.stateDelayTick <= character.animation.stateDelayTickEnd) {
+			movable.animation.stateDelayTick++;
+			if (movable.animation.stateDelayTick <= movable.animation.stateDelayTickEnd) {
 				continue;
 			}
-			character.animation.stateDelayTick = 0;
+			movable.animation.stateDelayTick = 0;
 
 			// state next
-			character.animation.state++;
-			character.animation.state %= TextureSSCharacter[character.type.getValue()].length;
+			movable.animation.state++;
+			movable.animation.state %= TextureSSCharacter[movable.type.getValue()].length;
 		}
 	}
 
 	// TickCalculate calculates next state from current
-	public void TickCalculate() {
+	public void nextState() {
 		// this should be calculated first as these objects should not exists in this
 		// tick
-		TickCalculateDestroy();
+		List<Unmovable> deletelist = new ArrayList<>();
+		for (Unmovable listItemCurrent : worldServer.objectList) {
+			if (listItemCurrent.shouldDestroy(tickCount)) {
+				listItemCurrent.destroy(config, logger, worldServer);
+				deletelist.add(listItemCurrent);
+			}
+		}
+		worldServer.objectList.removeAll(deletelist);
 
-		// must be before character movement as that fixes bumping into wall
-		TickCalculateEnemyMovement();
+		// must be before character movement as that fixes bumping into wall TODO ?
+		for (Movable movable : worldServer.characterList) {
+			if (movable instanceof Enemy) {
+				movable.move(worldServer, tickCount);
+			}
+		}
 
 		// character movement
 		// this should be calculated before TickCalculateFireDestroy() otherwise player
 		// would be in fire for 1 tick
 		// if 2 character is racing for the same spot the first in list wins
-		for (Movable character : worldServer.characterList) {
-			if (character.keys[Key.KeyType.KeyBomb.getValue()]) {
-				character.KeyBombPlace(worldServer, tickCount);
+		for (Movable movable : worldServer.characterList) {
+			if (!(movable instanceof Enemy)) {
+				movable.move(worldServer, tickCount);
 			}
-			character.KeyMovement(worldServer);
 		}
 
 		// should be before any destroy
-		TickCalculateWin();
+		if (nextStateWin()) {
+			cancel();
+			return;
+		}
 
-		TickCalculateFireDestroy();
+		// fire tick
+		for (Unmovable unmovable : worldServer.objectList) {
+			if (unmovable instanceof BombFire) {
+				unmovable.tick(config, logger, worldServer);
+			}
+		}
 
-		TickCalculateEnemyKill();
+		// player tick
+		List<Movable> deaths = new ArrayList<>();
+		for (Movable movable : worldServer.characterList) {
+			if (movable instanceof Player) {
+				movable.tick(config, logger, worldServer);
+				if (movable.owner.state == User.State.Dead) {
+					deaths.add(movable);
+				}
+			}
+		}
+		for (Movable movable : deaths) {
+			worldServer.characterList.remove(movable);
+		}
 
-		TickCalculateAnimate();
+		nextStateAnimate();
 	}
 
 	// TickSend sends new world to connected clients
@@ -279,7 +200,7 @@ public class Tick extends TimerTask {
 			}
 
 			// send
-			NetworkSendClient(worldServer, userServer);
+			send(worldServer, userServer);
 
 			// remove character alter
 			if (character != null) {

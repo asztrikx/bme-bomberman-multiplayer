@@ -10,6 +10,8 @@ import helper.Logger;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
+import world.element.unmovable.Bomb;
+import world.element.unmovable.Unmovable;
 
 public abstract class Movable extends WorldElement {
 	public CharacterType type;
@@ -105,6 +107,11 @@ public abstract class Movable extends WorldElement {
 			return;
 		}
 
+		// key pressed
+		if (!keys[Key.KeyType.KeyBomb.getValue()]) {
+			return;
+		}
+
 		Position positionSquare = position.getSquare(config);
 
 		// position
@@ -125,9 +132,9 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// bomb insert
-		Unmovable object = new Unmovable();
-		object.created = tickCount;
-		object.destroy = tickCount + 2 * config.tickSecond;
+		Unmovable object = new Bomb();
+		object.createdTick = tickCount;
+		object.destroyTick = tickCount + 2 * config.tickSecond;
 		object.position = positionNew;
 		object.type = Unmovable.ObjectType.ObjectTypeBomb;
 		object.velocity = 0;
@@ -141,7 +148,6 @@ public abstract class Movable extends WorldElement {
 	}
 
 	public void move(WorldServer worldServer, long tickCount) {
-		updateKeys();
 		applyMovement(worldServer);
 		applyBombPlace(worldServer, tickCount);
 	}

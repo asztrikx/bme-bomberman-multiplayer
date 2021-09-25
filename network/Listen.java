@@ -15,8 +15,9 @@ import client.WorldClient;
 import helper.AutoClosableLock;
 import server.UserServer;
 import server.WorldServer;
+import user.UserManager;
 import world.element.Movable;
-import world.element.Unmovable;
+import world.element.unmovable.Unmovable;
 
 public class Listen implements Closeable {
 	// lock for sockets and active
@@ -66,48 +67,55 @@ public class Listen implements Closeable {
 	@Override
 	public void close() throws IOException {
 		// do not let new sockets to be added to list
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-			for (Socket socket : sockets) {
-				socket.close();
+		try {
+			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+				for (Socket socket : sockets) {
+					socket.close();
+				}
+				active = false;
 			}
-			active = false;
+		} catch (Exception e) {
+			System.exit(1);
 		}
 	}
 
-	// NetworkSendClient send worldServer to client as WorldClient
-	void NetworkSendClient(WorldServer worldServer, UserServer userServer) throws IOException {
-		WorldClient worldClient = new WorldClient();
+	// sends worldServer to client as WorldClient
+	public void send(WorldServer worldServer, UserManager<UserServer> usermanager) throws IOException {
+		for (UserServer userServer : usermanager.getList()) {
+			WorldClient worldClient = new WorldClient();
 
-		// state
-		worldClient.state = userServer.state;
+			// state
+			worldClient.state = userServer.state;
 
-		// exit
-		if (worldServer.exit != null) {
-			worldClient.exit = worldServer.exit;
-		}
-
-		// objectS
-		for (Unmovable object : worldServer.objectList) {
-			// remove exit
-			if (object.type == Unmovable.ObjectType.ObjectTypeExit && worldServer.exit == null) {
-				continue;
+			// exit
+			if (worldServer.exit != null) {
+				worldClient.exit = worldServer.exit;
 			}
 
-			worldClient.objectList.add(object);
+			// objectS
+			for (Unmovable object : worldServer.objectList) {
+				// don't add exit
+				if (object.type == Unmovable.ObjectType.ObjectTypeExit && worldServer.exit == null) {
+					continue;
+				}
+
+				worldClient.objectList.add(object);
+			}
+
+			// characterS
+			for (Movable character : worldServer.characterList) {
+				worldClient.characterList.add(character);
+			}
+
+			// send
+			for (Socket socket : sockets) {
+				OutputStream outputStream = socket.getOutputStream();
+
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+				objectOutputStream.writeObject(worldClient);
+			}
 		}
 
-		// characterS
-		for (Movable character : worldServer.characterList) {
-			worldClient.characterList.add(character);
-		}
-
-		// send
-		for (Socket socket : sockets) {
-			OutputStream outputStream = socket.getOutputStream();
-
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-			objectOutputStream.writeObject(worldClient);
-		}
 	}
 
 }

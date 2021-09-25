@@ -1,9 +1,10 @@
-package world.element;
+package world.element.unmovable;
 
-public class Unmovable extends WorldElement {
+import world.element.Movable;
+import world.element.WorldElement;
+
+public abstract class Unmovable extends WorldElement {
 	public ObjectType type;
-	public long created = -1;
-	public long destroy = -1;
 	public int velocity;
 	public Movable owner = null;
 	public boolean bombOut = true; // TODO ?

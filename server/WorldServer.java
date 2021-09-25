@@ -5,8 +5,9 @@ import helper.Config;
 import helper.Logger;
 import helper.Position;
 import world.World;
+import world.element.Enemy;
 import world.element.Movable;
-import world.element.Unmovable;
+import world.element.unmovable.Unmovable;
 
 public class WorldServer extends World {
 	private Config config;
@@ -59,11 +60,11 @@ public class WorldServer extends World {
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
-			Movable character = new Movable(config, logger);
+			Movable character = new Enemy(config, logger);
 			character.position = SpawnGet(this, 3);
 			character.type = Movable.CharacterType.CharacterTypeEnemy;
 			character.velocity = config.velocityEnemy;
-			character.KeyMovementRandom();
+			// character.KeyMovementRandom();
 			characterList.add(character);
 		}
 	}

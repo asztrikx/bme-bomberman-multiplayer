@@ -1,11 +1,11 @@
 package helper;
 
+import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Writer;
 
 public class Logger extends PrintWriter {
 
-	public Logger(Writer w) {
-		super(w);
+	public Logger(OutputStream outputStream) {
+		super(outputStream);
 	}
 }

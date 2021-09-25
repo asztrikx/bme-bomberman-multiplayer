@@ -10,8 +10,8 @@ import helper.Logger;
 import helper.Position;
 import server.WorldServer;
 import world.element.Movable;
-import world.element.Unmovable;
 import world.element.WorldElement;
+import world.element.unmovable.Unmovable;
 
 public class Collision {
 	Config config;
@@ -37,7 +37,7 @@ public class Collision {
 	// collisionDecideObjectFunction decides for each object whether it should be
 	// taking into account
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	public <E extends WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
+	public <E extends WorldElement, WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
 			Position position, E2 worldElementRelative, BiFunction<E2, E, Boolean> collisionDecide) {
 		List<E> listCollision = new ArrayList<>();
 

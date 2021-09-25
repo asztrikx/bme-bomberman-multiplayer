@@ -9,3 +9,4 @@
 - do not pass whole config?
 - Movable have 0,0,10
 - finals for classes, members, params
+- maybe cross reference? to avoid passing member values

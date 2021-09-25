@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import world.element.Movable;
-import world.element.Unmovable;
+import world.element.unmovable.Unmovable;
 
 public abstract class World {
 	public List<Unmovable> objectList = new ArrayList<>();

@@ -4,12 +4,15 @@ import java.util.Timer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import engine.Collision;
+import engine.Tick;
 import helper.Auth;
 import helper.AutoClosableLock;
 import helper.Config;
 import helper.Key;
 import helper.Logger;
 import helper.Position;
+import network.Listen;
 import user.User;
 import user.UserManager;
 import world.element.Movable;
@@ -21,26 +24,24 @@ public class Server {
 	Logger logger;
 	WorldServer worldServer;
 	Timer timer = null;
-	boolean stopped = true;
+	Listen listen = null;
+	Tick tick;
 
-	public Server(Logger logger, Config config) {
+	public Server(Config config, Logger logger) {
 		this.logger = logger;
 		this.config = config;
-		worldServer = new WorldServer(config, logger); // not critical section
+		this.worldServer = new WorldServer(config, logger); // not critical section
+		Collision collision = new Collision(config, logger);
+		this.tick = new Tick(worldServer, config, mutex, collision);
 	}
 
-	public void Listen() {
-		stopped = false;
-
-		// key press
-		SDL_AddEventWatch(EventKey, null);
-
-		// network start
-		NetworkServerStart();
+	public void Listen(int port) {
+		listen = new Listen(port);
 
 		// tick start: world calc, connected user update
 		timer = new Timer();
-		timer.schedule(this, config.tickRate);
+		timer.schedule(tick, config.tickRate);
+		timer.wait();
 	}
 
 	// EventKey handles WorldServer saving

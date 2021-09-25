@@ -14,4 +14,7 @@ public class Config {
 	public long tickRate = 1000 / 58;
 	public long tickSecond = 1000 / tickRate; // tick count in one second
 	public int authLength = 26;
+	// TODO GUI or at least cmd line
+	public String ip = "";
+	public int port = 0;
 }

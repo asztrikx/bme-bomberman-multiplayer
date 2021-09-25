@@ -8,6 +8,14 @@ public class Position {
 		this.x = x;
 	}
 
+	public Position getSquare(Config config) {
+		return new Position(y % config.squaresize, x % config.squaresize);
+	}
+
+	public Position sub(Position position) {
+		return new Position(y - position.y, x - position.x);
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (!(object instanceof Position)) {

@@ -5,3 +5,7 @@
 - move pos,... to WorldElement
 - DI pattern
 - builder pattern
+- replace enum with class
+- do not pass whole config?
+- Movable have 0,0,10
+- finals for classes, members, params

@@ -6,8 +6,7 @@ public class Unmovable extends WorldElement {
 	public long destroy = -1;
 	public int velocity;
 	public Movable owner = null;
-	public boolean bombOut = true;
-	public Animation animation = new Animation(0, 0, 0);
+	public boolean bombOut = true; // TODO ?
 
 	public enum ObjectType {
 		ObjectTypeBomb(0), ObjectTypeBombFire(1), ObjectTypeWall(2), ObjectTypeBox(3), ObjectTypeExit(4);

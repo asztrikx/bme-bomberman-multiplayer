@@ -11,12 +11,11 @@ import helper.Position;
 import server.UserServer;
 import server.WorldServer;
 
-public class Movable extends WorldElement {
+public abstract class Movable extends WorldElement {
 	public CharacterType type;
 	public int velocity = 0;
 	public int bombCount = 0;
 	public UserServer owner;
-	public Animation animation = new Animation(0, 0, 10);
 	public boolean[] keys = new boolean[Key.KeyType.KeyLength];
 
 	Config config;
@@ -46,7 +45,7 @@ public class Movable extends WorldElement {
 	}
 
 	// KeyMovement moves character based on it's pressed keys
-	public void KeyMovement(WorldServer worldServer) {
+	public void applyMovement(WorldServer worldServer) {
 		Position positionNew = position;
 		if (keys[Key.KeyType.KeyUp.getValue()]) {
 			positionNew.y -= velocity;
@@ -100,21 +99,20 @@ public class Movable extends WorldElement {
 
 	// KeyBombPlace places a bomb to the nearest square in the grid relative to the
 	// character
-	public void KeyBombPlace(WorldServer worldServer, long tickCount) {
+	public void applyBombPlace(WorldServer worldServer, long tickCount) {
 		// bomb available
 		if (bombCount == 0) {
 			return;
 		}
 
-		Position positionNew = position;
+		Position positionSquare = position.getSquare(config);
 
 		// position
-		positionNew.y -= positionNew.y % config.squaresize;
-		positionNew.x -= positionNew.x % config.squaresize;
-		if (position.y % config.squaresize > config.squaresize / 2) {
+		Position positionNew = position.sub(positionSquare);
+		if (positionSquare.y > config.squaresize / 2) {
 			positionNew.y += config.squaresize;
 		}
-		if (position.x % config.squaresize > config.squaresize / 2) {
+		if (positionSquare.x > config.squaresize / 2) {
 			positionNew.x += config.squaresize;
 		}
 
@@ -142,14 +140,9 @@ public class Movable extends WorldElement {
 		bombCount--;
 	}
 
-	// KeyMovementRandom sets randomly one key to be active
-	public void KeyMovementRandom() {
-		SecureRandom secureRandom = new SecureRandom();
-
-		for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-			keys[i] = false;
-		}
-		keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
+	public void move(WorldServer worldServer, long tickCount) {
+		updateKeys();
+		applyMovement(worldServer);
+		applyBombPlace(worldServer, tickCount);
 	}
-
 }

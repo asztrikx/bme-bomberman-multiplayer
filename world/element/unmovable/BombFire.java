@@ -8,10 +8,14 @@ import helper.Config;
 import helper.Logger;
 import server.WorldServer;
 import user.User;
+import world.element.Animation;
 import world.element.WorldElement;
 import world.movable.Movable;
 
 public class BombFire extends Unmovable {
+	public BombFire() {
+		super(new Animation(2, BombFire.class.getSimpleName()));
+	}
 
 	@Override
 	public void destroy(Config config, Logger logger, WorldServer worldServer) {

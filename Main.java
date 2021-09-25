@@ -1,16 +1,22 @@
+import java.io.IOException;
+
 import client.Client;
 import helper.Config;
 import helper.Logger;
 import server.Server;
+import world.element.AnimationStore;
 
 public class Main {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			// TODO
 			System.exit(1);
 		}
 
 		Config config = new Config();
+		AnimationStore animationStore = new AnimationStore();
+		animationStore.addPath("resource/movable/");
+		animationStore.addPath("resource/unmovable/");
 
 		switch (args[1]) {
 			case "server":

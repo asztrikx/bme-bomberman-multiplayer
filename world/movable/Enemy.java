@@ -6,10 +6,11 @@ import helper.Config;
 import helper.Key;
 import helper.Logger;
 import server.WorldServer;
+import world.element.Animation;
 
 public class Enemy extends Movable {
 	public Enemy(Config config, Logger logger) {
-		super(config, logger);
+		super(config, logger, new Animation(10, Enemy.class.getSimpleName()));
 	}
 
 	@Override

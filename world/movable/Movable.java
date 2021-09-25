@@ -10,6 +10,7 @@ import helper.Logger;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
+import world.element.Animation;
 import world.element.WorldElement;
 import world.element.unmovable.Bomb;
 import world.element.unmovable.Box;
@@ -26,7 +27,9 @@ public abstract class Movable extends WorldElement {
 	Logger logger;
 	Collision collision;
 
-	public Movable(Config config, Logger logger) {
+	public Movable(Config config, Logger logger, Animation animation) {
+		super(animation);
+
 		this.logger = logger;
 		this.config = config;
 		this.collision = new Collision(config, logger);

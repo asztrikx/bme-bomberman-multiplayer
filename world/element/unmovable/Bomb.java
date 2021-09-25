@@ -7,8 +7,12 @@ import helper.Config;
 import helper.Logger;
 import helper.Position;
 import server.WorldServer;
+import world.element.Animation;
 
 public class Bomb extends Unmovable {
+	public Bomb() {
+		super(new Animation(15, Bomb.class.getSimpleName()));
+	}
 
 	@Override
 	public void destroy(Config config, Logger logger, WorldServer worldServer) {

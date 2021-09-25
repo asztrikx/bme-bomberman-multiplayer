@@ -4,27 +4,32 @@ import java.awt.Image;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ImageIcon;
-
 public class Animation {
 	// TODO private
-	public long state;
-	public long stateDelayTick;
+	public long state = 0;
+	public long stateDelayTick = 0;
 	public long stateDelayTickEnd;
 
 	public List<Image> images = new ArrayList<>();
+	public AnimationStore animationStore; // TODO inject
+	public String className;
 
-	public Animation(long state, long stateDelayTick, long stateDelayTickEnd, String[] paths) {
-		this.state = state;
-		this.stateDelayTick = stateDelayTick;
+	public Animation(long stateDelayTickEnd, String className) {
 		// TODO def is 2
 		this.stateDelayTickEnd = stateDelayTickEnd;
+		this.className = className;
+	}
 
-		// load frames
-		for (String path : paths) {
-			// TODO
-			Image image = new ImageIcon(path).getImage();
-			images.add(image);
+	public void increase() {
+		// delay
+		stateDelayTick++;
+		if (stateDelayTick <= stateDelayTickEnd) {
+			return;
 		}
+		stateDelayTick = 0;
+
+		// state next
+		state++;
+		state %= animationStore.get(className).size();
 	}
 }

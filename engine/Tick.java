@@ -85,16 +85,7 @@ public class Tick extends TimerTask {
 	public void nextStateAnimate() {
 		// animate
 		for (Unmovable unmovable : worldServer.unmovables) {
-			// delay
-			unmovable.animation.stateDelayTick++;
-			if (unmovable.animation.stateDelayTick <= unmovable.animation.stateDelayTickEnd) {
-				continue;
-			}
-			unmovable.animation.stateDelayTick = 0;
-
-			// state next
-			unmovable.animation.state++;
-			unmovable.animation.state %= TextureSSObject[unmovable.type.getValue()].length;
+			unmovable.animation.increase();
 		}
 		for (Movable movable : worldServer.movables) {
 			boolean moving = false;
@@ -110,16 +101,7 @@ public class Tick extends TimerTask {
 				continue;
 			}
 
-			// delay
-			movable.animation.stateDelayTick++;
-			if (movable.animation.stateDelayTick <= movable.animation.stateDelayTickEnd) {
-				continue;
-			}
-			movable.animation.stateDelayTick = 0;
-
-			// state next
-			movable.animation.state++;
-			movable.animation.state %= TextureSSCharacter[movable.type.getValue()].length;
+			movable.animation.increase();
 		}
 	}
 

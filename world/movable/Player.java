@@ -6,13 +6,14 @@ import helper.Config;
 import helper.Logger;
 import server.WorldServer;
 import user.User;
+import world.element.Animation;
 import world.element.WorldElement;
 
 public class Player extends Movable {
 	public boolean you = false;
 
 	public Player(Config config, Logger logger) {
-		super(config, logger);
+		super(config, logger, new Animation(10, Player.class.getSimpleName()));
 	}
 
 	@Override

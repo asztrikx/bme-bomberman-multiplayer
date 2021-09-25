@@ -63,7 +63,7 @@ public class Server {
 		// tick start: world calc, connected user update
 		timer = new Timer();
 		timer.schedule(tick, config.tickRate);
-		timer.wait();
+		// timer.wait();
 	}
 
 	public void stop() throws IOException {

@@ -4,6 +4,7 @@ import client.Client;
 import helper.Config;
 import helper.Logger;
 import server.Server;
+import world.element.Animation;
 import world.element.AnimationStore;
 
 public class Main {
@@ -18,6 +19,7 @@ public class Main {
 		AnimationStore animationStore = new AnimationStore();
 		animationStore.addPath("resource/movable/");
 		animationStore.addPath("resource/unmovable/");
+		Animation.animationStore = animationStore;
 
 		switch (args[0]) {
 			case "--server":
@@ -39,6 +41,8 @@ public class Main {
 			server.Listen(config.port);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		}
+		while (true) {
 		}
 	}
 

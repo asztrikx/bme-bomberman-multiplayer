@@ -11,7 +11,7 @@ public class Animation {
 	public long stateDelayTickEnd;
 
 	public List<Image> images = new ArrayList<>();
-	public AnimationStore animationStore; // TODO inject
+	public static AnimationStore animationStore;
 	public String className;
 
 	public Animation(long stateDelayTickEnd, String className) {

@@ -4,6 +4,7 @@
 - rename lot of things (Thing, ...)
 - move pos,... to WorldElement
 - DI pattern
+  - use static as DI
 - builder pattern
 - replace enum with class
 - do not pass whole config?
@@ -14,3 +15,4 @@
 - todo make exit computed value
 - world field rename
 - replace objects, characters
+- fix exit send

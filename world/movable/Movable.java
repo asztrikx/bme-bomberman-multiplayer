@@ -1,6 +1,5 @@
 package world.movable;
 
-import java.security.SecureRandom;
 import java.util.List;
 
 import engine.Collision;
@@ -82,23 +81,20 @@ public abstract class Movable extends WorldElement {
 				});
 
 		// enemy new one way direction
-		SecureRandom secureRandom = new SecureRandom();
 		if (this instanceof Enemy && position.equals(positionNew)) {
-			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-				keys[i] = false;
-			}
-
-			keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
+			Enemy enemy = (Enemy) this;
+			enemy.randomKeys();
 		}
 		position = positionNew;
 
 		// moved out from a bomb with !bombOut
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
-		for (Unmovable object : worldServer.unmovables) {
-			if (object instanceof Bomb && object.owner == this && !object.bombOut
-					&& !collision.doCollide(position, object.position)) {
-				object.bombOut = true;
+		for (Unmovable unmovable : worldServer.unmovables) {
+			// TODO only works for 1 bomb
+			if (unmovable instanceof Bomb && unmovable.owner == this && !unmovable.bombOut
+					&& !collision.doCollide(position, unmovable.position)) {
+				unmovable.bombOut = true;
 			}
 		}
 	}

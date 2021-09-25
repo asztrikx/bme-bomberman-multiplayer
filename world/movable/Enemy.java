@@ -18,19 +18,21 @@ public class Enemy extends Movable {
 		// move
 		super.move(worldServer, tickCount);
 
-		SecureRandom secureRandom = new SecureRandom();
-
 		// decide to change direction
+		SecureRandom secureRandom = new SecureRandom();
 		if (secureRandom.nextDouble() > config.enemyKeyChangePossibility) {
 			return;
 		}
+		randomKeys();
+	}
 
+	public void randomKeys() {
+		SecureRandom secureRandom = new SecureRandom();
 		// roll new direction
 		for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 			keys[i] = false;
 		}
 		keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
-
 	}
 
 	@Override

@@ -10,3 +10,6 @@
 - Movable have 0,0,10
 - finals for classes, members, params
 - maybe cross reference? to avoid passing member values
+- exit, stacktrace to logger and idk try catch?
+- todo make exit computed value
+- world field rename

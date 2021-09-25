@@ -1,4 +1,4 @@
-package world.element;
+package world.movable;
 
 import java.security.SecureRandom;
 
@@ -30,5 +30,13 @@ public class Enemy extends Movable {
 		}
 		keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
 
+	}
+
+	@Override
+	public void destroy(Config config, Logger logger, WorldServer worldServer) {
+	}
+
+	@Override
+	public void tick(Config config, Logger logger, WorldServer worldServer) {
 	}
 }

@@ -8,14 +8,13 @@ import helper.Config;
 import helper.Logger;
 import server.WorldServer;
 import user.User;
-import world.element.Movable;
 import world.element.WorldElement;
+import world.movable.Movable;
 
 public class BombFire extends Unmovable {
 
 	@Override
 	public void destroy(Config config, Logger logger, WorldServer worldServer) {
-		return;
 	}
 
 	@Override

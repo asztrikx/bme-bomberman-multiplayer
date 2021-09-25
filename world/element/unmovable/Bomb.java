@@ -47,7 +47,10 @@ public class Bomb extends Unmovable {
 		if (owner != null) {
 			owner.bombCount++;
 		}
-		return;
+	}
+
+	@Override
+	public void tick(Config config, Logger logger, WorldServer worldServer) {
 	}
 
 }

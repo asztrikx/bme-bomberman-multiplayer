@@ -9,9 +9,9 @@ import helper.Config;
 import helper.Logger;
 import helper.Position;
 import server.WorldServer;
-import world.element.Movable;
 import world.element.WorldElement;
 import world.element.unmovable.Unmovable;
+import world.movable.Movable;
 
 public class Collision {
 	Config config;
@@ -37,7 +37,7 @@ public class Collision {
 	// collisionDecideObjectFunction decides for each object whether it should be
 	// taking into account
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	public <E extends WorldElement, WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
+	public <E extends WorldElement, E2 extends WorldElement> List<E> collisionsGet(List<E> worldElements,
 			Position position, E2 worldElementRelative, BiFunction<E2, E, Boolean> collisionDecide) {
 		List<E> listCollision = new ArrayList<>();
 
@@ -123,7 +123,7 @@ public class Collision {
 
 	// CollisionFreeCountObjectGetRecursion is a helper function of
 	// CollisionFreeCountObjectGet
-	public int CollisionFreeCountObjectGetRecursion(WorldServer worldServer, Position positionCompress) {
+	private int getFreeSpaceCountRecursion(WorldServer worldServer, Position positionCompress) {
 		Position position = new Position(positionCompress.y * config.squaresize,
 				positionCompress.x * config.squaresize);
 
@@ -151,7 +151,7 @@ public class Collision {
 		for (int i = 0; i < 4; i++) {
 			Position positionCompressNew = new Position(positionCompress.y + directionY[i],
 					positionCompress.x + directionX[i]);
-			collisionFreeCountObject += CollisionFreeCountObjectGetRecursion(worldServer, positionCompressNew);
+			collisionFreeCountObject += getFreeSpaceCountRecursion(worldServer, positionCompressNew);
 		}
 
 		return collisionFreeCountObject;
@@ -159,20 +159,20 @@ public class Collision {
 
 	// CollisionFreeCountObjectGet returns how many square sized object-free area is
 	// reachable from (position - position % squaresize)
-	public int CollisionFreeCountObjectGet(WorldServer worldServer, Position position) {
+	public int getFreeSpaceCount(WorldServer worldServer, Position position) {
 		// memory alloc
 		collisionFreeCountObjectGetMemory = new boolean[config.worldHeight][config.windowWidth];
 
 		// recursion
 		Position positionCompress = new Position(position.y / config.squaresize, position.x / config.squaresize);
-		int count = CollisionFreeCountObjectGetRecursion(worldServer, positionCompress);
+		int count = getFreeSpaceCountRecursion(worldServer, positionCompress);
 
 		return count;
 	}
 
 	// SpawnGet return a position where there's at least 3 free space reachable
 	// without action so player does not die instantly
-	public Position SpawnGet(WorldServer worldServer, int collisionFreeCountObjectMin) {
+	public Position getSpawn(WorldServer worldServer) {
 		// random max check
 		// as it is already in int there is no need to check
 
@@ -208,8 +208,8 @@ public class Collision {
 			}
 
 			// position valid
-			collisionFreeCountObject = CollisionFreeCountObjectGet(worldServer, position);
-		} while (collisionCountCharacter != 0 || collisionFreeCountObject < collisionFreeCountObjectMin || near);
+			collisionFreeCountObject = getFreeSpaceCount(worldServer, position);
+		} while (collisionCountCharacter != 0 || collisionFreeCountObject < config.spawnSquareFreeSpace || near);
 
 		return position;
 	}

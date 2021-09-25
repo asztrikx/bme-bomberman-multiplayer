@@ -8,6 +8,9 @@ public class Box extends Unmovable {
 
 	@Override
 	public void destroy(Config config, Logger logger, WorldServer worldServer) {
-		return;
+	}
+
+	@Override
+	public void tick(Config config, Logger logger, WorldServer worldServer) {
 	}
 }

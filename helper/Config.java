@@ -17,4 +17,8 @@ public class Config {
 	// TODO GUI or at least cmd line
 	public String ip = "";
 	public int port = 0;
+	public int nameMaxLength = 15;
+	public int bombCountStart = 1;
+	public int spawnSquareDistanceFromOthers = 3;
+	public int spawnSquareFreeSpace = 3;
 }

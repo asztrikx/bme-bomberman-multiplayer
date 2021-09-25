@@ -10,26 +10,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import client.WorldClient;
 import helper.AutoClosableLock;
 import server.UserServer;
-import server.WorldServer;
 import user.UserManager;
-import world.element.Movable;
-import world.element.unmovable.Unmovable;
 
 public class Listen implements Closeable {
 	// lock for sockets and active
-	Lock lock = new ReentrantLock();
-	List<Socket> sockets = new LinkedList<>();
-	boolean active = true;
-	int port;
+	public Lock lock = new ReentrantLock();
+	public List<Socket> sockets = new LinkedList<>();
+	public boolean active = true;
+	public int port;
 
-	public Listen(int port) {
+	public Listen(int port, Function<Socket, Boolean> handshake, Consumer<Socket> receive) {
 		this.port = port;
 
-		// TODO
 		// blocking accept => new thread
 		Thread thread = new Thread() {
 			@Override
@@ -38,30 +36,29 @@ public class Listen implements Closeable {
 					try (ServerSocket serverSocket = new ServerSocket(port)) {
 						Socket socket = serverSocket.accept();
 
-						// do not stop if a clients fails to connect
+						// do not stop if a clients fails to connect => try here
 						try {
 							// server might be stopping => closing sockets => lock before accepting new
 							try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-								if (active) {
+								if (active && handshake.apply(socket)) {
 									sockets.add(socket);
 								} else {
 									socket.close();
 								}
 							}
 						} catch (Exception e) {
-							// TODO java logger
 							e.printStackTrace();
 						}
 					}
 				} catch (Exception e) {
-					// TODO java logger
 					e.printStackTrace();
-					// TODO java
 					System.exit(1);
 				}
 			}
 		};
 		thread.start();
+
+		// TODO create new thread for every client: receive;
 	}
 
 	@Override
@@ -80,42 +77,15 @@ public class Listen implements Closeable {
 	}
 
 	// sends worldServer to client as WorldClient
-	public void send(WorldServer worldServer, UserManager<UserServer> usermanager) throws IOException {
-		for (UserServer userServer : usermanager.getList()) {
-			WorldClient worldClient = new WorldClient();
+	public void send(WorldClient worldClient, UserManager<UserServer> usermanager) throws IOException {
+		// send
+		// TODO send to correct socket with auth?
+		for (Socket socket : sockets) {
+			OutputStream outputStream = socket.getOutputStream();
 
-			// state
-			worldClient.state = userServer.state;
-
-			// exit
-			if (worldServer.exit != null) {
-				worldClient.exit = worldServer.exit;
-			}
-
-			// objectS
-			for (Unmovable object : worldServer.objectList) {
-				// don't add exit
-				if (object.type == Unmovable.ObjectType.ObjectTypeExit && worldServer.exit == null) {
-					continue;
-				}
-
-				worldClient.objectList.add(object);
-			}
-
-			// characterS
-			for (Movable character : worldServer.characterList) {
-				worldClient.characterList.add(character);
-			}
-
-			// send
-			for (Socket socket : sockets) {
-				OutputStream outputStream = socket.getOutputStream();
-
-				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-				objectOutputStream.writeObject(worldClient);
-			}
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+			objectOutputStream.writeObject(worldClient);
 		}
-
 	}
 
 }

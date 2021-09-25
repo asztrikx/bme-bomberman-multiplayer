@@ -1,10 +1,17 @@
 package server;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
-import engine.Collision;
 import engine.Tick;
 import helper.Auth;
 import helper.AutoClosableLock;
@@ -15,7 +22,8 @@ import helper.Position;
 import network.Listen;
 import user.User;
 import user.UserManager;
-import world.element.Movable;
+import world.movable.Movable;
+import world.movable.Player;
 
 public class Server {
 	UserManager<UserServer> userManager = new UserManager<>();
@@ -31,12 +39,26 @@ public class Server {
 		this.logger = logger;
 		this.config = config;
 		this.worldServer = new WorldServer(config, logger); // not critical section
-		Collision collision = new Collision(config, logger);
-		this.tick = new Tick(worldServer, config, mutex, collision);
+		this.tick = new Tick(worldServer, config, logger, mutex, listen, userManager);
 	}
 
-	public void Listen(int port) {
-		listen = new Listen(port);
+	public void Listen(int port) throws InterruptedException {
+		listen = new Listen(port, (Socket socket) -> {
+			try {
+				return connect(socket);
+			} catch (Exception e) {
+				logger.println("connect failed");
+				e.printStackTrace();
+				return false;
+			}
+		}, (Socket socket) -> {
+			try {
+				receive(socket);
+			} catch (Exception e) {
+				logger.println("receive failed");
+				e.printStackTrace();
+			}
+		});
 
 		// tick start: world calc, connected user update
 		timer = new Timer();
@@ -44,95 +66,25 @@ public class Server {
 		timer.wait();
 	}
 
-	// EventKey handles WorldServer saving
-	static int EventKey(void* data, SDL_Event* sdl_event){
-		if(
-			sdl_event->type != SDL_KEYDOWN ||
-			sdl_event->key.keysym.sym != SDLK_q
-		){
-			return 0;
-		}
-
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
-			Save();
-		}
-
-		return 0;
-	}
-
-	// ServerReceive gets updates from users
-	// userServerUnsafe is not used after return
-	void ServerReceive(UserServer userServerUnsafe) {
-		if (stopped) {
-			return;
-		}
-
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
-			// auth validate
-			// auth's length validation
-			// -
-			if (userServerUnsafe.auth.length() != config.authLength) {
-				return;
-			}
-			// auth's length validation
-			// -
-			UserServer userServer = userManager.findByAuth(userServerUnsafe.auth);
-			if (userServer == null) {
-				return;
-			}
-			Movable character = CharacterFind(userServer);
-
-			// alive
-			if (character == null) {
-				return;
-			}
-
-			// name change
-			// TODO java max 15 length
-			if (!userServer.name.equals(userServerUnsafe.name)) {
-				userServer.name = userServerUnsafe.name;
-			}
-
-			// keys's length validation
-			// -
-
-			// keys copy
-			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-				character.keys[i] = userServerUnsafe.keys[i];
-			}
-		}
-	}
-
-	// ServerStop clears server module
-	void ServerStop() {
-		if (!SDL_RemoveTimer(tickId)) {
-			SDL_Log("ServerStop: SDL_RemoveTimer: %s", SDL_GetError());
-			exit(1);
-		}
-
-		// wait timers to finish
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
-			// need to be called before NetworkServerStop as incoming message may already be
-			// coming which
-			// could get stuck if SDL_DestroyMutex happens before SDL_LockMutex
-			stopped = true;
-
-			NetworkServerStop();
-		}
+	public void stop() throws IOException {
+		listen.close();
 	}
 
 	// ServerConnect register new connection user, returns it with auth
 	// userServerUnsafe is not used after return
-	void ServerConnect(UserServer userServerUnsafe) {
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
-			// userServer copy
-			UserServer userServer = new UserServer();
-			// TODO java max 15 length
-			userServer.name = userServerUnsafe.name;
-			userServer.state = User.State.Playing;
+	public boolean connect(Socket socket) throws IOException, Exception {
+		// get basic info
+		InputStream inputStream = socket.getInputStream();
+		ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+		String name = (String) objectInputStream.readObject();
+		if (name.length() > config.nameMaxLength) {
+			return false;
+		}
 
-			// userServer insert
-			userManager.add(userServer);
+		UserServer userServer = new UserServer();
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
+			userServer.name = name;
+			userServer.state = User.State.Playing;
 
 			// id generate
 			while (true) {
@@ -146,19 +98,71 @@ public class Server {
 			}
 
 			// spawn
-			Position position = SpawnGet(worldServer, 3);
+			Position position = worldServer.getSpawn(config, logger);
 
 			// character insert
-			Movable character = new Movable(config, logger);
-			character.bombCount = 1;
-			character.owner = userServer;
-			character.position = new Position(position.y, position.x);
-			character.type = Movable.CharacterType.CharacterTypeUser;
-			character.velocity = config.velocity;
-			worldServer.characterList.add(character);
+			Player player = new Player(config, logger);
+			player.bombCount = config.bombCountStart;
+			player.owner = userServer;
+			player.position = position;
+			player.velocity = config.velocity;
+			worldServer.characterList.add(player);
+		}
 
-			// reply
-			userServerUnsafe.auth = userServer.auth;
+		// reply
+		OutputStream outputStream = socket.getOutputStream();
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+		objectOutputStream.writeObject(userServer.auth);
+
+		// userServer insert
+		userManager.add(userServer);
+		return true;
+	}
+
+	public void receive(Socket socket) throws Exception {
+		InputStream inputStream = socket.getInputStream();
+		ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+		UserServer userServerUnsafe = (UserServer) objectInputStream.readObject();
+
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(mutex)) {
+			// auth validate
+			// auth's length validation
+			// -
+			if (userServerUnsafe.auth.length() != config.authLength) {
+				return;
+			}
+			UserServer userServer = userManager.findByAuth(userServerUnsafe.auth);
+			if (userServer == null) {
+				return;
+			}
+
+			// get Player
+			List<Movable> movables = worldServer.characterList.stream()
+					.filter((Movable movable) -> movable.owner == userServer).collect(Collectors.toList());
+			// has to be alive
+			if (movables.size() == 0) {
+				return;
+			}
+			assert movables.size() <= 1;
+			Movable movable = movables.get(0);
+
+			// name change
+			// name's length validation
+			if (userServerUnsafe.name.length() > config.nameMaxLength) {
+				return;
+			}
+			if (!userServer.name.equals(userServerUnsafe.name)) {
+				userServer.name = userServerUnsafe.name;
+			}
+
+			// keys copy
+			// keys's length validation
+			if (userServerUnsafe.keys.length != Key.KeyType.KeyLength) {
+				return;
+			}
+			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
+				movable.keys[i] = userServerUnsafe.keys[i];
+			}
 		}
 	}
 

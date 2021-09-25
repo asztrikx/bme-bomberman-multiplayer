@@ -1,4 +1,4 @@
-package world.element;
+package world.movable;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -10,6 +10,7 @@ import helper.Logger;
 import helper.Position;
 import server.UserServer;
 import server.WorldServer;
+import world.element.WorldElement;
 import world.element.unmovable.Bomb;
 import world.element.unmovable.Unmovable;
 

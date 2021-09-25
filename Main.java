@@ -28,7 +28,11 @@ public class Main {
 	public static void serverMode(Config config) {
 		Logger logger = new Logger(System.out);
 		Server server = new Server(config, logger);
-		server.Listen(config.port);
+		try {
+			server.Listen(config.port);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void clientMode(Config config) {

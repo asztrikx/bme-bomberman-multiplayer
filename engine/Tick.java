@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
 
+import client.WorldClient;
 import helper.AutoClosableLock;
 import helper.Config;
 import helper.Key;
@@ -14,11 +15,12 @@ import server.UserServer;
 import server.WorldServer;
 import user.User;
 import user.UserManager;
-import world.element.Enemy;
-import world.element.Movable;
-import world.element.Player;
 import world.element.unmovable.BombFire;
+import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
+import world.movable.Enemy;
+import world.movable.Movable;
+import world.movable.Player;
 
 public class Tick extends TimerTask {
 	WorldServer worldServer;
@@ -30,7 +32,7 @@ public class Tick extends TimerTask {
 	Listen listen;
 	UserManager<UserServer> userManager;
 
-	public Tick(WorldServer worldServer, Config config, Lock lock, Logger logger, Listen listen,
+	public Tick(WorldServer worldServer, Config config, Logger logger, Lock lock, Listen listen,
 			UserManager<UserServer> usermanager) {
 		this.worldServer = worldServer;
 		this.lock = lock;
@@ -46,7 +48,7 @@ public class Tick extends TimerTask {
 		try {
 			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 				nextState();
-				listen.send(worldServer, userManager);
+				send();
 			}
 		} catch (Exception e) {
 			System.exit(1);
@@ -181,34 +183,60 @@ public class Tick extends TimerTask {
 		nextStateAnimate();
 	}
 
-	// TickSend sends new world to connected clients
-	public void TickSend() {
-		for (UserServer userServer : userManager.getList()) {
-			// remove exit if not seeable
-			List<Object> collisionObjectS = CollisionObjectSGet(worldServer.objectList, worldServer.exit.position,
-					worldServer.exit, null);
-			Object exit = worldServer.exit;
-			if (collisionObjectS.size() != 0) {
-				// NetworkSendClient will remove it from list
-				worldServer.exit = null;
+	// sends new world to connected clients
+	public void send() {
+		WorldClient worldClient = new WorldClient();
+
+		// remove exit if behind box
+		List<Unmovable> collisionObjectS = collision.collisionsGet(worldServer.objectList, worldServer.exit.position,
+				worldServer.exit, null);
+		if (collisionObjectS.size() == 0) {
+			worldClient.exit = worldServer.exit;
+		}
+
+		// unmovables
+		for (Unmovable unmovable : worldServer.objectList) {
+			// don't add exit
+			if (unmovable instanceof Exit && worldServer.exit == null) {
+				continue;
 			}
 
+			worldClient.objectList.add(unmovable);
+		}
+
+		// movables
+		for (Movable movables : worldServer.characterList) {
+			worldClient.characterList.add(movables);
+		}
+
+		for (UserServer userServer : userManager.getList()) {
+			// state
+			worldClient.state = userServer.state;
+
 			// alter user character to be identifiable
-			Movable character = CharacterFind(userServer);
-			if (character != null) {
-				character.type = Movable.CharacterType.CharacterTypeYou;
+			Player playerYou = null;
+			for (Movable movable : worldServer.characterList) {
+				if (!(movable instanceof Player)) {
+					continue;
+				}
+
+				Player player = (Player) movable;
+
+				if (player.owner != userServer) {
+					playerYou = player;
+					player.you = true; // TODO no..
+					continue;
+				}
 			}
 
 			// send
-			send(worldServer, userServer);
+			// TODO
+			// send(worldServer, userServer);
 
 			// remove character alter
-			if (character != null) {
-				character.type = Movable.CharacterType.CharacterTypeUser;
+			if (playerYou != null) {
+				playerYou.you = false;
 			}
-
-			// remove exit remove
-			worldServer.exit = exit;
 		}
 	}
 

@@ -1,18 +1,23 @@
 package helper;
 
+import java.io.Serializable;
 import java.security.SecureRandom;
 
-public class Auth {
+public class Auth implements Serializable {
 	private String value;
 
-	// AuthCreate creates a `length` character long auth key
+	// creates a `length` character long auth key
 	public Auth(int length) {
+		regenerate(length);
+	}
+
+	public void regenerate(int length) {
 		SecureRandom secureRandom = new SecureRandom();
 
 		String auth = new String();
 		for (int i = 0; i < length; i++) {
 			int A = Character.getNumericValue('A');
-			int Z = Character.getNumericValue('A');
+			int Z = Character.getNumericValue('Z');
 
 			int character = secureRandom.nextInt(Z - A + 1) + A;
 			auth = auth + String.valueOf(character);
@@ -25,8 +30,7 @@ public class Auth {
 	// AuthFind returns UserServer with that auth or NULL if does not exists
 	public boolean equals(Object object) {
 		if (!(object instanceof Auth)) {
-			// TODO java
-			throw new Error();
+			throw new RuntimeException();
 		}
 
 		Auth auth = (Auth) object;

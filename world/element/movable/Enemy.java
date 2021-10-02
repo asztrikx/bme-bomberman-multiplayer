@@ -1,23 +1,24 @@
-package world.movable;
+package world.element.movable;
 
 import java.security.SecureRandom;
 
+import di.DI;
 import helper.Config;
 import helper.Key;
 import server.WorldServer;
 import world.element.Animation;
 
 public class Enemy extends Movable {
-	private Config config = Config.Injected;
+	private static Config config = (Config) DI.services.get(Config.class);
 
 	public Enemy() {
-		super(new Animation(10, Enemy.class.getSimpleName()));
+		super(new Animation(10, "resource/movable/enemy"));
 	}
 
 	@Override
-	public void move(WorldServer worldServer, long tickCount) {
+	public void nextState(WorldServer worldServer, long tickCount) {
 		// move
-		super.move(worldServer, tickCount);
+		super.nextState(worldServer, tickCount);
 
 		// decide to change direction
 		SecureRandom secureRandom = new SecureRandom();
@@ -34,13 +35,5 @@ public class Enemy extends Movable {
 			keys[i] = false;
 		}
 		keys[secureRandom.nextInt(Key.KeyType.KeyLength)] = true;
-	}
-
-	@Override
-	public void destroy(WorldServer worldServer) {
-	}
-
-	@Override
-	public void tick(WorldServer worldServer) {
 	}
 }

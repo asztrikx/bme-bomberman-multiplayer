@@ -1,65 +1,58 @@
 package network;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import client.UserClient;
-import helper.Key;
-import server.UserServer;
+import di.DI;
+import helper.Logger;
 
-public class Connect {
-	String ip;
-	int port;
-	Socket socket;
+public class Connect extends Network {
+	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
-	public Connect(String ip, int port) throws UnknownHostException, IOException {
-		this.ip = ip;
-		this.port = port;
-		socket = new Socket(ip, port);
-	}
+	private Socket socket;
+	private Consumer<Object> receive;
 
-	// TODO maybe send to different port
-	public UserClient Init(UserClient userClient) throws IOException, ClassNotFoundException {
-		// copy
-		UserServer userServer = new UserServer();
-		userServer.name = userClient.name;
-
-		// send
-		OutputStream outputStream = socket.getOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-		objectOutputStream.writeObject(userServer);
-
-		InputStream inputStream = socket.getInputStream();
-		ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-		userServer = (UserServer) objectInputStream.readObject();
-
-		// apply changes
-		// name could be occupied
-		// TODO string len limits
-		userClient.auth = userServer.auth;
-		userClient.name = userServer.name;
-
-		return userClient;
-	}
-
-	// Sends userClient to server as UserServer
-	void Send(UserClient userClient) throws IOException {
-		// create userServer
-		UserServer userServer = new UserServer();
-		userServer.auth = userClient.auth;
-		userServer.name = userClient.name;
-		for (int i = 0; i < Key.KeyType.KeyLength; i++) {
-			userServer.keys[i] = userClient.keys[i];
+	public void connect(String ip, int port, Function<Socket, Boolean> handshake, Consumer<Object> receive) {
+		try {
+			socket = new Socket(ip, port);
+		} catch (IOException e) {
+			logger.printf("Couldn't connect to %s:%d", ip, port);
+			return;
 		}
 
-		// send
-		OutputStream outputStream = socket.getOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-		objectOutputStream.writeObject(userServer);
+		handshake.apply(socket);
+
+		Thread thread = new Thread(new Receive());
+		thread.start();
+	}
+
+	private class Receive implements Runnable {
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					Object object = receive(socket);
+					receive.accept(object);
+				} catch (ClassNotFoundException | IOException e) {
+					logger.println("received object is wrong:");
+					logger.println(e.getStackTrace());
+				}
+			}
+		}
+	}
+
+	public void send(Object... objects) throws IOException {
+		super.send(socket, objects);
+	}
+
+	public Object receive() throws ClassNotFoundException, IOException {
+		return super.receive(socket);
+	}
+
+	@Override
+	public void close() throws Exception {
+		socket.close();
 	}
 }

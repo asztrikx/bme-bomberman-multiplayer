@@ -3,7 +3,7 @@ package helper;
 import java.util.concurrent.locks.Lock;
 
 public class AutoClosableLock implements AutoCloseable {
-	Lock lock;
+	private Lock lock;
 
 	public AutoClosableLock(Lock lock) {
 		this.lock = lock;
@@ -12,7 +12,11 @@ public class AutoClosableLock implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws Exception {
-		lock.unlock();
+	public void close() {
+		try {
+			lock.unlock();
+		} catch (Exception e) {
+			throw new Error(e);
+		}
 	}
 }

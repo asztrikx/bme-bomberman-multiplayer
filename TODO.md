@@ -1,19 +1,16 @@
 - add finals
-- rename enums
-- add proper accessibility
-- rename lot of things (Thing, ...)
 - move pos,... to WorldElement
-- DI pattern
-  - use static as DI
-- builder pattern
-- replace enum with class
-- do not pass whole config?
-- Movable have 0,0,10
 - finals for classes, members, params
 - maybe cross reference? to avoid passing member values
-- exit, stacktrace to logger and idk try catch?
 - todo make exit computed value
 - world field rename
-- replace objects, characters
 - fix exit send
 - private static Logger logger = Logger.getDefaultLogger(class).
+- GUI or at least cmd line for some config
+- private where possible
+
+# Breaking
+- remove owner move to usermanager
+
+# Clean code
+- visibility explicit

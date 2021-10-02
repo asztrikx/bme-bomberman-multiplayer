@@ -2,56 +2,34 @@ package engine;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimerTask;
-import java.util.concurrent.locks.Lock;
 
 import client.WorldClient;
-import helper.AutoClosableLock;
+import di.DI;
 import helper.Key;
-import network.Listen;
-import server.UserServer;
 import server.WorldServer;
 import user.User;
 import user.UserManager;
+import world.element.movable.Enemy;
+import world.element.movable.Movable;
+import world.element.movable.Player;
 import world.element.unmovable.BombFire;
 import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
-import world.movable.Enemy;
-import world.movable.Movable;
-import world.movable.Player;
 
-public class Tick extends TimerTask {
-	WorldServer worldServer;
-	long tickCount = 0;
-	Lock lock;
-	private Collision collision = Collision.Injected;
-	Listen listen;
-	UserManager<UserServer> userManager;
+public class Tick {
+	private static Collision collision = (Collision) DI.services.get(Collision.class);
 
-	public Tick(WorldServer worldServer, Lock lock, Listen listen, UserManager<UserServer> usermanager) {
+	private WorldServer worldServer;
+	private long tickCount = 0;
+	private UserManager<? extends User> userManager;
+
+	public Tick(WorldServer worldServer, UserManager<? extends User> userManager) {
 		this.worldServer = worldServer;
-		this.lock = lock;
-		this.listen = listen;
-		this.userManager = usermanager;
-	}
-
-	@Override
-	// Tick calculates new frame, notifies users
-	public void run() {
-		try {
-			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-				nextState();
-				send();
-			}
-		} catch (Exception e) {
-			System.exit(1);
-		}
-
-		tickCount++;
+		this.userManager = userManager;
 	}
 
 	// checks if any CharacterTypeUser if in a winning state and removes them if so
-	public boolean nextStateWin() {
+	public List<Player> nextStateWinners() {
 		List<Player> players = new ArrayList<>();
 		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Player) {
@@ -61,17 +39,12 @@ public class Tick extends TimerTask {
 
 		// can't win until all enemies are dead
 		if (worldServer.movables.size() - players.size() != 0) {
-			return false;
+			return new ArrayList<>();
 		}
 
 		// set user state, remove player
 		List<Player> playersAtExit = collision.getCollisions(players, worldServer.exit.position, null, null);
-		for (Player player : playersAtExit) {
-			player.owner.state = User.State.Won;
-		}
-		worldServer.movables.removeAll(playersAtExit);
-
-		return playersAtExit.size() != 0;
+		return playersAtExit;
 	}
 
 	// TickCalculateAnimate calculates next texture state from current
@@ -89,8 +62,7 @@ public class Tick extends TimerTask {
 				}
 			}
 			if (!moving) {
-				movable.animation.state = 0;
-				movable.animation.stateDelayTick = 0;
+				movable.animation.reset();
 				continue;
 			}
 
@@ -98,8 +70,8 @@ public class Tick extends TimerTask {
 		}
 	}
 
-	// TickCalculate calculates next state from current
-	public void nextState() {
+	// calculates next state from current
+	public boolean nextState() {
 		// this should be calculated first as these objects should not exists in this
 		// tick
 		List<Unmovable> deletelist = new ArrayList<>();
@@ -114,7 +86,7 @@ public class Tick extends TimerTask {
 		// must be before character movement as that fixes bumping into wall TODO ?
 		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Enemy) {
-				movable.move(worldServer, tickCount);
+				movable.nextState(worldServer, tickCount);
 			}
 		}
 
@@ -124,20 +96,24 @@ public class Tick extends TimerTask {
 		// if 2 character is racing for the same spot the first in list wins
 		for (Movable movable : worldServer.movables) {
 			if (!(movable instanceof Enemy)) {
-				movable.move(worldServer, tickCount);
+				movable.nextState(worldServer, tickCount);
 			}
 		}
 
 		// should be before any destroy
-		if (nextStateWin()) {
-			cancel();
-			return;
+		List<Player> playersWinning = nextStateWinners();
+		if (playersWinning.size() != 0) {
+			for (Player player : playersWinning) {
+				player.owner.state = User.State.Won;
+			}
+			// worldServer.movables.removeAll(playersAtExit);
+			return false;
 		}
 
 		// fire tick
 		for (Unmovable unmovable : worldServer.unmovables) {
 			if (unmovable instanceof BombFire) {
-				unmovable.tick(worldServer);
+				unmovable.nextState(worldServer, tickCount);
 			}
 		}
 
@@ -145,7 +121,7 @@ public class Tick extends TimerTask {
 		List<Movable> deaths = new ArrayList<>();
 		for (Movable movable : worldServer.movables) {
 			if (movable instanceof Player) {
-				movable.tick(worldServer);
+				movable.nextState(worldServer, tickCount);
 				if (movable.owner.state == User.State.Dead) {
 					deaths.add(movable);
 				}
@@ -156,10 +132,13 @@ public class Tick extends TimerTask {
 		}
 
 		nextStateAnimate();
+
+		tickCount++;
+
+		return true;
 	}
 
-	// sends new world to connected clients
-	public void send() {
+	public WorldClient getWorldClient() {
 		WorldClient worldClient = new WorldClient();
 
 		// remove exit if behind box
@@ -176,43 +155,22 @@ public class Tick extends TimerTask {
 				continue;
 			}
 
+			// TODO new unmovable with ref to new movable
+
 			worldClient.unmovables.add(unmovable);
 		}
 
 		// movables
-		for (Movable movables : worldServer.movables) {
-			worldClient.movables.add(movables);
+		for (Movable movable : worldServer.movables) {
+			// has to send User
+			// - do not leak other things
+			// - can't serialize socket
+
+			// TODO new movable
+
+			worldClient.movables.add(movable);
 		}
 
-		for (UserServer userServer : userManager.getList()) {
-			// state
-			worldClient.state = userServer.state;
-
-			// alter user character to be identifiable
-			Player playerYou = null;
-			for (Movable movable : worldServer.movables) {
-				if (!(movable instanceof Player)) {
-					continue;
-				}
-
-				Player player = (Player) movable;
-
-				if (player.owner != userServer) {
-					playerYou = player;
-					player.you = true; // TODO no..
-					continue;
-				}
-			}
-
-			// send
-			// TODO
-			// send(worldServer, userServer);
-
-			// remove character alter
-			if (playerYou != null) {
-				playerYou.you = false;
-			}
-		}
+		return worldClient;
 	}
-
 }

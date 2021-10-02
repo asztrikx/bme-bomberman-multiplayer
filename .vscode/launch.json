@@ -10,7 +10,7 @@
             "request": "launch",
             "mainClass": "Main",
             "projectName": "NHF_efc2c572",
-            "args": "--server",
+            "args": "--server --client --port 22543 --ip 127.0.0.1 --name Asztrik",
             "stepFilters": {
                 "classNameFilters": [
                     "java.*",

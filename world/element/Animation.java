@@ -1,23 +1,24 @@
 package world.element;
 
 import java.awt.Image;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 
-public class Animation {
-	// TODO private
-	public long state = 0;
-	public long stateDelayTick = 0;
+import di.DI;
+
+public class Animation implements Serializable {
+	private static AnimationStore animationStore = (AnimationStore) DI.services.get(AnimationStore.class);
+
+	private long state = 0;
+	private long stateDelayTick = 0;
 	public long stateDelayTickEnd;
+	public long stateEnd;
 
-	public List<Image> images = new ArrayList<>();
-	public static AnimationStore animationStore;
-	public String className;
+	public String path;
 
-	public Animation(long stateDelayTickEnd, String className) {
-		// TODO def is 2
+	public Animation(long stateDelayTickEnd, String path) {
 		this.stateDelayTickEnd = stateDelayTickEnd;
-		this.className = className;
+		this.path = path;
+		this.stateEnd = animationStore.get(path).size();
 	}
 
 	public void increase() {
@@ -30,6 +31,15 @@ public class Animation {
 
 		// state next
 		state++;
-		state %= animationStore.get(className).size();
+		state %= animationStore.get(path).size();
+	}
+
+	public void reset() {
+		state = 0;
+		stateDelayTick = 0;
+	}
+
+	public Image getImage() {
+		return animationStore.get(path).get((int) state);
 	}
 }

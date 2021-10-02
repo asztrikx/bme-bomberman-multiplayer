@@ -3,26 +3,28 @@ package server;
 import java.security.SecureRandom;
 import java.util.List;
 
+import di.DI;
 import engine.Collision;
 import helper.Config;
+import helper.Logger;
 import helper.Position;
 import world.World;
+import world.element.movable.Enemy;
+import world.element.movable.Movable;
 import world.element.unmovable.Box;
 import world.element.unmovable.Exit;
 import world.element.unmovable.Wall;
-import world.movable.Enemy;
-import world.movable.Movable;
 
 public class WorldServer extends World {
-	private Collision collision = Collision.Injected;
-	private Config config = Config.Injected;
+	private static Collision collision = (Collision) DI.services.get(Collision.class);
+	private static Config config = (Config) DI.services.get(Config.class);
+	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
 	public WorldServer() {
 		if (config.worldHeight % 2 != 1 || config.worldWidth % 2 != 1 || config.worldHeight < 5
 				|| config.worldWidth < 5) {
-			// TODO java custom exception
-			System.out.println("WorldGenerate: World size is malformed");
-			System.exit(1);
+			logger.println("config world dimension malformed");
+			throw new Error("config world dimension malformed");
 		}
 
 		// wall generate

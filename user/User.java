@@ -1,9 +1,11 @@
 package user;
 
+import java.io.Serializable;
+
 import helper.Auth;
 import helper.Key;
 
-public class User {
+public class User implements Serializable {
 	public boolean[] keys = new boolean[Key.KeyType.KeyLength];
 	public String name;
 	public Auth auth;

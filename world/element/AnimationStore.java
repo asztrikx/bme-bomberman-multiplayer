@@ -11,24 +11,28 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 
 public class AnimationStore {
-	Map<String, List<Image>> classNameFrames = new HashMap<>();
+	private Map<String, List<Image>> framesByPath = new HashMap<>();
 
-	public void addPath(String path) throws IOException {
-		File file = new File(path);
-		File[] classNames = file.listFiles();
-		for (File className : classNames) {
+	private void add(String path) {
+		try {
+			File file = new File(path);
+			File[] frameFiles = file.listFiles();
+
 			List<Image> frames = new ArrayList<>();
-			classNameFrames.put(className.getName(), frames);
-
-			File[] frameFiles = className.listFiles();
 			for (File frame : frameFiles) {
 				Image image = new ImageIcon(frame.getCanonicalPath()).getImage();
 				frames.add(image);
 			}
+			framesByPath.put(path, frames);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	public List<Image> get(String className) {
-		return classNameFrames.get(className);
+	public List<Image> get(String path) {
+		if (!framesByPath.containsKey(path)) {
+			add(path);
+		}
+		return framesByPath.get(path);
 	}
 }

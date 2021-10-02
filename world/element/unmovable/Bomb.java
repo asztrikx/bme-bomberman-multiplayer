@@ -2,6 +2,7 @@ package world.element.unmovable;
 
 import java.util.List;
 
+import di.DI;
 import engine.Collision;
 import helper.Config;
 import helper.Position;
@@ -9,11 +10,11 @@ import server.WorldServer;
 import world.element.Animation;
 
 public class Bomb extends Unmovable {
-	private Config config = Config.Injected;
-	private Collision collision = Collision.Injected;
+	private static Config config = (Config) DI.services.get(Config.class);
+	private static Collision collision = (Collision) DI.services.get(Collision.class);
 
 	public Bomb() {
-		super(new Animation(15, Bomb.class.getSimpleName()));
+		super(new Animation(15, "resource/unmovable/bomb"));
 	}
 
 	@Override
@@ -36,7 +37,7 @@ public class Bomb extends Unmovable {
 			}
 
 			Unmovable objectFire = new BombFire();
-			objectFire.bombOut = true;
+			objectFire.movedOutOfBomb = true;
 			objectFire.createdTick = tickCount;
 			objectFire.destroyTick = tickCount + (long) (0.25 * config.tickSecond);
 			objectFire.owner = owner;
@@ -52,9 +53,4 @@ public class Bomb extends Unmovable {
 			owner.bombCount++;
 		}
 	}
-
-	@Override
-	public void tick(WorldServer worldServer) {
-	}
-
 }

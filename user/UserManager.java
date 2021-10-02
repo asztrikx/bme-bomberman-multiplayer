@@ -1,28 +1,32 @@
 package user;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import helper.Auth;
+import world.element.WorldElement;
 
 public class UserManager<U extends User> {
-	List<U> users = new ArrayList<>();
+	Map<U, List<WorldElement>> userPossession = new HashMap<>();
 
 	public void add(U user) {
-		users.add(user);
+		userPossession.put(user, new ArrayList<>());
 	}
 
 	public void remove(U user) {
-		users.remove(user);
+		userPossession.remove(user);
 	}
 
 	public void remove(Auth auth) {
 		U user = findByAuth(auth);
-		users.remove(user);
+		remove(user);
 	}
 
 	public U findByAuth(Auth auth) {
-		for (U user : users) {
+		for (U user : userPossession.keySet()) {
 			if (user.auth.equals(auth)) {
 				return user;
 			}
@@ -30,11 +34,23 @@ public class UserManager<U extends User> {
 		return null;
 	}
 
+	public U findByName(String name) {
+		Optional<U> user = userPossession.keySet().stream().filter((U userServerOther) -> {
+			return userServerOther.name == name;
+		}).findFirst();
+
+		if (user.isEmpty()) {
+			return null;
+		} else {
+			return user.get();
+		}
+	}
+
 	public List<U> getList() {
-		return users;
+		return new ArrayList<>(userPossession.keySet());
 	}
 
 	public void clear() {
-		users.clear();
+		userPossession.clear();
 	}
 }

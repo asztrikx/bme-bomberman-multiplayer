@@ -3,27 +3,24 @@ package world.element.unmovable;
 import java.util.ArrayList;
 import java.util.List;
 
+import di.DI;
 import engine.Collision;
 import server.WorldServer;
 import user.User;
 import world.element.Animation;
 import world.element.WorldElement;
-import world.movable.Movable;
+import world.element.movable.Movable;
 
 public class BombFire extends Unmovable {
-	private Collision collision = Collision.Injected;
+	private static Collision collision = (Collision) DI.services.get(Collision.class);
 
 	public BombFire() {
-		super(new Animation(2, BombFire.class.getSimpleName()));
-	}
-
-	@Override
-	public void destroy(WorldServer worldServer) {
+		super(new Animation(2, "resource/unmovable/bombFire"));
 	}
 
 	@Override
 	// destroys all ObjectTypeBox and all Character in collision
-	public void tick(WorldServer worldServer) {
+	public void nextState(WorldServer worldServer, long tickCount) {
 		List<WorldElement> worldElements = new ArrayList<>();
 		worldElements.addAll(worldServer.unmovables);
 		worldElements.addAll(worldServer.movables);

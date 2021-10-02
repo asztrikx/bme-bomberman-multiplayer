@@ -1,8 +1,12 @@
 package helper;
 
-public class Position {
+import java.io.Serializable;
+
+import di.DI;
+
+public class Position implements Serializable {
 	public int y, x;
-	Config config = Config.Injected;
+	private static Config config = (Config) DI.services.get(Config.class);
 
 	public Position(int y, int x) {
 		this.y = y;
@@ -17,11 +21,14 @@ public class Position {
 		return new Position(y - position.y, x - position.x);
 	}
 
+	public Position shift(Position offset) {
+		return new Position(y + offset.y, x + offset.x);
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (!(object instanceof Position)) {
-			// TODO java
-			throw new Error();
+			throw new RuntimeException();
 		}
 
 		Position position = (Position) object;

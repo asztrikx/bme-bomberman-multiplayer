@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import di.DI;
 import helper.Config;
 import helper.Position;
 import server.WorldServer;
 import world.element.WorldElement;
+import world.element.movable.Movable;
 import world.element.unmovable.Unmovable;
-import world.movable.Movable;
 
 public class Collision {
-	private Config config = Config.Injected;
-	public static Collision Injected;
+	private static Config config = (Config) DI.services.get(Config.class);
 
 	// Collision tells whether there's a collision between objects at positions
 	public boolean doCollide(Position position1, Position position2) {

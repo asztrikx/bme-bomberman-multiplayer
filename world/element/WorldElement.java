@@ -1,9 +1,11 @@
 package world.element;
 
+import java.io.Serializable;
+
 import helper.Position;
 import server.WorldServer;
 
-public abstract class WorldElement {
+public abstract class WorldElement implements Serializable {
 	public Position position = new Position(0, 0);
 	public Animation animation;
 	public long createdTick = -1;
@@ -17,8 +19,10 @@ public abstract class WorldElement {
 		return tickCount == destroyTick;
 	}
 
-	public abstract void destroy(WorldServer worldServer);
+	public void destroy(WorldServer worldServer) {
 
-	public abstract void tick(WorldServer worldServer);
+	}
 
+	public void nextState(WorldServer worldServer, long tickCount) {
+	}
 }

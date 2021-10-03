@@ -16,11 +16,11 @@ public class Auth implements Serializable {
 
 		String auth = new String();
 		for (int i = 0; i < length; i++) {
-			int A = Character.getNumericValue('A');
-			int Z = Character.getNumericValue('Z');
+			char A = 'A';
+			char Z = 'Z';
 
 			int character = secureRandom.nextInt(Z - A + 1) + A;
-			auth = auth + String.valueOf(character);
+			auth = auth + Character.toString(character);
 		}
 
 		value = auth;
@@ -43,7 +43,7 @@ public class Auth implements Serializable {
 				diff = true;
 			}
 		}
-		return diff;
+		return !diff;
 	}
 
 	public int length() {

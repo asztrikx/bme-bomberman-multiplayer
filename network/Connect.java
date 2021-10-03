@@ -39,7 +39,6 @@ public class Connect extends Network {
 					receive.accept(object);
 				} catch (ClassNotFoundException | IOException e) {
 					logger.println("received object is wrong:");
-					logger.println(e.getStackTrace());
 				}
 			}
 		}

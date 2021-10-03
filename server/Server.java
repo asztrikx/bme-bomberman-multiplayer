@@ -57,7 +57,7 @@ public class Server implements AutoCloseable {
 		});
 
 		// tick start: world calc, connected user update
-		tick = new Tick(worldServer, userManager, lock);
+		tick = new Tick(worldServer);
 		timer = new Timer();
 		TimerTask timerTask = new TimerTask() {
 			@Override

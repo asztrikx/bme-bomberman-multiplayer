@@ -8,6 +8,7 @@
 - private static Logger logger = Logger.getDefaultLogger(class).
 - GUI or at least cmd line for some config
 - private where possible
+- merge worlds?
 
 # Breaking
 - remove owner move to usermanager

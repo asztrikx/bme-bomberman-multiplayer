@@ -60,7 +60,7 @@ public class Listen extends Network {
 				} catch (ClassNotFoundException | IOException e) {
 					String ip = Network.getIP(socket);
 					int port = Network.getPort(socket);
-					logger.printf("Couldn't receive client: %s:%d", ip, port);
+					logger.printf("Couldn't receive client: %s:%d\n", ip, port);
 					logger.println(e.getStackTrace());
 				}
 
@@ -90,7 +90,7 @@ public class Listen extends Network {
 							}
 						}
 					} catch (Exception e) {
-						logger.printf("Client failed to connect: %s", e.toString());
+						logger.printf("Client failed to connect: %s\n", e.toString());
 					}
 				}
 			} catch (Exception e) {

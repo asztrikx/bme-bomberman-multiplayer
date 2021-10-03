@@ -23,7 +23,7 @@ public class Main {
 		commands.put("--server", new Flag.Entry("", true, false));
 		commands.put("--client", new Flag.Entry("", true, false));
 		commands.put("--ip", new Flag.Entry("", false, false));
-		commands.put("--port", new Flag.Entry("", false, true));
+		commands.put("--server-port", new Flag.Entry("", false, true));
 		commands.put("--name", new Flag.Entry("", false, true));
 		Flag flag = new Flag(commands);
 		Optional<Map<String, String>> parsedOrError = flag.parse(args);
@@ -33,10 +33,10 @@ public class Main {
 		Map<String, String> parsed = parsedOrError.get();
 
 		// start appropiate mode
-		int port = Integer.parseInt(parsed.get("--port"));
+		int serverPort = Integer.parseInt(parsed.get("--server-port"));
 		if (parsed.containsKey("--server")) {
 			Server server = new Server();
-			server.listen(port);
+			server.listen(serverPort);
 			if (!parsed.containsKey("--client")) {
 				server.waitUntilWin();
 				server.close();
@@ -49,7 +49,7 @@ public class Main {
 			String ip = parsed.get("--ip");
 			String name = parsed.get("--name");
 			Client client = new Client();
-			client.connect(ip, port, name);
+			client.connect(ip, serverPort, name);
 			client.waitUntilWin();
 			client.close();
 		}

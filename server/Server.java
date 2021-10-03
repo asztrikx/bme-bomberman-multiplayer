@@ -49,7 +49,7 @@ public class Server implements AutoCloseable {
 			try {
 				return handshake(socket);
 			} catch (Exception e) {
-				logger.printf("failed to use port: %s", port);
+				logger.printf("failed to use port: %s\n", port);
 				return false;
 			}
 		}, (Object object) -> {
@@ -57,22 +57,27 @@ public class Server implements AutoCloseable {
 		});
 
 		// tick start: world calc, connected user update
-		tick = new Tick(worldServer, userManager);
+		tick = new Tick(worldServer, userManager, lock);
 		timer = new Timer();
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
 				try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-					boolean idk = tick.nextState();
+					boolean shouldContinue = tick.nextState();
 					send();
-					// TODO will lock get closed?
-					if (!idk) {
+					if (!shouldContinue) {
+						// TODO will lock get closed?
 						cancel();
 					}
 				}
 			}
 		};
-		timer.schedule(timerTask, config.tickRate);
+		timer.schedule(timerTask, 0, config.tickRate);
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		System.out.println("wtf");
 	}
 
 	public void waitUntilWin() {
@@ -95,18 +100,16 @@ public class Server implements AutoCloseable {
 
 			// alter user character to be identifiable
 			Player playerYou = null;
-			for (Movable movable : worldServer.movables) {
+			for (Movable movable : worldClient.movables) {
 				if (!(movable instanceof Player)) {
 					continue;
 				}
 
 				Player player = (Player) movable;
 
-				// TODO fix
-				if (player.owner != userServer) {
+				if (player.owner.name.equals(userServer.name)) {
 					playerYou = player;
 					player.you = true;
-					continue;
 				}
 			}
 

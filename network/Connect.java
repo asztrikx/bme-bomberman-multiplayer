@@ -15,10 +15,12 @@ public class Connect extends Network {
 	private Consumer<Object> receive;
 
 	public void connect(String ip, int port, Function<Socket, Boolean> handshake, Consumer<Object> receive) {
+		this.receive = receive;
+
 		try {
 			socket = new Socket(ip, port);
 		} catch (IOException e) {
-			logger.printf("Couldn't connect to %s:%d", ip, port);
+			logger.printf("Couldn't connect to %s:%d\n", ip, port);
 			return;
 		}
 

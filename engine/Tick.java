@@ -1,5 +1,10 @@
 package engine;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +13,6 @@ import di.DI;
 import helper.Key;
 import server.WorldServer;
 import user.User;
-import user.UserManager;
 import world.element.movable.Enemy;
 import world.element.movable.Movable;
 import world.element.movable.Player;
@@ -21,11 +25,9 @@ public class Tick {
 
 	private WorldServer worldServer;
 	private long tickCount = 0;
-	private UserManager<? extends User> userManager;
 
-	public Tick(WorldServer worldServer, UserManager<? extends User> userManager) {
+	public Tick(WorldServer worldServer) {
 		this.worldServer = worldServer;
-		this.userManager = userManager;
 	}
 
 	// checks if any CharacterTypeUser if in a winning state and removes them if so
@@ -155,20 +157,41 @@ public class Tick {
 				continue;
 			}
 
-			// TODO new unmovable with ref to new movable
-
 			worldClient.unmovables.add(unmovable);
 		}
 
 		// movables
+		List<User> owners = new ArrayList<>();
 		for (Movable movable : worldServer.movables) {
 			// has to send User
 			// - do not leak other things
 			// - can't serialize socket
-
-			// TODO new movable
-
+			owners.add(movable.owner);
 			worldClient.movables.add(movable);
+
+			if (movable.owner != null) {
+				User owner = movable.owner;
+
+				movable.owner = new User();
+				movable.owner.name = owner.name;
+			}
+		}
+
+		// deep copy (the maintainable way)
+		try {
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+			objectOutputStream.writeObject(worldClient);
+
+			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+			ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+			worldClient = (WorldClient) objectInputStream.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			throw new Error(e);
+		}
+
+		for (int i = 0; i < owners.size(); i++) {
+			worldServer.movables.get(i).owner = owners.get(i);
 		}
 
 		return worldClient;

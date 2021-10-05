@@ -21,17 +21,18 @@ public class WorldServer extends World {
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
 	public WorldServer() {
-		if (config.worldHeight % 2 != 1 || config.worldWidth % 2 != 1 || config.worldHeight < 5
-				|| config.worldWidth < 5) {
+		height = config.worldHeight;
+		width = config.worldWidth;
+
+		if (height % 2 != 1 || width % 2 != 1 || height < 5 || width < 5) {
 			logger.println("config world dimension malformed");
 			throw new Error("config world dimension malformed");
 		}
 
 		// wall generate
-		for (int i = 0; i < config.worldHeight; i++) {
-			for (int j = 0; j < config.worldWidth; j++) {
-				if (i == 0 || j == 0 || i == config.worldHeight - 1 || j == config.worldWidth - 1
-						|| (i % 2 == 0 && j % 2 == 0)) {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (i == 0 || j == 0 || i == height - 1 || j == width - 1 || (i % 2 == 0 && j % 2 == 0)) {
 					Wall wall = new Wall();
 					wall.position = new Position(i * config.squaresize, j * config.squaresize);
 					unmovables.add(wall);
@@ -43,23 +44,25 @@ public class WorldServer extends World {
 				new Position(config.squaresize, config.squaresize));
 
 		// box generate randomly
+		Position lastBoxPosition = null;
 		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
 			Box box = new Box();
-			box.position = getSpawn(0);
+			box.position = getSpawn(1);
 			unmovables.add(box);
+
+			lastBoxPosition = box.position;
 		}
 
 		// exit
 		Exit exit = new Exit();
-		exit.position = unmovables.get(0).position;
-		exit.animation.stateDelayTickEnd = 10;
-		unmovables.add(exit);
+		exit.position = lastBoxPosition;
+		// unmovables.add(exit);
 		this.exit = exit;
 
 		// enemy generate randomly
 		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
 			Enemy enemy = new Enemy();
-			enemy.position = getSpawn(0);
+			enemy.position = getSpawn(3);
 			enemy.velocity = config.velocityEnemy;
 			// character.KeyMovementRandom();
 			movables.add(enemy);
@@ -79,8 +82,7 @@ public class WorldServer extends World {
 		do {
 			// random position in world
 			// this could be a bit optimized but it's more error prone
-			positionCompressed = new Position(secureRandom.nextInt(config.worldHeight),
-					secureRandom.nextInt(config.worldWidth));
+			positionCompressed = new Position(secureRandom.nextInt(height), secureRandom.nextInt(width));
 
 			// decompress
 			position = new Position(positionCompressed.y * config.squaresize, positionCompressed.x * config.squaresize);

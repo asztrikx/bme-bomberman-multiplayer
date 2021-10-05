@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -40,6 +41,7 @@ public class Server implements AutoCloseable {
 	// calculate next state of worldServer
 	private Tick tick;
 	private Timer timer;
+	private final Phaser phaser = new Phaser(0);
 
 	public void listen(int port) throws InterruptedException {
 		worldServer = new WorldServer();
@@ -62,16 +64,22 @@ public class Server implements AutoCloseable {
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
+				boolean shouldContinue;
 				try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-					boolean shouldContinue = tick.nextState();
+					shouldContinue = tick.nextState();
 					send();
-					if (!shouldContinue) {
-						// TODO will lock get closed?
-						cancel();
-					}
+				}
+
+				if (!shouldContinue) {
+					// has to be before deregister
+					cancel();
+
+					// has to be outside lock for it to be closed
+					phaser.arriveAndDeregister();
 				}
 			}
 		};
+		phaser.register();
 		timer.schedule(timerTask, 0, config.tickRate);
 	}
 
@@ -81,14 +89,14 @@ public class Server implements AutoCloseable {
 	}
 
 	public void waitUntilWin() {
-		while (tick.nextStateWinners().size() == 0) {
-		}
+		phaser.arriveAndDeregister();
 	}
 
 	@Override
 	public void close() throws Exception {
 		listen.close();
 		timer.cancel();
+		phaser.arriveAndDeregister();
 	}
 
 	public void send() {

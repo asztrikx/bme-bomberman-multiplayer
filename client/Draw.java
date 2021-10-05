@@ -4,6 +4,7 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.image.BufferStrategy;
 
 import di.DI;
 import helper.Config;
@@ -18,19 +19,37 @@ public class Draw extends Canvas {
 	private WorldClient worldClient;
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private BufferStrategy strategy;
 
 	public Draw() {
 		// setFocusable(true);
 		// requestFocus();
-		// requestFocusInWindow();
+		// requestFocusInWindow();wwadsdadw
+	}
+
+	public void init() {
+		// RepaintManager currentManager = RepaintManager.currentManager(jFrame);
+		// currentManager.setDoubleBufferingEnabled(true);
+		super.createBufferStrategy(2);
+		strategy = super.getBufferStrategy();
 	}
 
 	public void setWorldClient(WorldClient worldClient) {
 		this.worldClient = worldClient;
 	}
 
-	@Override
-	public void paint(Graphics graphics) {
+	public void render() {
+		do {
+			do {
+				Graphics graphics = strategy.getDrawGraphics();
+				render(graphics);
+				graphics.dispose();
+			} while (strategy.contentsRestored());
+			strategy.show();
+		} while (strategy.contentsLost());
+	}
+
+	private void render(Graphics graphics) {
 		// not yet connected
 		if (worldClient == null) {
 			return;

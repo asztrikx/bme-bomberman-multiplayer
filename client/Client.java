@@ -33,10 +33,13 @@ public class Client implements AutoCloseable {
 	public Client() {
 		// gui
 		jFrame = new JFrame();
-		jFrame.add(draw);
 		jFrame.setSize(config.windowWidth, config.windowHeight);
 		jFrame.setVisible(true);
 		jFrame.setResizable(false);
+
+		// jfram has to be visible before draw added
+		jFrame.add(draw);
+		draw.init();
 	}
 
 	public void connect(String ip, int port, String name) throws UnknownHostException, IOException {
@@ -49,7 +52,7 @@ public class Client implements AutoCloseable {
 				return handshake(socket);
 			} catch (ClassNotFoundException | IOException e) {
 				logger.println("Couldn't handshake:");
-				logger.println(e.getStackTrace());
+				logger.println(e);
 				return false;
 			}
 		}, (Object object) -> {
@@ -87,6 +90,7 @@ public class Client implements AutoCloseable {
 
 		@Override
 		public void keyPressed(KeyEvent e) {
+			logger.println("key press event fired");
 			Key.KeyType keyType = getKeysFromEvent(e);
 			if (keyType != null) {
 				userClient.keys[keyType.getValue()] = true;
@@ -96,6 +100,7 @@ public class Client implements AutoCloseable {
 
 		@Override
 		public void keyReleased(KeyEvent e) {
+			logger.println("key release event fired");
 			Key.KeyType keyType = getKeysFromEvent(e);
 			if (keyType != null) {
 				userClient.keys[keyType.getValue()] = false;
@@ -124,7 +129,7 @@ public class Client implements AutoCloseable {
 	private void receive(Object object) {
 		WorldClient worldClient = (WorldClient) object;
 		draw.setWorldClient(worldClient);
-		draw.repaint();
+		draw.render();
 	}
 
 	// Sends userClient to server as UserServer

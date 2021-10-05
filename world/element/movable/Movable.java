@@ -45,7 +45,7 @@ public abstract class Movable extends WorldElement {
 
 	// moves character based on it's pressed keys
 	public void applyMovement(WorldServer worldServer) {
-		Position positionNew = position;
+		Position positionNew = new Position(position.y, position.x);
 		if (keys[Key.KeyType.KeyUp.getValue()]) {
 			positionNew.y -= velocity;
 		}

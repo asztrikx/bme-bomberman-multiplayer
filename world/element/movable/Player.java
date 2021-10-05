@@ -22,6 +22,8 @@ public class Player extends Movable {
 	@Override
 	// checks if colliding with Enemy and kills them if so
 	public void nextState(WorldServer worldServer, long tickCount) {
+		super.nextState(worldServer, tickCount);
+
 		List<Movable> collisionMovableS = collision.getCollisions(worldServer.movables, position, this,
 				(WorldElement worldElementRelative, Movable that) -> {
 					return that instanceof Enemy;

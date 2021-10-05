@@ -68,7 +68,7 @@ public class Collision {
 		if (step == 0) {
 			step = Math.abs(to.x - from.x);
 		}
-		Position current = from;
+		Position current = new Position(from);
 
 		// stays in place
 		if (step == 0) {

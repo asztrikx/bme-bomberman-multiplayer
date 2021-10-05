@@ -13,6 +13,11 @@ public class Position implements Serializable {
 		this.x = x;
 	}
 
+	public Position(Position position) {
+		this.y = position.y;
+		this.x = position.x;
+	}
+
 	public Position getSquare() {
 		return new Position(y % config.squaresize, x % config.squaresize);
 	}

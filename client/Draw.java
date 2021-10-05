@@ -20,7 +20,9 @@ public class Draw extends Canvas {
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
 	public Draw() {
-		super();
+		// setFocusable(true);
+		// requestFocus();
+		// requestFocusInWindow();
 	}
 
 	public void setWorldClient(WorldClient worldClient) {
@@ -29,8 +31,6 @@ public class Draw extends Canvas {
 
 	@Override
 	public void paint(Graphics graphics) {
-		graphics.drawString("Hello", 40, 40);
-
 		// not yet connected
 		if (worldClient == null) {
 			return;
@@ -50,7 +50,7 @@ public class Draw extends Canvas {
 
 		// offset
 		Position offset = new Position(-characterMe.position.y + config.windowHeight / 2,
-				-characterMe.position.x + config.worldWidth / 2);
+				-characterMe.position.x + config.windowWidth / 2);
 
 		clear(graphics, 30, 30, 30);
 
@@ -110,6 +110,14 @@ public class Draw extends Canvas {
 			Image image = movable.animation.getImage();
 			Position position = movable.position.shift(offset);
 			graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
+
+			if (movable.owner != null) {
+				int nameWidth = graphics.getFontMetrics().stringWidth(movable.owner.name);
+				int nameOffset = (config.squaresize - nameWidth) / 2;
+
+				graphics.setColor(Color.WHITE);
+				graphics.drawString(movable.owner.name, position.x + nameOffset, position.y - 10);
+			}
 		}
 	}
 }

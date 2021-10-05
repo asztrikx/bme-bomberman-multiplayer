@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -28,6 +29,7 @@ public class Listen extends Network {
 
 	public Function<Socket, Boolean> handshake;
 	public Consumer<Object> receive;
+	private final Phaser phaser = new Phaser(0);
 
 	public void listen(int port, Function<Socket, Boolean> handshake, Consumer<Object> receive) {
 		sockets = new LinkedList<>();
@@ -37,6 +39,7 @@ public class Listen extends Network {
 		this.receive = receive;
 
 		// blocking accept => new thread
+		phaser.register();
 		Thread thread = new Thread(new Handshake());
 		thread.start();
 	}
@@ -66,6 +69,8 @@ public class Listen extends Network {
 
 				lock.lock();
 			}
+
+			phaser.arriveAndDeregister();
 		}
 	}
 
@@ -74,28 +79,37 @@ public class Listen extends Network {
 		public void run() {
 			try {
 				try (ServerSocket serverSocket = new ServerSocket(port)) {
-					Socket socket = serverSocket.accept();
+					lock.lock();
+					while (active) {
+						lock.unlock();
+						Socket socket = serverSocket.accept();
 
-					// do not stop if a clients fails to connect => try here
-					try {
-						// server might be stopping => closing sockets => lock before accepting new
-						try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-							if (active && handshake.apply(socket)) {
-								sockets.add(socket);
+						// do not stop if a clients fails to connect => try here
+						try {
+							// server might be stopping => closing sockets => lock before accepting new
+							try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+								if (active && handshake.apply(socket)) {
+									sockets.add(socket);
 
-								Thread thread = new Thread(new Receive(socket));
-								thread.start();
-							} else {
-								socket.close();
+									phaser.register();
+									Thread thread = new Thread(new Receive(socket));
+									thread.start();
+								} else {
+									socket.close();
+								}
 							}
+						} catch (Exception e) {
+							logger.printf("Client failed to connect: %s\n", e.toString());
 						}
-					} catch (Exception e) {
-						logger.printf("Client failed to connect: %s\n", e.toString());
+
+						lock.lock();
 					}
 				}
 			} catch (Exception e) {
 				throw new Error(e);
 			}
+
+			phaser.arriveAndDeregister();
 		}
 	}
 
@@ -108,6 +122,7 @@ public class Listen extends Network {
 			}
 			active = false;
 		}
+		phaser.arriveAndAwaitAdvance();
 	}
 
 	public void send(Object... objects) throws IOException {

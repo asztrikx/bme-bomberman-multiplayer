@@ -17,20 +17,13 @@ import world.element.movable.Player;
 import world.element.unmovable.Unmovable;
 
 public class Draw extends Canvas {
-	private WorldClient worldClient;
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
+
+	private WorldClient worldClient;
 	private BufferStrategy strategy;
 
-	public Draw() {
-		// setFocusable(true);
-		// requestFocus();
-		// requestFocusInWindow();wwadsdadw
-	}
-
 	public void init() {
-		// RepaintManager currentManager = RepaintManager.currentManager(jFrame);
-		// currentManager.setDoubleBufferingEnabled(true);
 		super.createBufferStrategy(2);
 		strategy = super.getBufferStrategy();
 	}

@@ -1,17 +1,20 @@
 package client;
 
+import java.awt.Color;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 
+import client.KeyCapturePanel.KeyMap;
 import di.DI;
 import helper.Config;
 import helper.Key;
-import helper.Key.KeyType;
 import helper.Logger;
 import network.Connect;
 import user.User;
@@ -24,7 +27,8 @@ public class Client implements AutoCloseable {
 	private Draw draw = new Draw();
 	private Connect connect;
 	private JFrame jFrame;
-	private KeyListener keyListener;
+	// private KeyListener keyListener;
+	private KeyCapturePanel panel;
 
 	public enum State {
 		Lobby, Ingame,
@@ -36,10 +40,23 @@ public class Client implements AutoCloseable {
 		jFrame.setSize(config.windowWidth, config.windowHeight);
 		jFrame.setVisible(true);
 		jFrame.setResizable(false);
+		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		// jfram has to be visible before draw added
-		jFrame.add(draw);
-		draw.init();
+		List<KeyMap> keyMaps = new ArrayList<>();
+		keyMaps.add(new KeyMap(KeyEvent.VK_W, "up", Key.KeyType.KeyUp.getValue()));
+		keyMaps.add(new KeyMap(KeyEvent.VK_D, "right", Key.KeyType.KeyRight.getValue()));
+		keyMaps.add(new KeyMap(KeyEvent.VK_S, "down", Key.KeyType.KeyDown.getValue()));
+		keyMaps.add(new KeyMap(KeyEvent.VK_A, "left", Key.KeyType.KeyLeft.getValue()));
+		keyMaps.add(new KeyMap(KeyEvent.VK_SPACE, "bomb", Key.KeyType.KeyBomb.getValue()));
+		panel = new KeyCapturePanel(keyMaps, userClient.keys, () -> {
+			send();
+		});
+		panel.setVisible(true);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.active = false;
+
+		panel.setBackground(new Color(30, 30, 30));
+		jFrame.getContentPane().add(panel);
 	}
 
 	public void connect(String ip, int port, String name) throws UnknownHostException, IOException {
@@ -49,64 +66,26 @@ public class Client implements AutoCloseable {
 		connect = new Connect();
 		connect.connect(ip, port, (Socket socket) -> {
 			try {
-				return handshake(socket);
+				handshake(socket);
 			} catch (ClassNotFoundException | IOException e) {
 				logger.println("Couldn't handshake:");
 				logger.println(e);
 				return false;
 			}
+
+			// control handle
+			// - only after connected
+			panel.add(draw);
+			panel.active = true;
+			panel.setBackground(Color.red);
+
+			// jframe has to be visible before draw added
+			draw.init();
+
+			return true;
 		}, (Object object) -> {
 			receive(object);
 		});
-
-		// control handle
-		// - only after connected
-		keyListener = new KeyHandler();
-		jFrame.addKeyListener(keyListener);
-	}
-
-	private class KeyHandler implements KeyListener {
-		public Key.KeyType getKeysFromEvent(KeyEvent e) {
-			switch (e.getKeyCode()) {
-				case KeyEvent.VK_W:
-					return KeyType.KeyUp;
-				case KeyEvent.VK_D:
-					return KeyType.KeyRight;
-				case KeyEvent.VK_S:
-					return KeyType.KeyDown;
-				case KeyEvent.VK_A:
-					return KeyType.KeyLeft;
-				case KeyEvent.VK_SPACE:
-					return KeyType.KeyBomb;
-				default:
-					return null;
-			}
-		}
-
-		@Override
-		public void keyTyped(KeyEvent e) {
-			logger.println("typed event fired");
-		}
-
-		@Override
-		public void keyPressed(KeyEvent e) {
-			logger.println("key press event fired");
-			Key.KeyType keyType = getKeysFromEvent(e);
-			if (keyType != null) {
-				userClient.keys[keyType.getValue()] = true;
-				send();
-			}
-		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-			logger.println("key release event fired");
-			Key.KeyType keyType = getKeysFromEvent(e);
-			if (keyType != null) {
-				userClient.keys[keyType.getValue()] = false;
-				send();
-			}
-		}
 	}
 
 	private boolean handshake(Socket socket) throws IOException, ClassNotFoundException {
@@ -144,9 +123,9 @@ public class Client implements AutoCloseable {
 
 	@Override
 	public void close() throws Exception {
+		panel.active = false;
+		panel.remove(draw);
 		connect.close();
-		jFrame.removeKeyListener(keyListener);
-		keyListener = null;
 	}
 
 	public void waitUntilWin() {

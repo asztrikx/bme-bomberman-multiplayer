@@ -12,5 +12,8 @@ public abstract class World implements Serializable {
 	public List<Unmovable> unmovables = new ArrayList<>();
 	public List<Movable> movables = new ArrayList<>();
 
+	public int height;
+	public int width;
+
 	public Unmovable exit;
 }

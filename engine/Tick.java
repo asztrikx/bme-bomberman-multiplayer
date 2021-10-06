@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import client.WorldClient;
-import di.DI;
 import helper.Key;
 import server.WorldServer;
 import user.User;
@@ -21,10 +20,8 @@ import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
 
 public class Tick {
-	private static Collision collision = (Collision) DI.services.get(Collision.class);
-
 	private WorldServer worldServer;
-	private long tickCount = 0;
+	public long tickCount = 0;
 
 	public Tick(WorldServer worldServer) {
 		this.worldServer = worldServer;
@@ -45,7 +42,7 @@ public class Tick {
 		}
 
 		// set user state, remove player
-		List<Player> playersAtExit = collision.getCollisions(players, worldServer.exit.position, null, null);
+		List<Player> playersAtExit = Collision.getCollisions(players, worldServer.exit.position, null, null);
 		return playersAtExit;
 	}
 
@@ -74,19 +71,27 @@ public class Tick {
 
 	// calculates next state from current
 	public boolean nextState() {
+		int unmovablesSize = worldServer.unmovables.size();
+		int movablesSize = worldServer.movables.size();
+
 		// this should be calculated first as these objects should not exists in this
 		// tick
 		List<Unmovable> deletelist = new ArrayList<>();
-		for (Unmovable listItemCurrent : worldServer.unmovables) {
-			if (listItemCurrent.shouldDestroy(tickCount)) {
-				listItemCurrent.destroy(worldServer);
-				deletelist.add(listItemCurrent);
+		for (int i = 0; i < unmovablesSize; i++) {
+			Unmovable unmovable = worldServer.unmovables.get(i);
+
+			if (unmovable.shouldDestroy(tickCount)) {
+				unmovable.destroy(worldServer);
+				deletelist.add(unmovable);
 			}
 		}
 		worldServer.unmovables.removeAll(deletelist);
+		unmovablesSize -= deletelist.size();
 
 		// must be before character movement as that fixes bumping into wall TODO ?
-		for (Movable movable : worldServer.movables) {
+		for (int i = 0; i < movablesSize; i++) {
+			Movable movable = worldServer.movables.get(i);
+
 			if (movable instanceof Enemy) {
 				movable.nextState(worldServer, tickCount);
 			}
@@ -96,7 +101,9 @@ public class Tick {
 		// this should be calculated before TickCalculateFireDestroy() otherwise player
 		// would be in fire for 1 tick
 		// if 2 character is racing for the same spot the first in list wins
-		for (Movable movable : worldServer.movables) {
+		for (int i = 0; i < movablesSize; i++) {
+			Movable movable = worldServer.movables.get(i);
+
 			if (!(movable instanceof Enemy)) {
 				movable.nextState(worldServer, tickCount);
 			}
@@ -113,7 +120,9 @@ public class Tick {
 		}
 
 		// fire tick
-		for (Unmovable unmovable : worldServer.unmovables) {
+		for (int i = 0; i < unmovablesSize; i++) {
+			Unmovable unmovable = worldServer.unmovables.get(i);
+
 			if (unmovable instanceof BombFire) {
 				unmovable.nextState(worldServer, tickCount);
 			}
@@ -121,7 +130,9 @@ public class Tick {
 
 		// player tick
 		List<Movable> deaths = new ArrayList<>();
-		for (Movable movable : worldServer.movables) {
+		for (int i = 0; i < movablesSize; i++) {
+			Movable movable = worldServer.movables.get(i);
+
 			if (movable instanceof Player) {
 				movable.nextState(worldServer, tickCount);
 				if (movable.owner.state == User.State.Dead) {
@@ -129,9 +140,8 @@ public class Tick {
 				}
 			}
 		}
-		for (Movable movable : deaths) {
-			worldServer.movables.remove(movable);
-		}
+		worldServer.movables.removeAll(deaths);
+		movablesSize -= deaths.size();
 
 		nextStateAnimate();
 
@@ -144,7 +154,7 @@ public class Tick {
 		WorldClient worldClient = new WorldClient();
 
 		// remove exit if behind box
-		List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, worldServer.exit.position,
+		List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, worldServer.exit.position,
 				worldServer.exit, null);
 		if (collisionObjectS.size() == 0) {
 			worldClient.exit = worldServer.exit;

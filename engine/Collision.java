@@ -16,7 +16,7 @@ public class Collision {
 	private static Config config = (Config) DI.services.get(Config.class);
 
 	// Collision tells whether there's a collision between objects at positions
-	public boolean doCollide(Position position1, Position position2) {
+	public static boolean doCollide(Position position1, Position position2) {
 		if (Math.abs(position1.x - position2.x) >= config.squaresize) {
 			return false;
 		}
@@ -30,7 +30,7 @@ public class Collision {
 	// collisionDecideObjectFunction decides for each object whether it should be
 	// taking into account
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	public <E extends WorldElement, E2 extends WorldElement> List<E> getCollisions(List<E> worldElements,
+	public static <E extends WorldElement, E2 extends WorldElement> List<E> getCollisions(List<E> worldElements,
 			Position position, E2 worldElementRelative, BiFunction<E2, E, Boolean> collisionDecide) {
 		List<E> listCollision = new ArrayList<>();
 
@@ -59,8 +59,8 @@ public class Collision {
 	// we can be NULL
 	// if collisionDecideObjectFunction is NULL then it's treated as always true
 	// if collisionDecideCharacterFunction is NULL then it's treated as always true
-	public <E extends WorldElement> Position getValidPositionOnLine(WorldServer worldServer, Position from, Position to,
-			E we, BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
+	public static <E extends WorldElement> Position getValidPositionOnLine(WorldServer worldServer, Position from,
+			Position to, E we, BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
 			BiFunction<E, Movable, Boolean> collisionDecideCharacterFunction) {
 		// position difference in abs is always same for y and x coordinate if none of
 		// them is zero
@@ -90,20 +90,20 @@ public class Collision {
 			// step y
 			current.y += unit.y;
 
-			List<Unmovable> collisionObjectS = getCollisions(worldServer.unmovables, current, we,
+			List<Unmovable> unmovableCollisions = getCollisions(worldServer.unmovables, current, we,
 					collisionDecideObjectFunction);
-			List<Movable> collisionCharacterS = getCollisions(worldServer.movables, current, we,
+			List<Movable> movableCollisions = getCollisions(worldServer.movables, current, we,
 					collisionDecideCharacterFunction);
-			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
+			if (unmovableCollisions.size() != 0 || movableCollisions.size() != 0) {
 				current.y -= unit.y;
 			}
 
 			// step x
 			current.x += unit.x;
 
-			collisionObjectS = getCollisions(worldServer.unmovables, current, we, collisionDecideObjectFunction);
-			collisionCharacterS = getCollisions(worldServer.movables, current, we, collisionDecideCharacterFunction);
-			if (collisionObjectS.size() != 0 || collisionCharacterS.size() != 0) {
+			unmovableCollisions = getCollisions(worldServer.unmovables, current, we, collisionDecideObjectFunction);
+			movableCollisions = getCollisions(worldServer.movables, current, we, collisionDecideCharacterFunction);
+			if (unmovableCollisions.size() != 0 || movableCollisions.size() != 0) {
 				current.x -= unit.x;
 			}
 		}
@@ -111,11 +111,11 @@ public class Collision {
 		return current;
 	}
 
-	private boolean[][] collisionFreeCountObjectGetMemory;
+	private static boolean[][] collisionFreeCountObjectGetMemory;
 
 	// CollisionFreeCountObjectGetRecursion is a helper function of
 	// CollisionFreeCountObjectGet
-	private int getFreeSpaceCountRecursion(WorldServer worldServer, Position positionCompress) {
+	private static int getFreeSpaceCountRecursion(WorldServer worldServer, Position positionCompress) {
 		Position position = new Position(positionCompress.y * config.squaresize,
 				positionCompress.x * config.squaresize);
 
@@ -151,7 +151,7 @@ public class Collision {
 
 	// CollisionFreeCountObjectGet returns how many square sized object-free area is
 	// reachable from (position - position % squaresize)
-	public int getFreeSpaceCount(WorldServer worldServer, Position position) {
+	public static int getFreeSpaceCount(WorldServer worldServer, Position position) {
 		// memory alloc
 		collisionFreeCountObjectGetMemory = new boolean[config.worldHeight][config.windowWidth];
 

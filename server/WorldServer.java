@@ -16,7 +16,6 @@ import world.element.unmovable.Exit;
 import world.element.unmovable.Wall;
 
 public class WorldServer extends World {
-	private static Collision collision = (Collision) DI.services.get(Collision.class);
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
@@ -40,7 +39,7 @@ public class WorldServer extends World {
 			}
 		}
 
-		int collisionFreeCountObject = collision.getFreeSpaceCount(this,
+		int collisionFreeCountObject = Collision.getFreeSpaceCount(this,
 				new Position(config.squaresize, config.squaresize));
 
 		// box generate randomly
@@ -88,7 +87,7 @@ public class WorldServer extends World {
 			position = new Position(positionCompressed.y * config.squaresize, positionCompressed.x * config.squaresize);
 
 			// collision check
-			List<Movable> collisionCharacterS = collision.getCollisions(movables, position, null, null);
+			List<Movable> collisionCharacterS = Collision.getCollisions(movables, position, null, null);
 			collisionCountCharacter = collisionCharacterS.size();
 
 			// distance check
@@ -103,7 +102,7 @@ public class WorldServer extends World {
 			}
 
 			// position valid
-			spawnSquareFreeSpace = collision.getFreeSpaceCount(this, position);
+			spawnSquareFreeSpace = Collision.getFreeSpaceCount(this, position);
 		} while (collisionCountCharacter != 0 || spawnSquareFreeSpace < minSpawnSquareFreeSpace || near);
 
 		return position;

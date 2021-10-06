@@ -3,7 +3,6 @@ package world.element.unmovable;
 import java.util.ArrayList;
 import java.util.List;
 
-import di.DI;
 import engine.Collision;
 import server.WorldServer;
 import user.User;
@@ -12,8 +11,6 @@ import world.element.WorldElement;
 import world.element.movable.Movable;
 
 public class BombFire extends Unmovable {
-	private static Collision collision = (Collision) DI.services.get(Collision.class);
-
 	public BombFire() {
 		super(new Animation(2, "resource/unmovable/bombFire"));
 	}
@@ -25,7 +22,7 @@ public class BombFire extends Unmovable {
 		worldElements.addAll(worldServer.unmovables);
 		worldElements.addAll(worldServer.movables);
 
-		List<WorldElement> collisionWorldElements = collision.getCollisions(worldElements, position, null, null);
+		List<WorldElement> collisionWorldElements = Collision.getCollisions(worldElements, position, null, null);
 		List<WorldElement> deletelist = new ArrayList<>();
 		for (WorldElement collisionWorldElement : collisionWorldElements) {
 			if (collisionWorldElement instanceof Box) {

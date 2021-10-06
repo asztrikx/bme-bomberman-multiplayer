@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import client.Client;
 import di.DI;
-import engine.Collision;
 import flag.Flag;
 import helper.Config;
 import helper.Logger;
@@ -15,7 +14,6 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		DI.put(new Config());
 		DI.put(new Logger(System.out));
-		DI.put(new Collision());
 		DI.put(new AnimationStore());
 
 		// parse cli

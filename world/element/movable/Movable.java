@@ -18,7 +18,6 @@ import world.element.unmovable.Wall;
 
 public abstract class Movable extends WorldElement {
 	private static Config config = (Config) DI.services.get(Config.class);
-	private static Collision collision = (Collision) DI.services.get(Collision.class);
 
 	public int velocity = 0;
 	public int bombCount = 0;
@@ -60,7 +59,7 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		positionNew = collision.getValidPositionOnLine(worldServer, position, positionNew, this,
+		positionNew = Collision.getValidPositionOnLine(worldServer, position, positionNew, this,
 				(Movable characterRelative, Unmovable object) -> {
 					return object instanceof Wall || object instanceof Box
 							|| (object instanceof Bomb && (object.owner != characterRelative || object.movedOutOfBomb));
@@ -69,8 +68,8 @@ public abstract class Movable extends WorldElement {
 					// CharacterTypeEnemy is not solid for CharacterTypeUser
 					// vice versa with CharacterTypeEnemy
 					// so only same type character is solid
-					return !(movable instanceof Player && objectRelative instanceof Player
-							|| movable instanceof Enemy && objectRelative instanceof Enemy);
+					return movable instanceof Player && objectRelative instanceof Player
+							|| movable instanceof Enemy && objectRelative instanceof Enemy;
 				});
 
 		// enemy new one way direction
@@ -86,7 +85,7 @@ public abstract class Movable extends WorldElement {
 		for (Unmovable unmovable : worldServer.unmovables) {
 			// TODO only works for 1 bomb
 			if (unmovable instanceof Bomb && unmovable.owner == this && !unmovable.movedOutOfBomb
-					&& !collision.doCollide(position, unmovable.position)) {
+					&& !Collision.doCollide(position, unmovable.position)) {
 				unmovable.movedOutOfBomb = true;
 			}
 		}
@@ -117,8 +116,8 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, positionNew, null, null);
-		List<Movable> collisionCharacterS = collision.getCollisions(worldServer.movables, positionNew, this, null);
+		List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, positionNew, null, null);
+		List<Movable> collisionCharacterS = Collision.getCollisions(worldServer.movables, positionNew, this, null);
 
 		if (collisionCharacterS.size() != 0 || collisionObjectS.size() != 0) {
 			return;

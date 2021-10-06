@@ -11,7 +11,6 @@ import world.element.Animation;
 
 public class Bomb extends Unmovable {
 	private static Config config = (Config) DI.services.get(Config.class);
-	private static Collision collision = (Collision) DI.services.get(Collision.class);
 
 	public Bomb() {
 		super(new Animation(15, "resource/unmovable/bomb"));
@@ -28,7 +27,7 @@ public class Bomb extends Unmovable {
 			Position positionFire = new Position(position.y + directionY[j] * config.squaresize,
 					position.x + directionX[j] * config.squaresize);
 
-			List<Unmovable> collisionObjectS = collision.getCollisions(worldServer.unmovables, positionFire, this,
+			List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, positionFire, this,
 					null);
 			boolean boxExists = collisionObjectS.isEmpty()
 					|| collisionObjectS.stream().filter(t -> t instanceof Box).count() != 0;

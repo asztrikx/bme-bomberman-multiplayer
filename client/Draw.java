@@ -8,6 +8,7 @@ import java.awt.image.BufferStrategy;
 
 import di.DI;
 import helper.Config;
+import helper.Key;
 import helper.Logger;
 import helper.Position;
 import user.User;
@@ -128,7 +129,14 @@ public class Draw extends Canvas {
 		for (Movable movable : worldClient.movables) {
 			Image image = movable.animation.getImage();
 			Position position = movable.position.shift(offset);
-			graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
+
+			// flip image if moving to right
+			if (!movable.keys[Key.KeyType.KeyLeft.getValue()] && movable.keys[Key.KeyType.KeyRight.getValue()]) {
+				graphics.drawImage(image, position.x + config.squaresize, position.y, -config.squaresize,
+						config.squaresize, null);
+			} else {
+				graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
+			}
 
 			if (movable.owner != null) {
 				int nameWidth = graphics.getFontMetrics().stringWidth(movable.owner.name);

@@ -55,7 +55,7 @@ public class Connect extends Network {
 				}
 			}
 
-			// phaser.arriveAndDeregister();
+			// phaser.awaitAdvance(phaser.getPhase());
 		}
 	}
 
@@ -71,6 +71,6 @@ public class Connect extends Network {
 	public void close() throws Exception {
 		// only close one
 		connection.socket.close();
-		phaser.arriveAndAwaitAdvance();
+		phaser.awaitAdvance(phaser.getPhase());
 	}
 }

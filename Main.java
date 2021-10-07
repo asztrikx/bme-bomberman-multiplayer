@@ -18,11 +18,11 @@ public class Main {
 
 		// parse cli
 		Map<String, Flag.Entry> commands = new HashMap<>();
-		commands.put("--server", new Flag.Entry("", true, false));
-		commands.put("--client", new Flag.Entry("", true, false));
-		commands.put("--ip", new Flag.Entry("", false, false));
-		commands.put("--server-port", new Flag.Entry("", false, true));
-		commands.put("--name", new Flag.Entry("", false, true));
+		commands.put("--server", new Flag.Entry("", true, false, null));
+		commands.put("--client", new Flag.Entry("", true, false, null));
+		commands.put("--ip", new Flag.Entry("", false, false, null));
+		commands.put("--server-port", new Flag.Entry("", false, true, "32469"));
+		commands.put("--name", new Flag.Entry("", false, false, null));
 		Flag flag = new Flag(commands);
 		Optional<Map<String, String>> parsedOrError = flag.parse(args);
 		if (!parsedOrError.isPresent()) {

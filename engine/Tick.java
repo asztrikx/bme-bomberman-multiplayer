@@ -121,7 +121,7 @@ public class Tick {
 		// unmovables
 		for (Unmovable unmovable : worldServer.unmovables) {
 			// don't add exit
-			if (unmovable instanceof Exit && worldServer.exit == null) {
+			if (unmovable instanceof Exit && worldClient.exit == null) {
 				continue;
 			}
 

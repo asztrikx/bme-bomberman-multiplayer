@@ -132,7 +132,7 @@ public class Listen extends Network {
 			}
 			active = false;
 		}
-		phaser.arriveAndAwaitAdvance();
+		phaser.awaitAdvance(phaser.getPhase());
 	}
 
 	public void send(Object... objects) throws IOException {

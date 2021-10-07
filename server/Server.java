@@ -90,7 +90,7 @@ public class Server implements AutoCloseable {
 	}
 
 	public void waitUntilWin() {
-		phaser.arriveAndDeregister();
+		phaser.awaitAdvance(phaser.getPhase());
 	}
 
 	@Override

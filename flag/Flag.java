@@ -15,11 +15,13 @@ public class Flag {
 		public String helpMessage;
 		public boolean noParam;
 		public boolean required;
+		public String defaultValue;
 
-		public Entry(String helpMessage, boolean noParam, boolean required) {
+		public Entry(String helpMessage, boolean noParam, boolean required, String defaultValue) {
 			this.helpMessage = helpMessage;
 			this.noParam = noParam;
 			this.required = required;
+			this.defaultValue = defaultValue;
 		}
 	}
 
@@ -52,7 +54,11 @@ public class Flag {
 				return Optional.empty();
 			}
 
-			parsed.put(arg, args[i + 1]);
+			if (entry.noParam) {
+				parsed.put(arg, "");
+			} else {
+				parsed.put(arg, args[i + 1]);
+			}
 
 			if (!entry.noParam) {
 				i++;
@@ -65,8 +71,13 @@ public class Flag {
 			Entry entry = mapEntry.getValue();
 
 			if (entry.required && !parsed.containsKey(name)) {
-				System.out.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
-				missing = true;
+				if (entry.defaultValue == null) {
+					System.out.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
+					missing = true;
+				} else {
+					System.out.println(String.format("Using default value %s for %s", entry.defaultValue, name));
+					parsed.put(name, entry.defaultValue);
+				}
 			}
 		}
 		if (missing) {

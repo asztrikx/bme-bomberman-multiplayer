@@ -59,7 +59,7 @@ public class WorldServer extends World {
 		// exit
 		Exit exit = new Exit();
 		exit.position = lastBoxPosition;
-		// unmovables.add(exit);
+		unmovables.add(exit);
 		this.exit = exit;
 
 		// enemy generate randomly

@@ -10,42 +10,27 @@ import java.util.LinkedList;
 import java.util.List;
 
 import client.WorldClient;
+import engine.gameend.Gameend;
 import helper.Key;
 import server.WorldServer;
 import user.User;
 import world.element.movable.Movable;
-import world.element.movable.Player;
 import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
 
+/**
+ * Must be called with lock closed
+ */
 public class Tick {
 	private WorldServer worldServer;
 	public long tickCount = 0;
+	public Gameend gameend;
 
-	public Tick(WorldServer worldServer) {
+	public Tick(WorldServer worldServer, Gameend gameend) {
 		this.worldServer = worldServer;
+		this.gameend = gameend;
 	}
 
-	// checks if any CharacterTypeUser if in a winning state and removes them if so
-	public List<Player> nextStateWinners() {
-		List<Player> players = new ArrayList<>();
-		for (Movable movable : worldServer.movables) {
-			if (movable instanceof Player) {
-				players.add((Player) movable);
-			}
-		}
-
-		// can't win until all enemies are dead
-		if (worldServer.movables.size() - players.size() != 0) {
-			return new ArrayList<>();
-		}
-
-		// set user state, remove player
-		List<Player> playersAtExit = Collision.getCollisions(players, worldServer.exit.position, null, null);
-		return playersAtExit;
-	}
-
-	// TickCalculateAnimate calculates next texture state from current
 	public void nextStateAnimate() {
 		// animate
 		for (Unmovable unmovable : worldServer.unmovables) {
@@ -92,12 +77,7 @@ public class Tick {
 
 		nextStateAnimate();
 
-		List<Player> playersWinning = nextStateWinners();
-		if (playersWinning.size() != 0) {
-			for (Player player : playersWinning) {
-				player.owner.state = User.State.Won;
-			}
-			// worldServer.movables.removeAll(playersAtExit);
+		if (gameend.shouldEnd(worldServer, tickCount)) {
 			return false;
 		}
 
@@ -119,29 +99,32 @@ public class Tick {
 		}
 
 		// unmovables
+		List<Movable> unmovableOwners = new ArrayList<>();
 		for (Unmovable unmovable : worldServer.unmovables) {
 			// don't add exit
 			if (unmovable instanceof Exit && worldClient.exit == null) {
 				continue;
 			}
 
+			unmovableOwners.add(unmovable.owner);
+			unmovable.owner = null;
+
 			worldClient.unmovables.add(unmovable);
 		}
 
 		// movables
-		List<User> owners = new ArrayList<>();
+		List<User> movableOwners = new ArrayList<>();
 		for (Movable movable : worldServer.movables) {
 			// has to send User
 			// - do not leak other things
 			// - can't serialize socket
-			owners.add(movable.owner);
+			movableOwners.add(movable.owner);
 			worldClient.movables.add(movable);
 
 			if (movable.owner != null) {
-				User owner = movable.owner;
-
-				movable.owner = new User();
-				movable.owner.name = owner.name;
+				User user = new User();
+				user.name = movable.owner.name;
+				movable.owner = user;
 			}
 		}
 
@@ -158,8 +141,12 @@ public class Tick {
 			throw new Error(e);
 		}
 
-		for (int i = 0; i < owners.size(); i++) {
-			worldServer.movables.get(i).owner = owners.get(i);
+		for (int i = 0; i < movableOwners.size(); i++) {
+			worldServer.movables.get(i).owner = movableOwners.get(i);
+		}
+
+		for (int i = 0; i < unmovableOwners.size(); i++) {
+			worldServer.unmovables.get(i).owner = unmovableOwners.get(i);
 		}
 
 		return worldClient;

@@ -52,6 +52,7 @@ public class Draw extends Canvas {
 		// dead or won
 		if (worldClient.state != User.State.Playing) {
 			gameEnd(graphics);
+			// TODO disconnect
 			return;
 		}
 

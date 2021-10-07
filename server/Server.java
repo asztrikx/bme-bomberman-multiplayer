@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import client.WorldClient;
 import di.DI;
 import engine.Tick;
+import engine.gameend.FirstExit;
 import helper.Auth;
 import helper.AutoClosableLock;
 import helper.Config;
@@ -67,7 +68,7 @@ public class Server implements AutoCloseable {
 		});
 
 		// tick start: world calc, connected user update
-		tick = new Tick(worldServer);
+		tick = new Tick(worldServer, new FirstExit());
 		timer = new Timer();
 		TimerTask timerTask = new TimerTask() {
 			@Override
@@ -102,6 +103,9 @@ public class Server implements AutoCloseable {
 		phaser.arriveAndDeregister();
 	}
 
+	/**
+	 * Must be called with lock closed
+	 */
 	public void send() {
 		WorldClient worldClient = tick.getWorldClient();
 

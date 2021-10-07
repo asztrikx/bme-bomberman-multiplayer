@@ -6,11 +6,32 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Launch Main",
+            "name": "Server & Client",
             "request": "launch",
             "mainClass": "Main",
             "projectName": "NHF_efc2c572",
-            "args": "--server --client --server-port 22544 --ip 127.0.0.1 --name Asztrik",
+            "args": "--server --client --name Asztrik",
+            "stepFilters": {
+                "classNameFilters": [
+                    "java.*",
+                    "javax.*",
+                    "com.sun.*",
+                    "sun.*",
+                    "sunw.*",
+                    "org.omg.*"
+                ],
+                "skipSynthetics": false,
+                "skipStaticInitializers": false,
+                "skipConstructors": false
+            }
+        },
+        {
+            "type": "java",
+            "name": "Server",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "NHF_efc2c572",
+            "args": "--server",
             "stepFilters": {
                 "classNameFilters": [
                     "java.*",

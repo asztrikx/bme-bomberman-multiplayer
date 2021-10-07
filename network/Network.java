@@ -3,6 +3,7 @@ package network;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public abstract class Network implements AutoCloseable {
@@ -18,7 +19,8 @@ public abstract class Network implements AutoCloseable {
 	}
 
 	public static String getIP(Socket socket) {
-		return socket.getInetAddress().getAddress().toString();
+		InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+		return inetSocketAddress.getAddress().toString();
 	}
 
 	public static int getPort(Socket socket) {
@@ -27,7 +29,7 @@ public abstract class Network implements AutoCloseable {
 
 	abstract public void close() throws Exception;
 
-	public static class Connection {
+	public static class Connection implements AutoCloseable {
 		public ObjectInputStream objectInputStream;
 		public ObjectOutputStream objectOutputStream;
 		public Socket socket;
@@ -36,6 +38,11 @@ public abstract class Network implements AutoCloseable {
 			this.objectInputStream = objectInputStream;
 			this.objectOutputStream = objectOutputStream;
 			this.socket = socket;
+		}
+
+		@Override
+		public void close() throws Exception {
+			socket.close();
 		}
 	}
 }

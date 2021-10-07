@@ -57,6 +57,13 @@ public class Server implements AutoCloseable {
 			}
 		}, (Object object) -> {
 			receive(object);
+		}, (Connection connection) -> {
+			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+				UserServer userServer = userManager.getList().stream()
+						.filter(userServerCandidate -> userServerCandidate.connection.equals(connection)).findFirst()
+						.get();
+				userManager.remove(userServer);
+			}
 		});
 
 		// tick start: world calc, connected user update
@@ -82,11 +89,6 @@ public class Server implements AutoCloseable {
 		};
 		phaser.register();
 		timer.schedule(timerTask, 0, config.tickRate);
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		System.out.println("wtf");
 	}
 
 	public void waitUntilWin() {
@@ -124,12 +126,11 @@ public class Server implements AutoCloseable {
 
 			// send
 			try {
-				listen.send(worldClient);
+				listen.send(userServer.connection.objectOutputStream, worldClient);
 			} catch (IOException e) {
 				String ip = Network.getIP(userServer.connection.socket);
 				int port = Network.getPort(userServer.connection.socket);
 				logger.printf("Couldn't send update to client: %s:%d\n", ip, port);
-				logger.println(e.getStackTrace());
 			}
 
 			// remove character alter

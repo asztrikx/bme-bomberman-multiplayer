@@ -10,8 +10,18 @@
 - private where possible
 - merge worlds?
 
+# Gameplay
+- no enemies, no exit, infinite respawn (show deaths)
+- low visibility (fog view, circle shape)
+- pushable bombs
+
 # Breaking
 - remove owner move to usermanager
+- key doesn't work
+- exit is sent
+- awt is used
+- server, client json config
+- remove exit field
 
 # Clean code
 - visibility explicit

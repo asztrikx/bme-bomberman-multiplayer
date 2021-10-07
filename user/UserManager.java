@@ -36,7 +36,7 @@ public class UserManager<U extends User> {
 
 	public U findByName(String name) {
 		Optional<U> user = userPossession.keySet().stream().filter((U userServerOther) -> {
-			return userServerOther.name == name;
+			return userServerOther.name.equals(name);
 		}).findFirst();
 
 		if (user.isEmpty()) {

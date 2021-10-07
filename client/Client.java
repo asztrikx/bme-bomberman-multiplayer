@@ -119,7 +119,6 @@ public class Client implements AutoCloseable {
 			connect.send((User) userClient);
 		} catch (IOException e) {
 			logger.println("Couldn't send update");
-			logger.println(e.getStackTrace());
 		}
 	}
 

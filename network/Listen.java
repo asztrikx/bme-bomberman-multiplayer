@@ -31,16 +31,19 @@ public class Listen extends Network {
 
 	public int port;
 
-	public Function<Connection, Boolean> handshake;
-	public Consumer<Object> receive;
+	private Function<Connection, Boolean> handshake;
+	private Consumer<Object> receive;
+	private Consumer<Connection> disconnect;
 	private final Phaser phaser = new Phaser(0);
 
-	public void listen(int port, Function<Connection, Boolean> handshake, Consumer<Object> receive) {
+	public void listen(int port, Function<Connection, Boolean> handshake, Consumer<Object> receive,
+			Consumer<Connection> disconnect) {
 		connections = new LinkedList<>();
 		this.port = port;
 		this.active = true;
 		this.handshake = handshake;
 		this.receive = receive;
+		this.disconnect = disconnect;
 
 		// blocking accept => new thread
 		phaser.register();
@@ -65,10 +68,16 @@ public class Listen extends Network {
 					Object object = receive(connection.objectInputStream);
 					Listen.this.receive.accept(object);
 				} catch (ClassNotFoundException | IOException e) {
-					String ip = Network.getIP(connection.socket);
-					int port = Network.getPort(connection.socket);
-					logger.printf("Couldn't receive client: %s:%d\n", ip, port);
-					logger.println(e.getStackTrace());
+					// disconnect first to prevent using connection after close but before
+					// disconnect()
+					disconnect.accept(connection);
+
+					try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+						connection.close();
+						connections.remove(connection);
+						active = false;
+					} catch (Exception e2) {
+					}
 				}
 
 				lock.lock();
@@ -128,7 +137,7 @@ public class Listen extends Network {
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// only close one of objectOutputStream, objectInputStream
 			for (Connection connection : connections) {
-				connection.socket.close();
+				connection.close();
 			}
 			active = false;
 		}

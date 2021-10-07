@@ -42,7 +42,11 @@ public class KeyCapturePanel extends JPanel {
 						if (!active) {
 							return;
 						}
-						keys[keyMap.keysIndex] ^= true;
+						if (onrelease) {
+							keys[keyMap.keysIndex] = false;
+						} else {
+							keys[keyMap.keysIndex] = true;
+						}
 						callback.run();
 					}
 				});

@@ -70,10 +70,13 @@ public class Flag {
 			String name = mapEntry.getKey();
 			Entry entry = mapEntry.getValue();
 
-			if (entry.required && !parsed.containsKey(name)) {
+			if (!parsed.containsKey(name)) {
 				if (entry.defaultValue == null) {
-					System.out.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
-					missing = true;
+					if (entry.required) {
+						System.out
+								.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
+						missing = true;
+					}
 				} else {
 					System.out.println(String.format("Using default value %s for %s", entry.defaultValue, name));
 					parsed.put(name, entry.defaultValue);

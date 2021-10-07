@@ -38,6 +38,7 @@ public class KeyCapturePanel extends JPanel {
 				actionMap.put(prefix + keyMap.name, new AbstractAction() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						// TODO thread safe
 						if (!active) {
 							return;
 						}

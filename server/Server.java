@@ -1,7 +1,6 @@
 package server;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,6 +19,7 @@ import helper.Logger;
 import helper.Position;
 import network.Listen;
 import network.Network;
+import network.Network.Connection;
 import user.User;
 import user.UserManager;
 import world.element.movable.Movable;
@@ -47,9 +47,9 @@ public class Server implements AutoCloseable {
 		worldServer = new WorldServer();
 		userManager = new UserManager<>();
 		listen = new Listen();
-		listen.listen(port, (Socket socket) -> {
+		listen.listen(port, (connection) -> {
 			try {
-				return handshake(socket);
+				return handshake(connection);
 			} catch (Exception e) {
 				logger.printf("failed to use port: %s\n", port);
 				return false;
@@ -123,10 +123,10 @@ public class Server implements AutoCloseable {
 
 			// send
 			try {
-				listen.send(userServer.socket, worldClient);
+				listen.send(worldClient);
 			} catch (IOException e) {
-				String ip = Network.getIP(userServer.socket);
-				int port = Network.getPort(userServer.socket);
+				String ip = Network.getIP(userServer.connection.socket);
+				int port = Network.getPort(userServer.connection.socket);
 				logger.printf("Couldn't send update to client: %s:%d\n", ip, port);
 				logger.println(e.getStackTrace());
 			}
@@ -139,15 +139,15 @@ public class Server implements AutoCloseable {
 	}
 
 	// registers new user connection, returns it with auth
-	public boolean handshake(Socket socket) throws ClassNotFoundException, IOException {
+	public boolean handshake(Connection connection) throws ClassNotFoundException, IOException {
 		// get basic info
-		String name = (String) listen.receive(socket);
+		String name = (String) listen.receive(connection.objectInputStream);
 		if (name.length() > config.nameMaxLength) {
 			return false;
 		}
 
 		// add
-		UserServer userServer = new UserServer(socket);
+		UserServer userServer = new UserServer(connection);
 		userServer.state = User.State.Playing;
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// unique name
@@ -187,7 +187,7 @@ public class Server implements AutoCloseable {
 		User user = new User();
 		user.auth = userServer.auth;
 		user.name = userServer.name;
-		listen.send(socket, user);
+		listen.send(connection.objectOutputStream, user);
 
 		return true;
 	}

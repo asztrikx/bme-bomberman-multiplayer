@@ -3,7 +3,6 @@ package client;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +16,7 @@ import helper.Config;
 import helper.Key;
 import helper.Logger;
 import network.Connect;
+import network.Network.Connection;
 import user.User;
 
 public class Client implements AutoCloseable {
@@ -38,7 +38,6 @@ public class Client implements AutoCloseable {
 		// gui
 		jFrame = new JFrame();
 		jFrame.setSize(config.windowWidth, config.windowHeight);
-		jFrame.setVisible(true);
 		jFrame.setResizable(false);
 		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -51,11 +50,11 @@ public class Client implements AutoCloseable {
 		panel = new KeyCapturePanel(keyMaps, userClient.keys, () -> {
 			send();
 		});
-		panel.setVisible(true);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.active = false;
 
 		panel.setBackground(new Color(30, 30, 30));
+
 		jFrame.getContentPane().add(panel);
 	}
 
@@ -64,9 +63,9 @@ public class Client implements AutoCloseable {
 
 		// connect
 		connect = new Connect();
-		connect.connect(ip, port, (Socket socket) -> {
+		connect.connect(ip, port, (Connection connection) -> {
 			try {
-				handshake(socket);
+				handshake();
 			} catch (ClassNotFoundException | IOException e) {
 				logger.println("Couldn't handshake:");
 				logger.println(e);
@@ -77,7 +76,10 @@ public class Client implements AutoCloseable {
 			// - only after connected
 			panel.add(draw);
 			panel.active = true;
-			panel.setBackground(Color.red);
+
+			// show after all elements are added
+			panel.setVisible(true);
+			jFrame.setVisible(true);
 
 			// jframe has to be visible before draw added
 			draw.init();
@@ -88,7 +90,7 @@ public class Client implements AutoCloseable {
 		});
 	}
 
-	private boolean handshake(Socket socket) throws IOException, ClassNotFoundException {
+	private boolean handshake() throws IOException, ClassNotFoundException {
 		// send name
 		connect.send(userClient.name);
 
@@ -125,6 +127,9 @@ public class Client implements AutoCloseable {
 	public void close() throws Exception {
 		panel.active = false;
 		panel.remove(draw);
+		panel.setVisible(false);
+		jFrame.remove(panel);
+		jFrame.setVisible(false);
 		connect.close();
 	}
 

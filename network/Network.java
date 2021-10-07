@@ -1,25 +1,19 @@
 package network;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
 public abstract class Network implements AutoCloseable {
-	public void send(Socket socket, Object... objects) throws IOException {
-		OutputStream outputStream = socket.getOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+	public void send(ObjectOutputStream objectOutputStream, Object... objects) throws IOException {
+		objectOutputStream.reset();
 		for (Object object : objects) {
 			objectOutputStream.writeObject(object);
 		}
 	}
 
-	public Object receive(Socket socket) throws IOException, ClassNotFoundException {
-		InputStream inputStream = socket.getInputStream();
-		ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-
+	public Object receive(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
 		return objectInputStream.readObject();
 	}
 
@@ -32,4 +26,16 @@ public abstract class Network implements AutoCloseable {
 	}
 
 	abstract public void close() throws Exception;
+
+	public static class Connection {
+		public ObjectInputStream objectInputStream;
+		public ObjectOutputStream objectOutputStream;
+		public Socket socket;
+
+		public Connection(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, Socket socket) {
+			this.objectInputStream = objectInputStream;
+			this.objectOutputStream = objectOutputStream;
+			this.socket = socket;
+		}
+	}
 }

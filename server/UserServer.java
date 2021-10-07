@@ -1,13 +1,12 @@
 package server;
 
-import java.net.Socket;
-
+import network.Network.Connection;
 import user.User;
 
 public class UserServer extends User {
-	public Socket socket;
+	public Connection connection;
 
-	public UserServer(Socket socket) {
-		this.socket = socket;
+	public UserServer(Connection connection) {
+		this.connection = connection;
 	}
 }

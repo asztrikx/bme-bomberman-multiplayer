@@ -59,7 +59,7 @@ public class WorldServer extends World {
 		this.exit = exit;
 
 		// enemy generate randomly
-		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
+		for (int i = 0; i < (int) (0 * config.enemyRatio * collisionFreeCountObject); i++) {
 			Enemy enemy = new Enemy();
 			enemy.position = getSpawn(3);
 			enemy.velocity = config.velocityEnemy;

@@ -45,6 +45,7 @@ public class Server implements AutoCloseable {
 
 	public void listen(int port) throws InterruptedException {
 		worldServer = new WorldServer();
+		worldServer.generate();
 		userManager = new UserManager<>();
 		listen = new Listen();
 		listen.listen(port, (connection) -> {

@@ -1,6 +1,7 @@
 package server;
 
 import java.security.SecureRandom;
+import java.util.LinkedList;
 import java.util.List;
 
 import di.DI;
@@ -19,7 +20,10 @@ public class WorldServer extends World {
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
-	public WorldServer() {
+	public void generate() {
+		movables = new LinkedList<>();
+		unmovables = new LinkedList<>();
+
 		height = config.worldHeight;
 		width = config.worldWidth;
 
@@ -59,7 +63,7 @@ public class WorldServer extends World {
 		this.exit = exit;
 
 		// enemy generate randomly
-		for (int i = 0; i < (int) (0 * config.enemyRatio * collisionFreeCountObject); i++) {
+		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
 			Enemy enemy = new Enemy();
 			enemy.position = getSpawn(3);
 			enemy.velocity = config.velocityEnemy;

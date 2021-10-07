@@ -3,7 +3,7 @@ package helper;
 public class Config {
 	// TODO should be same between server and client
 	public int squaresize = 50;
-	public int velocityPlayer = 3;
+	public int velocityPlayer = 6;
 	public int velocityEnemy = 1;
 	// TODO make position etc for others, optimize after like offset variable
 	public int windowHeight = 480;

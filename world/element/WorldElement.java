@@ -19,10 +19,10 @@ public abstract class WorldElement implements Serializable {
 		return tickCount == destroyTick;
 	}
 
-	public void destroy(WorldServer worldServer) {
+	public void destroy(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 
 	}
 
-	public void nextState(WorldServer worldServer, long tickCount) {
+	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 	}
 }

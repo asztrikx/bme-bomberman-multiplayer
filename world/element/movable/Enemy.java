@@ -16,9 +16,9 @@ public class Enemy extends Movable {
 	}
 
 	@Override
-	public void nextState(WorldServer worldServer, long tickCount) {
+	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 		// move
-		super.nextState(worldServer, tickCount);
+		super.nextState(worldServer, nextWorldServer, tickCount);
 
 		// decide to change direction
 		SecureRandom secureRandom = new SecureRandom();

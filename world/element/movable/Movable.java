@@ -28,22 +28,8 @@ public abstract class Movable extends WorldElement {
 		super(animation);
 	}
 
-	public enum CharacterType {
-		CharacterTypeUser(0), CharacterTypeEnemy(1), CharacterTypeYou(2);
-
-		private final int value;
-
-		private CharacterType(int value) {
-			this.value = value;
-		}
-
-		public int getValue() {
-			return value;
-		}
-	}
-
 	// moves character based on it's pressed keys
-	public void applyMovement(WorldServer worldServer) {
+	public void applyMovement(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 		Position positionNew = new Position(position.y, position.x);
 		if (keys[Key.KeyType.KeyUp.getValue()]) {
 			positionNew.y -= velocity;
@@ -93,7 +79,7 @@ public abstract class Movable extends WorldElement {
 
 	// places a bomb to the nearest square in the grid relative to the
 	// character
-	public void applyBombPlace(WorldServer worldServer, long tickCount) {
+	public void applyBombPlace(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 		// bomb available
 		if (bombCount == 0) {
 			return;
@@ -132,15 +118,15 @@ public abstract class Movable extends WorldElement {
 		object.movedOutOfBomb = false;
 		object.owner = this;
 		object.animation.stateDelayTickEnd = 15;
-		worldServer.unmovables.add(object);
+		nextWorldServer.unmovables.add(object);
 
 		// bomb decrease
 		bombCount--;
 	}
 
 	@Override
-	public void nextState(WorldServer worldServer, long tickCount) {
-		applyMovement(worldServer);
-		applyBombPlace(worldServer, tickCount);
+	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+		applyMovement(worldServer, nextWorldServer, tickCount);
+		applyBombPlace(worldServer, nextWorldServer, tickCount);
 	}
 }

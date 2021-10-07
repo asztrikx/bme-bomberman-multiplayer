@@ -17,9 +17,7 @@ public class Bomb extends Unmovable {
 	}
 
 	@Override
-	public void destroy(WorldServer worldServer) {
-		long tickCount = destroyTick;
-
+	public void destroy(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 		// fire inserts
 		int directionX[] = { 0, 1, -1, 0, 0 };
 		int directionY[] = { 0, 0, 0, 1, -1 };
@@ -44,7 +42,7 @@ public class Bomb extends Unmovable {
 			objectFire.animation.stateDelayTickEnd = 2;
 			objectFire.velocity = 0;
 
-			worldServer.unmovables.add(objectFire);
+			nextWorldServer.unmovables.add(objectFire);
 		}
 
 		// give back bomb to user

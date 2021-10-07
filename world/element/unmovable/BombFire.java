@@ -17,16 +17,15 @@ public class BombFire extends Unmovable {
 
 	@Override
 	// destroys all ObjectTypeBox and all Character in collision
-	public void nextState(WorldServer worldServer, long tickCount) {
+	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
 		List<WorldElement> worldElements = new ArrayList<>();
 		worldElements.addAll(worldServer.unmovables);
 		worldElements.addAll(worldServer.movables);
 
 		List<WorldElement> collisionWorldElements = Collision.getCollisions(worldElements, position, null, null);
-		List<WorldElement> deletelist = new ArrayList<>();
 		for (WorldElement collisionWorldElement : collisionWorldElements) {
 			if (collisionWorldElement instanceof Box) {
-				deletelist.add(collisionWorldElement);
+				nextWorldServer.unmovables.remove(collisionWorldElement);
 			} else if (collisionWorldElement instanceof Bomb) {
 				// chain bomb explosion
 				// -
@@ -39,10 +38,8 @@ public class BombFire extends Unmovable {
 					movable.owner.state = User.State.Dead;
 				}
 
-				deletelist.add(movable);
+				nextWorldServer.movables.remove(movable);
 			}
 		}
-		worldServer.unmovables.removeAll(deletelist);
-		worldServer.movables.removeAll(deletelist);
 	}
 }

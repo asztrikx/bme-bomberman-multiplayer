@@ -6,16 +6,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import client.WorldClient;
 import helper.Key;
 import server.WorldServer;
 import user.User;
-import world.element.movable.Enemy;
 import world.element.movable.Movable;
 import world.element.movable.Player;
-import world.element.unmovable.BombFire;
 import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
 
@@ -71,45 +70,28 @@ public class Tick {
 
 	// calculates next state from current
 	public boolean nextState() {
-		int unmovablesSize = worldServer.unmovables.size();
-		int movablesSize = worldServer.movables.size();
+		WorldServer nextWorldServer = new WorldServer();
+		nextWorldServer.movables = new LinkedList<>(worldServer.movables);
+		nextWorldServer.unmovables = new LinkedList<>(worldServer.unmovables);
 
-		// this should be calculated first as these objects should not exists in this
-		// tick
-		List<Unmovable> deletelist = new ArrayList<>();
-		for (int i = 0; i < unmovablesSize; i++) {
-			Unmovable unmovable = worldServer.unmovables.get(i);
-
+		for (Unmovable unmovable : worldServer.unmovables) {
+			unmovable.nextState(worldServer, nextWorldServer, tickCount);
 			if (unmovable.shouldDestroy(tickCount)) {
-				unmovable.destroy(worldServer);
-				deletelist.add(unmovable);
-			}
-		}
-		worldServer.unmovables.removeAll(deletelist);
-		unmovablesSize -= deletelist.size();
-
-		// must be before character movement as that fixes bumping into wall TODO ?
-		for (int i = 0; i < movablesSize; i++) {
-			Movable movable = worldServer.movables.get(i);
-
-			if (movable instanceof Enemy) {
-				movable.nextState(worldServer, tickCount);
+				unmovable.destroy(worldServer, nextWorldServer, tickCount);
+				nextWorldServer.unmovables.remove(unmovable);
 			}
 		}
 
-		// character movement
-		// this should be calculated before TickCalculateFireDestroy() otherwise player
-		// would be in fire for 1 tick
-		// if 2 character is racing for the same spot the first in list wins
-		for (int i = 0; i < movablesSize; i++) {
-			Movable movable = worldServer.movables.get(i);
-
-			if (!(movable instanceof Enemy)) {
-				movable.nextState(worldServer, tickCount);
+		for (Movable movable : worldServer.movables) {
+			movable.nextState(worldServer, nextWorldServer, tickCount);
+			if (movable.shouldDestroy(tickCount)) {
+				movable.destroy(worldServer, nextWorldServer, tickCount);
+				nextWorldServer.movables.remove(movable);
 			}
 		}
 
-		// should be before any destroy
+		nextStateAnimate();
+
 		List<Player> playersWinning = nextStateWinners();
 		if (playersWinning.size() != 0) {
 			for (Player player : playersWinning) {
@@ -119,33 +101,9 @@ public class Tick {
 			return false;
 		}
 
-		// fire tick
-		for (int i = 0; i < unmovablesSize; i++) {
-			Unmovable unmovable = worldServer.unmovables.get(i);
-
-			if (unmovable instanceof BombFire) {
-				unmovable.nextState(worldServer, tickCount);
-			}
-		}
-
-		// player tick
-		List<Movable> deaths = new ArrayList<>();
-		for (int i = 0; i < movablesSize; i++) {
-			Movable movable = worldServer.movables.get(i);
-
-			if (movable instanceof Player) {
-				movable.nextState(worldServer, tickCount);
-				if (movable.owner.state == User.State.Dead) {
-					deaths.add(movable);
-				}
-			}
-		}
-		worldServer.movables.removeAll(deaths);
-		movablesSize -= deaths.size();
-
-		nextStateAnimate();
-
 		tickCount++;
+		worldServer.movables = nextWorldServer.movables;
+		worldServer.unmovables = nextWorldServer.unmovables;
 
 		return true;
 	}

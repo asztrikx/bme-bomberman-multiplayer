@@ -19,7 +19,6 @@ import helper.Key;
 import helper.Logger;
 import helper.Position;
 import network.Listen;
-import network.Network;
 import network.Network.Connection;
 import user.User;
 import user.UserManager;
@@ -35,7 +34,7 @@ public class Server implements AutoCloseable {
 	private Lock lock = new ReentrantLock();
 
 	// session based states
-	private WorldServer worldServer;
+	private WorldServer worldServer = new WorldServer();;
 	private UserManager<UserServer> userManager;
 	private Listen listen;
 
@@ -45,7 +44,6 @@ public class Server implements AutoCloseable {
 	private final Phaser phaser = new Phaser(0);
 
 	public void listen(int port) throws InterruptedException {
-		worldServer = new WorldServer();
 		worldServer.generate();
 		userManager = new UserManager<>();
 		listen = new Listen();
@@ -53,11 +51,12 @@ public class Server implements AutoCloseable {
 			try {
 				return handshake(connection);
 			} catch (Exception e) {
-				logger.printf("failed to use port: %s\n", port);
+				logger.printf("server handshake exception with %s\n", connection.toString());
+				e.printStackTrace();
 				return false;
 			}
-		}, (Object object) -> {
-			receive(object);
+		}, (Connection connection, Object object) -> {
+			receive(connection, object);
 		}, (Connection connection) -> {
 			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 				UserServer userServer = userManager.getList().stream()
@@ -100,7 +99,7 @@ public class Server implements AutoCloseable {
 	public void close() throws Exception {
 		listen.close();
 		timer.cancel();
-		phaser.arriveAndDeregister();
+		phaser.awaitAdvance(phaser.getPhase());
 	}
 
 	/**
@@ -132,9 +131,7 @@ public class Server implements AutoCloseable {
 			try {
 				listen.send(userServer.connection.objectOutputStream, worldClient);
 			} catch (IOException e) {
-				String ip = Network.getIP(userServer.connection.socket);
-				int port = Network.getPort(userServer.connection.socket);
-				logger.printf("Couldn't send update to client: %s:%d\n", ip, port);
+				logger.printf("Couldn't send update to client: %s\n", userServer.connection.toString());
 			}
 
 			// remove character alter
@@ -189,7 +186,6 @@ public class Server implements AutoCloseable {
 		}
 
 		// reply
-		// has to be outside of lock
 		User user = new User();
 		user.auth = userServer.auth;
 		user.name = userServer.name;
@@ -198,17 +194,19 @@ public class Server implements AutoCloseable {
 		return true;
 	}
 
-	public void receive(Object object) {
+	public void receive(Connection connection, Object object) {
 		User userUnsafe = (User) object;
 
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// auth validate
 			// - length validation
 			if (userUnsafe.auth.length() != config.authLength) {
+				logger.printf("Too long auth from %s\n", connection.toString());
 				return;
 			}
 			UserServer userServer = userManager.findByAuth(userUnsafe.auth);
 			if (userServer == null) {
+				logger.printf("Auth unknown from %s\n", connection.toString());
 				return;
 			}
 
@@ -224,15 +222,19 @@ public class Server implements AutoCloseable {
 			// name change
 			// - length validation
 			if (userUnsafe.name.length() > config.nameMaxLength) {
+				logger.printf("Long name from %s\n", connection.toString());
 				return;
 			}
 			if (!userServer.name.equals(userUnsafe.name)) {
+				logger.printf("Replacing name from %s to %s from %s\n", userServer.name, userUnsafe.name,
+						connection.toString());
 				userServer.name = userUnsafe.name;
 			}
 
 			// keys copy
 			// - length validation
 			if (userUnsafe.keys.length != Key.KeyType.KeyLength) {
+				logger.printf("Length of keys is wrong %s\n", connection.toString());
 				return;
 			}
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {

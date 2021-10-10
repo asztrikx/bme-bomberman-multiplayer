@@ -16,13 +16,19 @@ public class Main {
 		DI.put(new Logger(System.out));
 		DI.put(new AnimationStore());
 
+		Config config = (Config) DI.services.get(Config.class);
+		if (config.ip == null) {
+			config.ip = config.defaultIP;
+		}
+		if (config.name == null) {
+			config.name = config.defaultName;
+		}
+
 		// parse cli
 		Map<String, Flag.Entry> commands = new HashMap<>();
 		commands.put("--server", new Flag.Entry("", true, false, null));
 		commands.put("--client", new Flag.Entry("", true, false, null));
-		commands.put("--ip", new Flag.Entry("", false, false, "127.0.0.1"));
-		commands.put("--server-port", new Flag.Entry("", false, true, "32469"));
-		commands.put("--name", new Flag.Entry("", false, false, null));
+		commands.put("--server-port", new Flag.Entry("", false, true, String.valueOf(config.defaultPort)));
 		Flag flag = new Flag(commands);
 		Optional<Map<String, String>> parsedOrError = flag.parse(args);
 		if (!parsedOrError.isPresent()) {
@@ -31,25 +37,25 @@ public class Main {
 		Map<String, String> parsed = parsedOrError.get();
 
 		// start appropiate mode
-		int serverPort = Integer.parseInt(parsed.get("--server-port"));
+		config.port = Integer.parseInt(parsed.get("--server-port"));
+		Server server = null;
 		if (parsed.containsKey("--server")) {
-			Server server = new Server();
-			server.listen(serverPort);
+			server = new Server();
+			server.listen(config.port);
 			if (!parsed.containsKey("--client")) {
 				server.waitUntilWin();
 				server.close();
 			}
 		}
 		if (parsed.containsKey("--client")) {
-			if (!flag.required(parsed, "--ip", "--name")) {
-				return;
-			}
-			String ip = parsed.get("--ip");
-			String name = parsed.get("--name");
 			Client client = new Client();
-			client.connect(ip, serverPort, name);
 			client.waitUntilWin();
 			client.close();
+			if (server != null) {
+				server.waitUntilWin();
+				server.close();
+			}
 		}
+		// TODO close button event
 	}
 }

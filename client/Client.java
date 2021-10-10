@@ -1,14 +1,21 @@
 package client;
 
 import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
 import client.KeyCapturePanel.KeyMap;
 import di.DI;
@@ -34,6 +41,8 @@ public class Client implements AutoCloseable {
 		Lobby, Ingame,
 	}
 
+	private State state = State.Lobby;
+
 	public Client() {
 		// gui
 		jFrame = new JFrame();
@@ -56,14 +65,117 @@ public class Client implements AutoCloseable {
 		panel.setBackground(new Color(30, 30, 30));
 
 		jFrame.getContentPane().add(panel);
+
+		// menu
+		JMenuBar jMenuBar = new JMenuBar();
+		JMenu jMenu;
+		JMenuItem jMenuItem;
+
+		// game
+		jMenu = new JMenu("Game");
+		jMenuBar.add(jMenu);
+
+		jMenuItem = new JMenuItem("Connect");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
+						JOptionPane.PLAIN_MESSAGE, null, null, String.format("%s:%d", config.ip, config.port));
+				String[] cols = address.split(":");
+				if (address == null || cols[0].length() == 0 || cols[1].length() == 0) {
+					JOptionPane.showMessageDialog(jFrame, "Wrong format");
+					return;
+				}
+
+				if (state == State.Ingame) {
+					disconnect();
+				}
+
+				config.ip = cols[0];
+				config.port = Integer.parseInt(cols[1]);
+				if (config.name.equals("")) {
+					config.name = config.defaultName;
+				}
+				try {
+					connect();
+				} catch (Exception e1) {
+					throw new RuntimeException(e1);
+				}
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		jMenuItem = new JMenuItem("Disconnect");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				disconnect();
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		// server
+		jMenu = new JMenu("Server");
+		jMenuBar.add(jMenu);
+
+		jMenuItem = new JMenuItem("Start server");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				return;
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		jMenuItem = new JMenuItem("Stop server");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				return;
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		// settings
+		jMenu = new JMenu("Settings");
+		jMenuBar.add(jMenu);
+
+		jMenuItem = new JMenuItem("Open settings");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (Desktop.isDesktopSupported()) {
+					try {
+						File myFile = new File("Main.java");
+						Desktop.getDesktop().open(myFile);
+					} catch (IOException e2) {
+						throw new RuntimeException(e2);
+					}
+				}
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		jMenuItem = new JMenuItem("Player name");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
+						null, null, config.name);
+			}
+		});
+		jMenu.add(jMenuItem);
+
+		jFrame.setJMenuBar(jMenuBar);
+		jFrame.setVisible(true);
 	}
 
-	public void connect(String ip, int port, String name) throws UnknownHostException, IOException {
-		userClient.name = name;
+	public void connect() throws Exception {
+		userClient.name = config.name;
 
 		// connect
 		connect = new Connect();
-		connect.connect(ip, port, (Connection connection) -> {
+		connect.connect((Connection connection) -> {
 			try {
 				handshake();
 			} catch (ClassNotFoundException | IOException e) {
@@ -71,6 +183,8 @@ public class Client implements AutoCloseable {
 				logger.println(e);
 				return false;
 			}
+
+			state = State.Ingame;
 
 			// control handle
 			// - only after connected
@@ -122,11 +236,27 @@ public class Client implements AutoCloseable {
 		}
 	}
 
-	@Override
-	public void close() throws Exception {
+	private void disconnect() {
+		if (state != State.Ingame) {
+			JOptionPane.showMessageDialog(jFrame, "Not in game");
+			return;
+		}
+
+		state = State.Lobby;
+		try {
+			connect.close();
+		} catch (Exception e) {
+			throw new RuntimeException();
+		}
+
 		panel.active = false;
 		panel.remove(draw);
 		panel.setVisible(false);
+	}
+
+	@Override
+	public void close() throws Exception {
+		disconnect();
 		jFrame.remove(panel);
 		jFrame.setVisible(false);
 		connect.close();

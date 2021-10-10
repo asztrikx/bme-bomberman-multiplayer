@@ -23,9 +23,9 @@ public class WorldServer extends World {
 	public void generate() {
 		movables = new LinkedList<>();
 		unmovables = new LinkedList<>();
-
 		height = config.worldHeight;
 		width = config.worldWidth;
+		exit = null;
 
 		if (height % 2 != 1 || width % 2 != 1 || height < 5 || width < 5) {
 			logger.println("config world dimension malformed");

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -23,24 +24,23 @@ public class Listen extends Network {
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
 	// lock for
-	// - sockets
-	// - active
+	// - connections
+	// - serverSocket
 	public Lock lock = new ReentrantLock();
-	public boolean active;
 	public List<Connection> connections;
+	private ServerSocket serverSocket;
 
 	public int port;
 
 	private Function<Connection, Boolean> handshake;
-	private Consumer<Object> receive;
+	private BiConsumer<Connection, Object> receive;
 	private Consumer<Connection> disconnect;
 	private final Phaser phaser = new Phaser(0);
 
-	public void listen(int port, Function<Connection, Boolean> handshake, Consumer<Object> receive,
+	public void listen(int port, Function<Connection, Boolean> handshake, BiConsumer<Connection, Object> receive,
 			Consumer<Connection> disconnect) {
 		connections = new LinkedList<>();
 		this.port = port;
-		this.active = true;
 		this.handshake = handshake;
 		this.receive = receive;
 		this.disconnect = disconnect;
@@ -52,7 +52,7 @@ public class Listen extends Network {
 	}
 
 	private class Receive implements Runnable {
-		Connection connection;
+		private Connection connection;
 
 		public Receive(Connection connection) {
 			this.connection = connection;
@@ -60,30 +60,32 @@ public class Listen extends Network {
 
 		@Override
 		public void run() {
-			lock.lock();
-			while (active) {
-				lock.unlock();
-
+			// receive will block so there's no point in locking (it would starve other
+			// threads), just handle exceptions as close
+			while (!serverSocket.isClosed()) {
 				try {
 					Object object = receive(connection.objectInputStream);
-					Listen.this.receive.accept(object);
+					Listen.this.receive.accept(connection, object);
 				} catch (ClassNotFoundException | IOException e) {
-					// disconnect first to prevent using connection after close but before
-					// disconnect()
-					disconnect.accept(connection);
-
-					try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-						connection.close();
-						connections.remove(connection);
-						active = false;
-					} catch (Exception e2) {
-					}
+					disconnect();
+					break;
 				}
-
-				lock.lock();
 			}
 
 			phaser.arriveAndDeregister();
+		}
+
+		public void disconnect() {
+			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+				// disconnect first to prevent using connection after close but before
+				// disconnect()
+				disconnect.accept(connection);
+
+				connection.close();
+				connections.remove(connection);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -91,42 +93,61 @@ public class Listen extends Network {
 		@Override
 		public void run() {
 			try {
-				try (ServerSocket serverSocket = new ServerSocket(port)) {
-					lock.lock();
-					while (active) {
-						lock.unlock();
-						Socket socket = serverSocket.accept();
-
-						// do not stop if a clients fails to connect => try here
-						try {
-							// server might be stopping => closing sockets => lock before accepting new
-							try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-								OutputStream outputStream = socket.getOutputStream();
-								ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-								InputStream inputStream = socket.getInputStream();
-								ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-								Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
-								connections.add(connection);
-
-								if (active && handshake.apply(connection)) {
-									phaser.register();
-									Thread thread = new Thread(new Receive(connection));
-									thread.start();
-								} else {
-									socket.close();
-								}
-							}
-						} catch (Exception e) {
-							logger.printf("Client failed to connect: %s\n", e.toString());
-						}
-
-						lock.lock();
-					}
-				}
-			} catch (Exception e) {
-				throw new Error(e);
+				serverSocket = new ServerSocket(port);
+			} catch (IOException e1) {
+				throw new Error(e1);
 			}
 
+			while (!serverSocket.isClosed()) {
+				Socket socket;
+				try {
+					socket = serverSocket.accept();
+				} catch (IOException e1) {
+					// serverSocket closed
+					if (serverSocket.isClosed()) {
+						break;
+					} else {
+						logger.printf("Socket accept failed");
+						e1.printStackTrace();
+						continue;
+					}
+				}
+
+				// do not stop if a clients fails to connect => try here
+				// server might be stopping => closing sockets => lock before accepting new
+				try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+					// between this and previous block lock could have been used
+					if (serverSocket.isClosed()) {
+						break;
+					}
+
+					// ObjectOutputStream has to be first as server has to send ObjectXXStream
+					// header first
+					OutputStream outputStream = socket.getOutputStream();
+					ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+					InputStream inputStream = socket.getInputStream();
+					ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+					Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
+					connections.add(connection);
+
+					if (handshake.apply(connection)) {
+						logger.printf("Handshake with server successful %s\n", connection.toString());
+
+						phaser.register();
+						Thread thread = new Thread(new Receive(connection));
+						thread.start();
+					} else {
+						logger.printf("Handshake with server failed %s\n", connection.toString());
+
+						socket.close();
+					}
+				} catch (Exception e) {
+					logger.printf("Client failed to connect: %s:%d\n", Network.getIP(socket), Network.getPort(socket));
+					e.printStackTrace();
+				}
+			}
+
+			// has to be outside of exception handle to always decrement
 			phaser.arriveAndDeregister();
 		}
 	}
@@ -139,7 +160,7 @@ public class Listen extends Network {
 			for (Connection connection : connections) {
 				connection.close();
 			}
-			active = false;
+			serverSocket.close();
 		}
 		phaser.awaitAdvance(phaser.getPhase());
 	}

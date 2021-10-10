@@ -10,7 +10,7 @@
             "request": "launch",
             "mainClass": "Main",
             "projectName": "NHF_efc2c572",
-            "args": "--server --client --name Asztrik",
+            "args": "--server --client",
             "stepFilters": {
                 "classNameFilters": [
                     "java.*",

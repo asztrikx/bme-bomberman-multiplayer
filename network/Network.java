@@ -33,16 +33,25 @@ public abstract class Network implements AutoCloseable {
 		public ObjectInputStream objectInputStream;
 		public ObjectOutputStream objectOutputStream;
 		public Socket socket;
+		public String ip;
+		public int port;
 
 		public Connection(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, Socket socket) {
 			this.objectInputStream = objectInputStream;
 			this.objectOutputStream = objectOutputStream;
 			this.socket = socket;
+			this.ip = Network.getIP(socket);
+			this.port = Network.getPort(socket);
 		}
 
 		@Override
 		public void close() throws Exception {
 			socket.close();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s:%d", ip, port);
 		}
 	}
 }

@@ -16,12 +16,11 @@
 - pushable bombs
 
 # Breaking
-- remove owner move to usermanager
-- key doesn't work
-- exit is sent
-- awt is used
 - server, client json config
 - remove exit field
+- stuck in bomb
+- phaser review
+- right click > source action > final where possible
 
 # Clean code
 - visibility explicit

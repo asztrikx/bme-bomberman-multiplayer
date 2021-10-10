@@ -20,4 +20,11 @@ public class Config {
 	public int bombCountStart = 1;
 	public int spawnSquareDistanceFromOthers = 3;
 	public int spawnPlayerSquareFreeSpace = 3;
+
+	public String defaultIP = "127.0.0.1";
+	public int defaultPort = 32469;
+	public String defaultName = "player";
+	public String ip;
+	public int port;
+	public String name;
 }

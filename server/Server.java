@@ -63,6 +63,7 @@ public class Server implements AutoCloseable {
 						.filter(userServerCandidate -> userServerCandidate.connection.equals(connection)).findFirst()
 						.get();
 				userManager.remove(userServer);
+				worldServer.movables.removeIf(movable -> movable.owner == userServer);
 			}
 		});
 

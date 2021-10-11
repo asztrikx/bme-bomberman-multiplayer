@@ -173,6 +173,9 @@ public class Client implements AutoCloseable {
 	public void connect() throws Exception {
 		userClient.name = config.name;
 
+		jFrame.add(panel);
+		jFrame.setVisible(true);
+
 		// connect
 		connect = new Connect();
 		connect.connect((Connection connection) -> {
@@ -257,8 +260,8 @@ public class Client implements AutoCloseable {
 	@Override
 	public void close() throws Exception {
 		disconnect();
-		jFrame.remove(panel);
 		jFrame.setVisible(false);
+		jFrame.remove(panel);
 		connect.close();
 	}
 

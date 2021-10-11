@@ -27,4 +27,5 @@ public class Config {
 	public String ip;
 	public int port;
 	public String name;
+	public boolean debug;
 }

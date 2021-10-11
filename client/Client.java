@@ -45,7 +45,8 @@ public class Client implements AutoCloseable {
 	public Client() {
 		// gui
 		jFrame = new JFrame();
-		jFrame.setSize(config.windowWidth, config.windowHeight);
+		// add extra height
+		jFrame.setSize(config.windowWidth, config.windowHeight + 50);
 		jFrame.setResizable(false);
 		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -59,11 +60,8 @@ public class Client implements AutoCloseable {
 			send();
 		});
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.setSize(config.windowWidth, config.windowHeight);
 		panel.active = false;
-
-		// panel.setBackground(new Color(30, 30, 30));
-
-		// jFrame.getContentPane().add(panel);
 
 		// menu
 		JMenuBar jMenuBar = new JMenuBar();

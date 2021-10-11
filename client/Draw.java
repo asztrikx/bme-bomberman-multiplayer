@@ -63,8 +63,8 @@ public class Draw extends Canvas {
 		}
 
 		// offset
-		Position offset = new Position(-characterMe.position.y + config.windowHeight / 2,
-				-characterMe.position.x + config.windowWidth / 2);
+		Position offset = new Position(-characterMe.position.y + config.windowHeight / 2 - config.squaresize / 2,
+				-characterMe.position.x + config.windowWidth / 2 - config.squaresize / 2);
 
 		clear(graphics, 30, 30, 30);
 
@@ -73,6 +73,15 @@ public class Draw extends Canvas {
 		unmovable(graphics, offset);
 
 		movable(graphics, offset);
+
+		if (config.debug) {
+			graphics.setColor(Color.RED);
+			graphics.fillOval(0, 0, 10, 10);
+			graphics.fillOval(config.windowWidth / 2, config.windowHeight / 2, 10, 10);
+			graphics.fillOval(config.windowWidth / 2 - config.squaresize / 2,
+					config.windowHeight / 2 - config.squaresize / 2, 10, 10);
+			graphics.fillOval(config.windowWidth, config.windowHeight, 10, 10);
+		}
 	}
 
 	private void gameEnd(Graphics graphics) {

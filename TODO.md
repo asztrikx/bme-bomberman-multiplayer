@@ -17,8 +17,6 @@
 
 # Breaking
 - server, client json config
-- remove exit field
-- stuck in bomb
 - phaser review
 - right click > source action > final where possible
 

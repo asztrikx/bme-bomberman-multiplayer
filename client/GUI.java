@@ -190,5 +190,7 @@ public class GUI {
 			default:
 				break;
 		}
+
+		this.state = state;
 	}
 }

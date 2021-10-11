@@ -32,28 +32,30 @@ public class Draw extends Canvas {
 		this.worldClient = worldClient;
 	}
 
-	public void render() {
+	public boolean render() {
 		do {
 			do {
 				Graphics graphics = strategy.getDrawGraphics();
-				render(graphics);
+				if (!render(graphics)) {
+					return false;
+				}
 				graphics.dispose();
 			} while (strategy.contentsRestored());
 			strategy.show();
 		} while (strategy.contentsLost());
+		return true;
 	}
 
-	private void render(Graphics graphics) {
+	private boolean render(Graphics graphics) {
 		// not yet connected
 		if (worldClient == null) {
-			return;
+			return true;
 		}
 
 		// dead or won
 		if (worldClient.state != User.State.Playing) {
 			gameEnd(graphics);
-			// TODO disconnect
-			return;
+			return false;
 		}
 
 		Player characterMe = worldClient.findMe();
@@ -82,6 +84,8 @@ public class Draw extends Canvas {
 					config.windowHeight / 2 - config.squaresize / 2, 10, 10);
 			graphics.fillOval(config.windowWidth, config.windowHeight, 10, 10);
 		}
+
+		return true;
 	}
 
 	private void gameEnd(Graphics graphics) {

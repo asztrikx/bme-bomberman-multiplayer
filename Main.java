@@ -43,18 +43,23 @@ public class Main {
 			server = new Server();
 			server.listen(config.port);
 			if (!parsed.containsKey("--client")) {
-				server.waitUntilWin();
-				server.close();
+				while (true) {
+					server.waitUntilWin();
+					server.close();
+					server.listen(config.port);
+				}
 			}
 		}
 		if (parsed.containsKey("--client")) {
 			Client client = new Client();
-			client.waitUntilWin();
-			client.close();
 			if (server != null) {
-				server.waitUntilWin();
-				server.close();
+				while (true) {
+					server.waitUntilWin();
+					server.close();
+					server.listen(config.port);
+				}
 			}
+			client.close();
 		}
 		// TODO close button event
 	}

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -18,6 +19,7 @@ import javax.swing.JOptionPane;
 
 import client.KeyCapturePanel.KeyMap;
 import di.DI;
+import helper.AutoClosableLock;
 import helper.Config;
 import helper.Key;
 import helper.Logger;
@@ -35,6 +37,8 @@ public class Client implements AutoCloseable {
 	private JFrame jFrame;
 	// private KeyListener keyListener;
 	private KeyCapturePanel panel;
+	private ReentrantLock lock = new ReentrantLock();
+	private boolean active;
 
 	public enum State {
 		Lobby, Ingame,
@@ -106,6 +110,11 @@ public class Client implements AutoCloseable {
 		jMenuItem.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if (state != State.Ingame) {
+					JOptionPane.showMessageDialog(jFrame, "Not in game");
+					return;
+				}
+
 				disconnect();
 			}
 		});
@@ -169,6 +178,7 @@ public class Client implements AutoCloseable {
 
 	public void connect() throws Exception {
 		userClient.name = config.name;
+		active = true;
 
 		jFrame.add(panel);
 		jFrame.setVisible(true);
@@ -224,7 +234,11 @@ public class Client implements AutoCloseable {
 	private void receive(Object object) {
 		WorldClient worldClient = (WorldClient) object;
 		draw.setWorldClient(worldClient);
-		draw.render();
+		if (!draw.render()) {
+			// otherwise this would wait for a deregister which would happend after this
+			// line finished
+			new Thread(() -> disconnect()).start();
+		}
 	}
 
 	// Sends userClient to server as UserServer
@@ -232,34 +246,35 @@ public class Client implements AutoCloseable {
 		try {
 			connect.send((User) userClient);
 		} catch (IOException e) {
-			logger.println("Couldn't send update");
+			logger.println("Client couldn't send update");
 		}
 	}
 
 	private void disconnect() {
-		if (state != State.Ingame) {
-			JOptionPane.showMessageDialog(jFrame, "Not in game");
-			return;
-		}
+		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+			if (!active) {
+				return;
+			}
 
-		state = State.Lobby;
-		try {
-			connect.close();
-		} catch (Exception e) {
-			throw new RuntimeException();
-		}
+			active = false;
 
-		panel.active = false;
-		panel.remove(draw);
-		panel.setVisible(false);
+			state = State.Lobby;
+			try {
+				// TODO this block idk why
+				connect.close();
+			} catch (Exception e) {
+				throw new RuntimeException();
+			}
+
+			panel.active = false;
+			panel.remove(draw);
+			panel.setVisible(false);
+		}
 	}
 
 	@Override
 	public void close() throws Exception {
 		disconnect();
-		jFrame.setVisible(false);
-		jFrame.remove(panel);
-		connect.close();
 	}
 
 	public void waitUntilWin() {

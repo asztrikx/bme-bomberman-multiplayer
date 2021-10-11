@@ -21,7 +21,6 @@ public class Connect extends Network {
 	private Consumer<Object> receive;
 	private final Phaser phaser = new Phaser(0);
 	private Connection connection;
-	private boolean active = false;
 
 	public void connect(Function<Connection, Boolean> handshake, Consumer<Object> receive) throws Exception {
 		this.receive = receive;
@@ -45,7 +44,6 @@ public class Connect extends Network {
 			return;
 		}
 
-		active = true;
 		phaser.register();
 		Thread thread = new Thread(new Receive());
 		thread.start();
@@ -54,12 +52,13 @@ public class Connect extends Network {
 	private class Receive implements Runnable {
 		@Override
 		public void run() {
-			while (active) {
+			while (true) {
 				try {
 					Object object = receive(connection.objectInputStream);
 					receive.accept(object);
 				} catch (ClassNotFoundException | IOException e) {
-					logger.println("received object is wrong:");
+					logger.println("Couldn't receive from server or stream stopped...stopping");
+					break;
 				}
 			}
 
@@ -77,7 +76,6 @@ public class Connect extends Network {
 
 	@Override
 	public void close() throws Exception {
-		active = false;
 		// only close one
 		connection.socket.close();
 		phaser.awaitAdvance(phaser.getPhase());

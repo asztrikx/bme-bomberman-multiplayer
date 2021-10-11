@@ -10,8 +10,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import client.WorldClient;
+import di.DI;
 import engine.gameend.Gameend;
 import helper.Key;
+import helper.Logger;
 import server.WorldServer;
 import user.User;
 import world.element.movable.Movable;
@@ -22,6 +24,8 @@ import world.element.unmovable.Unmovable;
  * Must be called with lock closed
  */
 public class Tick {
+	Logger logger = (Logger) DI.services.get(Logger.class);
+
 	private WorldServer worldServer;
 	public long tickCount = 0;
 	public Gameend gameend;
@@ -78,6 +82,7 @@ public class Tick {
 		nextStateAnimate();
 
 		if (gameend.shouldEnd(worldServer, tickCount)) {
+			logger.println("Match ended");
 			return false;
 		}
 

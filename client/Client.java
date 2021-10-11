@@ -260,7 +260,6 @@ public class Client implements AutoCloseable {
 
 			state = State.Lobby;
 			try {
-				// TODO this block idk why
 				connect.close();
 			} catch (Exception e) {
 				throw new RuntimeException();

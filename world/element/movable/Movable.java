@@ -46,16 +46,16 @@ public abstract class Movable extends WorldElement {
 
 		// collision
 		positionNew = Collision.getValidPositionOnLine(worldServer, position, positionNew, this,
-				(Movable characterRelative, Unmovable object) -> {
-					return object instanceof Wall || object instanceof Box
-							|| (object instanceof Bomb && (object.owner != characterRelative || object.movedOutOfBomb));
-				}, (Movable objectRelative, Movable movable) -> {
+				(movableRelative, unmovable) -> {
+					return unmovable instanceof Wall || unmovable instanceof Box || (unmovable instanceof Bomb
+							&& (unmovable.owner != movableRelative || unmovable.movedOutOfBomb));
+				}, (movableRelative, movable) -> {
 					// CharacterTypeUser is solid for CharacterTypeUser
 					// CharacterTypeEnemy is not solid for CharacterTypeUser
 					// vice versa with CharacterTypeEnemy
 					// so only same type character is solid
-					return movable instanceof Player && objectRelative instanceof Player
-							|| movable instanceof Enemy && objectRelative instanceof Enemy;
+					return movable instanceof Player && movableRelative instanceof Player
+							|| movable instanceof Enemy && movableRelative instanceof Enemy;
 				});
 
 		// enemy new one way direction

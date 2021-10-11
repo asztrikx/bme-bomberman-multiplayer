@@ -101,12 +101,14 @@ public class Tick {
 		// unmovables
 		List<Movable> unmovableOwners = new ArrayList<>();
 		for (Unmovable unmovable : worldServer.unmovables) {
+			// always add owner in order for correct restore
+			unmovableOwners.add(unmovable.owner);
+
 			// don't add exit
 			if (unmovable instanceof Exit && worldClient.exit == null) {
 				continue;
 			}
 
-			unmovableOwners.add(unmovable.owner);
 			unmovable.owner = null;
 
 			worldClient.unmovables.add(unmovable);

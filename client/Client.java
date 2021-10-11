@@ -1,6 +1,5 @@
 package client;
 
-import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -62,9 +61,9 @@ public class Client implements AutoCloseable {
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.active = false;
 
-		panel.setBackground(new Color(30, 30, 30));
+		// panel.setBackground(new Color(30, 30, 30));
 
-		jFrame.getContentPane().add(panel);
+		// jFrame.getContentPane().add(panel);
 
 		// menu
 		JMenuBar jMenuBar = new JMenuBar();

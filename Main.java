@@ -74,6 +74,5 @@ public class Main {
 			}
 			client.close();
 		}
-		// TODO close button event
 	}
 }

@@ -51,7 +51,7 @@ public class Main {
 				}
 			}
 		}
-		if (parsed.containsKey("--client")) {
+		if (parsed.containsKey("--client") || !parsed.containsKey("--server")) {
 			Client client = new Client();
 			if (server != null) {
 				while (true) {

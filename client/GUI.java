@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -92,6 +93,15 @@ public class GUI {
 			}
 		});
 		jMenu.add(jMenuItem);
+
+		JCheckBoxMenuItem jCheckBoxMenuItem = new JCheckBoxMenuItem("Auto reconnect");
+		jMenuItem.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				config.autoreconnect = jCheckBoxMenuItem.getState();
+			}
+		});
+		jMenu.add(jCheckBoxMenuItem);
 
 		jMenuItem = new JMenuItem("Disconnect");
 		jMenuItem.addActionListener(new AbstractAction() {

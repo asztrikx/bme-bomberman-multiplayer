@@ -20,6 +20,7 @@ public class Config {
 	public int bombCountStart = 1;
 	public int spawnSquareDistanceFromOthers = 3;
 	public int spawnPlayerSquareFreeSpace = 3;
+	public boolean autoreconnect = false;
 
 	public String defaultIP = "127.0.0.1";
 	public int defaultPort = 32469;

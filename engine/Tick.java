@@ -16,7 +16,9 @@ import helper.Key;
 import helper.Logger;
 import server.WorldServer;
 import user.User;
+import user.User.State;
 import world.element.movable.Movable;
+import world.element.movable.Player;
 import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
 
@@ -82,6 +84,12 @@ public class Tick {
 		nextStateAnimate();
 
 		if (gameend.shouldEnd(worldServer, tickCount)) {
+			for (Movable movable : worldServer.movables) {
+				if (movable instanceof Player) {
+					Player player = (Player) movable;
+					player.owner.state = State.Won;
+				}
+			}
 			logger.println("Match ended");
 			return false;
 		}

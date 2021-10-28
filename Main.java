@@ -44,6 +44,7 @@ public class Main {
 			server.listen(config.port);
 			if (!parsed.containsKey("--client")) {
 				while (true) {
+					// TODO this goes without stop
 					server.waitUntilWin();
 					server.close();
 					server.listen(config.port);

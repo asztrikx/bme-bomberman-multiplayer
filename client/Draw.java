@@ -36,9 +36,7 @@ public class Draw extends Canvas {
 		do {
 			do {
 				Graphics graphics = strategy.getDrawGraphics();
-				if (!render(graphics)) {
-					return false;
-				}
+				render(graphics);
 				graphics.dispose();
 			} while (strategy.contentsRestored());
 			strategy.show();
@@ -46,16 +44,16 @@ public class Draw extends Canvas {
 		return true;
 	}
 
-	private boolean render(Graphics graphics) {
+	private void render(Graphics graphics) {
 		// not yet connected
 		if (worldClient == null) {
-			return true;
+			return;
 		}
 
 		// dead or won
 		if (worldClient.state != User.State.Playing) {
 			gameEnd(graphics);
-			return false;
+			return;
 		}
 
 		Player characterMe = worldClient.findMe();
@@ -84,8 +82,6 @@ public class Draw extends Canvas {
 					config.windowHeight / 2 - config.squaresize / 2, 10, 10);
 			graphics.fillOval(config.windowWidth, config.windowHeight, 10, 10);
 		}
-
-		return true;
 	}
 
 	private void gameEnd(Graphics graphics) {

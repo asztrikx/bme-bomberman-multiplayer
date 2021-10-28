@@ -70,10 +70,12 @@ public class Client implements AutoCloseable {
 	private void receive(Object object) {
 		WorldClient worldClient = (WorldClient) object;
 		gui.draw.setWorldClient(worldClient);
-		if (!gui.draw.render()) {
+		if (worldClient.state != User.State.Playing) {
 			// otherwise this would wait for a deregister which would happend after this
 			// line finished
 			new Thread(() -> disconnect()).start();
+		} else {
+			gui.draw.render();
 		}
 	}
 

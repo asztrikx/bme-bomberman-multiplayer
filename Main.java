@@ -40,7 +40,7 @@ public class Main {
 		Map<String, Flag.Entry> commands = new HashMap<>();
 		commands.put("--server", new Flag.Entry("", true, false, null));
 		commands.put("--client", new Flag.Entry("", true, false, null));
-		commands.put("--server-port", new Flag.Entry("", false, true, String.valueOf(config.defaultPort)));
+		commands.put("--server-port", new Flag.Entry("", false, true, String.valueOf(Config.defaultPort)));
 		Flag flag = new Flag(commands);
 		Optional<Map<String, String>> parsedOrError = flag.parse(args);
 		if (!parsedOrError.isPresent()) {
@@ -48,7 +48,7 @@ public class Main {
 		}
 		Map<String, String> parsed = parsedOrError.get();
 
-		// start appropiate mode
+		// start appropriate mode
 		config.port = Integer.parseInt(parsed.get("--server-port"));
 		Server server = null;
 		if (parsed.containsKey("--server")) {

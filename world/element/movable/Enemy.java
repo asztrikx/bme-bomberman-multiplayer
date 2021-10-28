@@ -16,12 +16,12 @@ public class Enemy extends Movable {
 	}
 
 	@Override
-	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		// move
 		super.nextState(worldServer, nextWorldServer, tickCount);
 
 		// decide to change direction
-		SecureRandom secureRandom = new SecureRandom();
+		final SecureRandom secureRandom = new SecureRandom();
 		if (secureRandom.nextDouble() > config.enemyKeyChangePossibility) {
 			return;
 		}
@@ -29,7 +29,7 @@ public class Enemy extends Movable {
 	}
 
 	public void randomKeys() {
-		SecureRandom secureRandom = new SecureRandom();
+		final SecureRandom secureRandom = new SecureRandom();
 		// roll new direction
 		for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 			keys[i] = false;

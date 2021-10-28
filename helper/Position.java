@@ -8,12 +8,12 @@ public class Position implements Serializable {
 	public int y, x;
 	private static Config config = (Config) DI.services.get(Config.class);
 
-	public Position(int y, int x) {
+	public Position(final int y, final int x) {
 		this.y = y;
 		this.x = x;
 	}
 
-	public Position(Position position) {
+	public Position(final Position position) {
 		this.y = position.y;
 		this.x = position.x;
 	}
@@ -22,21 +22,21 @@ public class Position implements Serializable {
 		return new Position(y % config.squaresize, x % config.squaresize);
 	}
 
-	public Position sub(Position position) {
+	public Position sub(final Position position) {
 		return new Position(y - position.y, x - position.x);
 	}
 
-	public Position shift(Position offset) {
+	public Position shift(final Position offset) {
 		return new Position(y + offset.y, x + offset.x);
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(final Object object) {
 		if (!(object instanceof Position)) {
 			throw new RuntimeException();
 		}
 
-		Position position = (Position) object;
+		final Position position = (Position) object;
 
 		return x == position.x && y == position.y;
 	}

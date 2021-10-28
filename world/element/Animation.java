@@ -15,7 +15,7 @@ public class Animation implements Serializable {
 
 	public String path;
 
-	public Animation(long stateDelayTickEnd, String path) {
+	public Animation(final long stateDelayTickEnd, final String path) {
 		this.stateDelayTickEnd = stateDelayTickEnd;
 		this.path = path;
 		this.stateEnd = animationStore.get(path).size();

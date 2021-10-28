@@ -9,9 +9,9 @@ public class WorldClient extends World {
 	public State state;
 
 	public Player findMe() {
-		for (Movable movable : movables) {
+		for (final Movable movable : movables) {
 			if (movable instanceof Player) {
-				Player player = (Player) movable;
+				final Player player = (Player) movable;
 				if (player.you) {
 					return player;
 				}

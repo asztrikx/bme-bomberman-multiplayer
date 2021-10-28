@@ -8,7 +8,7 @@ public class Key {
 
 		private final int value;
 
-		private KeyType(int value) {
+		private KeyType(final int value) {
 			this.value = value;
 		}
 

@@ -12,21 +12,21 @@ import world.element.WorldElement;
 public class UserManager<U extends User> {
 	Map<U, List<WorldElement>> userPossession = new HashMap<>();
 
-	public void add(U user) {
+	public void add(final U user) {
 		userPossession.put(user, new ArrayList<>());
 	}
 
-	public void remove(U user) {
+	public void remove(final U user) {
 		userPossession.remove(user);
 	}
 
-	public void remove(Auth auth) {
-		U user = findByAuth(auth);
+	public void remove(final Auth auth) {
+		final U user = findByAuth(auth);
 		remove(user);
 	}
 
-	public U findByAuth(Auth auth) {
-		for (U user : userPossession.keySet()) {
+	public U findByAuth(final Auth auth) {
+		for (final U user : userPossession.keySet()) {
 			if (user.auth.equals(auth)) {
 				return user;
 			}
@@ -34,8 +34,8 @@ public class UserManager<U extends User> {
 		return null;
 	}
 
-	public U findByName(String name) {
-		Optional<U> user = userPossession.keySet().stream().filter((U userServerOther) -> {
+	public U findByName(final String name) {
+		final Optional<U> user = userPossession.keySet().stream().filter((final U userServerOther) -> {
 			return userServerOther.name.equals(name);
 		}).findFirst();
 

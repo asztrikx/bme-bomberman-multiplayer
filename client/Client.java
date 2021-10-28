@@ -15,14 +15,14 @@ public class Client implements AutoCloseable {
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
-	private UserClient userClient = new UserClient();
+	private final UserClient userClient = new UserClient();
 	private Connect connect;
-	private ReentrantLock lock = new ReentrantLock();
+	private final ReentrantLock lock = new ReentrantLock();
 	private boolean active;
-	private GUI gui = new GUI(() -> {
+	private final GUI gui = new GUI(() -> {
 		try {
 			connect();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}, () -> disconnect(), () -> send(), userClient.keys);
@@ -33,7 +33,7 @@ public class Client implements AutoCloseable {
 
 		// connect
 		connect = new Connect();
-		connect.connect((Connection connection) -> {
+		connect.connect((final Connection connection) -> {
 			try {
 				handshake();
 			} catch (ClassNotFoundException | IOException e) {
@@ -45,7 +45,7 @@ public class Client implements AutoCloseable {
 			gui.setState(GUI.State.Ingame);
 
 			return true;
-		}, (Object object) -> {
+		}, (final Object object) -> {
 			receive(object);
 		});
 	}
@@ -55,7 +55,7 @@ public class Client implements AutoCloseable {
 		connect.send(userClient.name);
 
 		// receive new name, auth
-		User user = (User) connect.receive();
+		final User user = (User) connect.receive();
 
 		// apply changes
 		// - name could be occupied
@@ -67,8 +67,8 @@ public class Client implements AutoCloseable {
 	}
 
 	// gets updates from server
-	private void receive(Object object) {
-		WorldClient worldClient = (WorldClient) object;
+	private void receive(final Object object) {
+		final WorldClient worldClient = (WorldClient) object;
 		gui.draw.setWorldClient(worldClient);
 		if (worldClient.state != User.State.Playing) {
 			// otherwise this would wait for a deregister which would happeend after this
@@ -78,7 +78,7 @@ public class Client implements AutoCloseable {
 				if (config.autoreconnect) {
 					try {
 						connect();
-					} catch (Exception e) {
+					} catch (final Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
@@ -92,7 +92,7 @@ public class Client implements AutoCloseable {
 	private void send() {
 		try {
 			connect.send((User) userClient);
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			logger.println("Client couldn't send update");
 		}
 	}
@@ -108,7 +108,7 @@ public class Client implements AutoCloseable {
 			gui.setState(GUI.State.Lobby);
 			try {
 				connect.close();
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException();
 			}
 		}

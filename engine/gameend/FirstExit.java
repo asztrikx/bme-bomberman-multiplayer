@@ -8,17 +8,17 @@ import world.element.movable.Player;
 
 public class FirstExit implements Gameend {
 	@Override
-	public boolean shouldEnd(WorldServer worldServer, long tickCount) {
+	public boolean shouldEnd(final WorldServer worldServer, final long tickCount) {
 		if (Gameend.enemiesAlive(worldServer)) {
 			return false;
 		}
 
-		List<Player> playersWinning = Gameend.playersAtExit(worldServer);
+		final List<Player> playersWinning = Gameend.playersAtExit(worldServer);
 		if (playersWinning.size() == 0) {
 			return false;
 		}
 
-		for (Player player : playersWinning) {
+		for (final Player player : playersWinning) {
 			player.owner.state = User.State.Won;
 		}
 		// worldServer.movables.removeAll(playersAtExit);

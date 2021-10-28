@@ -11,7 +11,7 @@ public abstract class Unmovable extends WorldElement {
 	// collision
 	public boolean movedOutOfBomb = true;
 
-	public Unmovable(Animation animation) {
+	public Unmovable(final Animation animation) {
 		super(animation);
 	}
 }

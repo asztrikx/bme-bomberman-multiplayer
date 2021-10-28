@@ -4,7 +4,7 @@ import server.WorldServer;
 
 public class Never implements Gameend {
 	@Override
-	public boolean shouldEnd(WorldServer worldServer, long tickCount) {
+	public boolean shouldEnd(final WorldServer worldServer, final long tickCount) {
 		return false;
 	}
 }

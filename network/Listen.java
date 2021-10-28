@@ -37,8 +37,8 @@ public class Listen extends Network {
 	private Consumer<Connection> disconnect;
 	private final Phaser phaser = new Phaser(0);
 
-	public void listen(int port, Function<Connection, Boolean> handshake, BiConsumer<Connection, Object> receive,
-			Consumer<Connection> disconnect) {
+	public void listen(final int port, final Function<Connection, Boolean> handshake,
+			final BiConsumer<Connection, Object> receive, final Consumer<Connection> disconnect) {
 		connections = new LinkedList<>();
 		this.port = port;
 		this.handshake = handshake;
@@ -47,14 +47,14 @@ public class Listen extends Network {
 
 		// blocking accept => new thread
 		phaser.register();
-		Thread thread = new Thread(new Handshake());
+		final Thread thread = new Thread(new Handshake());
 		thread.start();
 	}
 
 	private class Receive implements Runnable {
-		private Connection connection;
+		private final Connection connection;
 
-		public Receive(Connection connection) {
+		public Receive(final Connection connection) {
 			this.connection = connection;
 		}
 
@@ -64,7 +64,7 @@ public class Listen extends Network {
 			// threads), just handle exceptions as close
 			while (!serverSocket.isClosed()) {
 				try {
-					Object object = receive(connection.objectInputStream);
+					final Object object = receive(connection.objectInputStream);
 					Listen.this.receive.accept(connection, object);
 				} catch (ClassNotFoundException | IOException e) {
 					disconnect();
@@ -83,7 +83,7 @@ public class Listen extends Network {
 
 				connection.close();
 				connections.remove(connection);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -94,7 +94,7 @@ public class Listen extends Network {
 		public void run() {
 			try {
 				serverSocket = new ServerSocket(port);
-			} catch (IOException e1) {
+			} catch (final IOException e1) {
 				throw new Error(e1);
 			}
 
@@ -102,7 +102,7 @@ public class Listen extends Network {
 				Socket socket;
 				try {
 					socket = serverSocket.accept();
-				} catch (IOException e1) {
+				} catch (final IOException e1) {
 					// serverSocket closed
 					if (serverSocket.isClosed()) {
 						break;
@@ -123,25 +123,25 @@ public class Listen extends Network {
 
 					// ObjectOutputStream has to be first as server has to send ObjectXXStream
 					// header first
-					OutputStream outputStream = socket.getOutputStream();
-					ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-					InputStream inputStream = socket.getInputStream();
-					ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-					Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
+					final OutputStream outputStream = socket.getOutputStream();
+					final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+					final InputStream inputStream = socket.getInputStream();
+					final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+					final Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
 					connections.add(connection);
 
 					if (handshake.apply(connection)) {
 						logger.printf("Handshake with server successful %s\n", connection.toString());
 
 						phaser.register();
-						Thread thread = new Thread(new Receive(connection));
+						final Thread thread = new Thread(new Receive(connection));
 						thread.start();
 					} else {
 						logger.printf("Handshake with server failed %s\n", connection.toString());
 
 						socket.close();
 					}
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					logger.printf("Client failed to connect: %s:%d\n", Network.getIP(socket), Network.getPort(socket));
 					e.printStackTrace();
 				}
@@ -157,7 +157,7 @@ public class Listen extends Network {
 		// do not let new sockets to be added to list
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// only close one of objectOutputStream, objectInputStream
-			for (Connection connection : connections) {
+			for (final Connection connection : connections) {
 				connection.close();
 			}
 			serverSocket.close();
@@ -165,9 +165,9 @@ public class Listen extends Network {
 		phaser.awaitAdvance(phaser.getPhase());
 	}
 
-	public void send(Object... objects) throws IOException {
+	public void send(final Object... objects) throws IOException {
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-			for (Connection connection : connections) {
+			for (final Connection connection : connections) {
 				super.send(connection.objectOutputStream, objects);
 			}
 		}

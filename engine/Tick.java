@@ -28,21 +28,21 @@ import world.element.unmovable.Unmovable;
 public class Tick {
 	Logger logger = (Logger) DI.services.get(Logger.class);
 
-	private WorldServer worldServer;
+	private final WorldServer worldServer;
 	public long tickCount = 0;
 	public Gameend gameend;
 
-	public Tick(WorldServer worldServer, Gameend gameend) {
+	public Tick(final WorldServer worldServer, final Gameend gameend) {
 		this.worldServer = worldServer;
 		this.gameend = gameend;
 	}
 
 	public void nextStateAnimate() {
 		// animate
-		for (Unmovable unmovable : worldServer.unmovables) {
+		for (final Unmovable unmovable : worldServer.unmovables) {
 			unmovable.animation.increase();
 		}
-		for (Movable movable : worldServer.movables) {
+		for (final Movable movable : worldServer.movables) {
 			boolean moving = false;
 			for (int i = 0; i < Key.KeyType.KeyLength; i++) {
 				if (movable.keys[i]) {
@@ -61,11 +61,11 @@ public class Tick {
 
 	// calculates next state from current
 	public boolean nextState() {
-		WorldServer nextWorldServer = new WorldServer();
+		final WorldServer nextWorldServer = new WorldServer();
 		nextWorldServer.movables = new LinkedList<>(worldServer.movables);
 		nextWorldServer.unmovables = new LinkedList<>(worldServer.unmovables);
 
-		for (Unmovable unmovable : worldServer.unmovables) {
+		for (final Unmovable unmovable : worldServer.unmovables) {
 			unmovable.nextState(worldServer, nextWorldServer, tickCount);
 			if (unmovable.shouldDestroy(tickCount)) {
 				unmovable.destroy(worldServer, nextWorldServer, tickCount);
@@ -73,7 +73,7 @@ public class Tick {
 			}
 		}
 
-		for (Movable movable : worldServer.movables) {
+		for (final Movable movable : worldServer.movables) {
 			movable.nextState(worldServer, nextWorldServer, tickCount);
 			if (movable.shouldDestroy(tickCount)) {
 				movable.destroy(worldServer, nextWorldServer, tickCount);
@@ -84,9 +84,9 @@ public class Tick {
 		nextStateAnimate();
 
 		if (gameend.shouldEnd(worldServer, tickCount)) {
-			for (Movable movable : worldServer.movables) {
+			for (final Movable movable : worldServer.movables) {
 				if (movable instanceof Player) {
-					Player player = (Player) movable;
+					final Player player = (Player) movable;
 					player.owner.state = State.Won;
 				}
 			}
@@ -105,15 +105,15 @@ public class Tick {
 		WorldClient worldClient = new WorldClient();
 
 		// remove exit if behind box
-		List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, worldServer.exit.position,
-				worldServer.exit, null);
+		final List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables,
+				worldServer.exit.position, worldServer.exit, null);
 		if (collisionObjectS.size() == 0) {
 			worldClient.exit = worldServer.exit;
 		}
 
 		// unmovables
-		List<Movable> unmovableOwners = new ArrayList<>();
-		for (Unmovable unmovable : worldServer.unmovables) {
+		final List<Movable> unmovableOwners = new ArrayList<>();
+		for (final Unmovable unmovable : worldServer.unmovables) {
 			// always add owner in order for correct restore
 			unmovableOwners.add(unmovable.owner);
 
@@ -128,8 +128,8 @@ public class Tick {
 		}
 
 		// movables
-		List<User> movableOwners = new ArrayList<>();
-		for (Movable movable : worldServer.movables) {
+		final List<User> movableOwners = new ArrayList<>();
+		for (final Movable movable : worldServer.movables) {
 			// has to send User
 			// - do not leak other things
 			// - can't serialize socket
@@ -137,7 +137,7 @@ public class Tick {
 			worldClient.movables.add(movable);
 
 			if (movable.owner != null) {
-				User user = new User();
+				final User user = new User();
 				user.name = movable.owner.name;
 				movable.owner = user;
 			}
@@ -145,12 +145,13 @@ public class Tick {
 
 		// deep copy (the maintainable way)
 		try {
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+			final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			final ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
 			objectOutputStream.writeObject(worldClient);
 
-			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-			ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+			final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
+					byteArrayOutputStream.toByteArray());
+			final ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
 			worldClient = (WorldClient) objectInputStream.readObject();
 		} catch (ClassNotFoundException | IOException e) {
 			throw new Error(e);

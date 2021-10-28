@@ -7,23 +7,23 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public abstract class Network implements AutoCloseable {
-	public void send(ObjectOutputStream objectOutputStream, Object... objects) throws IOException {
+	public void send(final ObjectOutputStream objectOutputStream, final Object... objects) throws IOException {
 		objectOutputStream.reset();
-		for (Object object : objects) {
+		for (final Object object : objects) {
 			objectOutputStream.writeObject(object);
 		}
 	}
 
-	public Object receive(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
+	public Object receive(final ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
 		return objectInputStream.readObject();
 	}
 
-	public static String getIP(Socket socket) {
-		InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+	public static String getIP(final Socket socket) {
+		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
 		return inetSocketAddress.getAddress().toString();
 	}
 
-	public static int getPort(Socket socket) {
+	public static int getPort(final Socket socket) {
 		return socket.getPort();
 	}
 
@@ -36,7 +36,8 @@ public abstract class Network implements AutoCloseable {
 		public String ip;
 		public int port;
 
-		public Connection(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream, Socket socket) {
+		public Connection(final ObjectInputStream objectInputStream, final ObjectOutputStream objectOutputStream,
+				final Socket socket) {
 			this.objectInputStream = objectInputStream;
 			this.objectOutputStream = objectOutputStream;
 			this.socket = socket;

@@ -24,12 +24,12 @@ public abstract class Movable extends WorldElement {
 	public User owner;
 	public boolean[] keys = new boolean[Key.KeyType.KeyLength];
 
-	public Movable(Animation animation) {
+	public Movable(final Animation animation) {
 		super(animation);
 	}
 
 	// moves character based on it's pressed keys
-	public void applyMovement(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+	public void applyMovement(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		Position positionNew = new Position(position.y, position.x);
 		if (keys[Key.KeyType.KeyUp.getValue()]) {
 			positionNew.y -= velocity;
@@ -60,7 +60,7 @@ public abstract class Movable extends WorldElement {
 
 		// enemy new one way direction
 		if (this instanceof Enemy && position.equals(positionNew)) {
-			Enemy enemy = (Enemy) this;
+			final Enemy enemy = (Enemy) this;
 			enemy.randomKeys();
 		}
 		position = positionNew;
@@ -68,7 +68,7 @@ public abstract class Movable extends WorldElement {
 		// moved out from a bomb with !bombOut
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
-		for (Unmovable unmovable : worldServer.unmovables) {
+		for (final Unmovable unmovable : worldServer.unmovables) {
 			// TODO only works for 1 bomb
 			if (unmovable instanceof Bomb && unmovable.owner == this && !unmovable.movedOutOfBomb
 					&& !Collision.doCollide(position, unmovable.position)) {
@@ -79,7 +79,7 @@ public abstract class Movable extends WorldElement {
 
 	// places a bomb to the nearest square in the grid relative to the
 	// character
-	public void applyBombPlace(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+	public void applyBombPlace(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		// bomb available
 		if (bombCount == 0) {
 			return;
@@ -90,10 +90,10 @@ public abstract class Movable extends WorldElement {
 			return;
 		}
 
-		Position positionSquare = position.getSquare();
+		final Position positionSquare = position.getSquare();
 
 		// position
-		Position positionNew = position.sub(positionSquare);
+		final Position positionNew = position.sub(positionSquare);
 		if (positionSquare.y > config.squaresize / 2) {
 			positionNew.y += config.squaresize;
 		}
@@ -102,15 +102,17 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, positionNew, null, null);
-		List<Movable> collisionCharacterS = Collision.getCollisions(worldServer.movables, positionNew, this, null);
+		final List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, positionNew, null,
+				null);
+		final List<Movable> collisionCharacterS = Collision.getCollisions(worldServer.movables, positionNew, this,
+				null);
 
 		if (collisionCharacterS.size() != 0 || collisionObjectS.size() != 0) {
 			return;
 		}
 
 		// bomb insert
-		Unmovable object = new Bomb();
+		final Unmovable object = new Bomb();
 		object.createdTick = tickCount;
 		object.destroyTick = tickCount + 2 * config.tickSecond;
 		object.position = positionNew;
@@ -125,7 +127,7 @@ public abstract class Movable extends WorldElement {
 	}
 
 	@Override
-	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		applyMovement(worldServer, nextWorldServer, tickCount);
 		applyBombPlace(worldServer, nextWorldServer, tickCount);
 	}

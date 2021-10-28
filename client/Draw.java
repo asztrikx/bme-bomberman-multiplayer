@@ -28,14 +28,14 @@ public class Draw extends Canvas {
 		strategy = super.getBufferStrategy();
 	}
 
-	public void setWorldClient(WorldClient worldClient) {
+	public void setWorldClient(final WorldClient worldClient) {
 		this.worldClient = worldClient;
 	}
 
 	public boolean render() {
 		do {
 			do {
-				Graphics graphics = strategy.getDrawGraphics();
+				final Graphics graphics = strategy.getDrawGraphics();
 				render(graphics);
 				graphics.dispose();
 			} while (strategy.contentsRestored());
@@ -44,7 +44,7 @@ public class Draw extends Canvas {
 		return true;
 	}
 
-	private void render(Graphics graphics) {
+	private void render(final Graphics graphics) {
 		// not yet connected
 		if (worldClient == null) {
 			return;
@@ -56,14 +56,14 @@ public class Draw extends Canvas {
 			return;
 		}
 
-		Player characterMe = worldClient.findMe();
+		final Player characterMe = worldClient.findMe();
 		if (characterMe == null) {
 			logger.println("Did not receive character from server");
 			throw new RuntimeException();
 		}
 
 		// offset
-		Position offset = new Position(-characterMe.position.y + config.windowHeight / 2 - config.squaresize / 2,
+		final Position offset = new Position(-characterMe.position.y + config.windowHeight / 2 - config.squaresize / 2,
 				-characterMe.position.x + config.windowWidth / 2 - config.squaresize / 2);
 
 		clear(graphics, 30, 30, 30);
@@ -84,7 +84,7 @@ public class Draw extends Canvas {
 		}
 	}
 
-	private void gameEnd(Graphics graphics) {
+	private void gameEnd(final Graphics graphics) {
 		int r = 0;
 		int g = 0;
 		int b = 0;
@@ -105,33 +105,33 @@ public class Draw extends Canvas {
 		clear(graphics, r, g, b);
 	}
 
-	private void clear(Graphics graphics, int r, int g, int b) {
+	private void clear(final Graphics graphics, final int r, final int g, final int b) {
 		graphics.setColor(new Color(r, g, b));
 		graphics.fillRect(0, 0, config.windowWidth, config.windowHeight);
 	}
 
-	private void exit(Graphics graphics, Position offset) {
+	private void exit(final Graphics graphics, final Position offset) {
 		if (worldClient.exit == null) {
 			return;
 		}
 
-		Image image = worldClient.exit.animation.getImage();
-		Position position = worldClient.exit.position.shift(offset);
+		final Image image = worldClient.exit.animation.getImage();
+		final Position position = worldClient.exit.position.shift(offset);
 		graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
 	}
 
-	public void unmovable(Graphics graphics, Position offset) {
-		for (Unmovable unmovable : worldClient.unmovables) {
-			Image image = unmovable.animation.getImage();
-			Position position = unmovable.position.shift(offset);
+	public void unmovable(final Graphics graphics, final Position offset) {
+		for (final Unmovable unmovable : worldClient.unmovables) {
+			final Image image = unmovable.animation.getImage();
+			final Position position = unmovable.position.shift(offset);
 			graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
 		}
 	}
 
-	public void movable(Graphics graphics, Position offset) {
-		for (Movable movable : worldClient.movables) {
-			Image image = movable.animation.getImage();
-			Position position = movable.position.shift(offset);
+	public void movable(final Graphics graphics, final Position offset) {
+		for (final Movable movable : worldClient.movables) {
+			final Image image = movable.animation.getImage();
+			final Position position = movable.position.shift(offset);
 
 			// flip image if moving to right
 			if (!movable.keys[Key.KeyType.KeyLeft.getValue()] && movable.keys[Key.KeyType.KeyRight.getValue()]) {
@@ -142,8 +142,8 @@ public class Draw extends Canvas {
 			}
 
 			if (movable.owner != null) {
-				int nameWidth = graphics.getFontMetrics().stringWidth(movable.owner.name);
-				int nameOffset = (config.squaresize - nameWidth) / 2;
+				final int nameWidth = graphics.getFontMetrics().stringWidth(movable.owner.name);
+				final int nameOffset = (config.squaresize - nameWidth) / 2;
 
 				graphics.setColor(Color.WHITE);
 				graphics.drawString(movable.owner.name, position.x + nameOffset, position.y - 10);

@@ -12,7 +12,7 @@ public class DI {
 	 * 
 	 * @param Class instance
 	 */
-	public static void put(Object object) {
+	public static void put(final Object object) {
 		services.put(object.getClass(), object);
 	}
 }

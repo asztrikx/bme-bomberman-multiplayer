@@ -17,17 +17,17 @@ public class Player extends Movable {
 	}
 
 	@Override
-	public boolean shouldDestroy(long tickCount) {
+	public boolean shouldDestroy(final long tickCount) {
 		return owner.state == User.State.Dead;
 	}
 
 	@Override
 	// checks if colliding with Enemy and kills them if so
-	public void nextState(WorldServer worldServer, WorldServer nextWorldServer, long tickCount) {
+	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		super.nextState(worldServer, nextWorldServer, tickCount);
 
-		List<Movable> collisionMovableS = Collision.getCollisions(worldServer.movables, position, this,
-				(WorldElement worldElementRelative, Movable that) -> {
+		final List<Movable> collisionMovableS = Collision.getCollisions(worldServer.movables, position, this,
+				(final WorldElement worldElementRelative, final Movable that) -> {
 					return that instanceof Enemy;
 				});
 		// death

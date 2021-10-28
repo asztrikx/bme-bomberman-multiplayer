@@ -35,14 +35,14 @@ public class GUI {
 
 	private State state = State.Lobby;
 
-	public GUI(Runnable connect, Runnable disconnect, Runnable send, boolean[] keys) {
+	public GUI(final Runnable connect, final Runnable disconnect, final Runnable send, final boolean[] keys) {
 		jFrame = new JFrame();
 		// add extra height
 		jFrame.setSize(config.windowWidth, config.windowHeight + 50);
 		jFrame.setResizable(false);
 		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		List<KeyMap> keyMaps = new ArrayList<>();
+		final List<KeyMap> keyMaps = new ArrayList<>();
 		keyMaps.add(new KeyMap(KeyEvent.VK_W, "up", Key.KeyType.KeyUp.getValue()));
 		keyMaps.add(new KeyMap(KeyEvent.VK_D, "right", Key.KeyType.KeyRight.getValue()));
 		keyMaps.add(new KeyMap(KeyEvent.VK_S, "down", Key.KeyType.KeyDown.getValue()));
@@ -56,7 +56,7 @@ public class GUI {
 		panel.active = false;
 
 		// menu
-		JMenuBar jMenuBar = new JMenuBar();
+		final JMenuBar jMenuBar = new JMenuBar();
 		JMenu jMenu;
 		JMenuItem jMenuItem;
 
@@ -67,10 +67,10 @@ public class GUI {
 		jMenuItem = new JMenuItem("Connect");
 		jMenuItem.addActionListener(new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
+			public void actionPerformed(final ActionEvent e) {
+				final String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
 						JOptionPane.PLAIN_MESSAGE, null, null, String.format("%s:%d", config.ip, config.port));
-				String[] cols = address.split(":");
+				final String[] cols = address.split(":");
 				if (address == null || cols[0].length() == 0 || cols[1].length() == 0) {
 					JOptionPane.showMessageDialog(jFrame, "Wrong format");
 					return;
@@ -90,17 +90,17 @@ public class GUI {
 
 				try {
 					connect.run();
-				} catch (Exception e1) {
+				} catch (final Exception e1) {
 					throw new RuntimeException(e1);
 				}
 			}
 		});
 		jMenu.add(jMenuItem);
 
-		JCheckBoxMenuItem jCheckBoxMenuItem = new JCheckBoxMenuItem("Auto reconnect");
+		final JCheckBoxMenuItem jCheckBoxMenuItem = new JCheckBoxMenuItem("Auto reconnect");
 		jCheckBoxMenuItem.addActionListener(new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				config.autoreconnect = jCheckBoxMenuItem.getState();
 
 				// save every modification
@@ -112,7 +112,7 @@ public class GUI {
 		jMenuItem = new JMenuItem("Disconnect");
 		jMenuItem.addActionListener(new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (state != State.Ingame) {
 					JOptionPane.showMessageDialog(jFrame, "Not in game");
 					return;
@@ -130,12 +130,12 @@ public class GUI {
 		jMenuItem = new JMenuItem("Open settings");
 		jMenuItem.addActionListener(new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (Desktop.isDesktopSupported()) {
 					try {
-						File myFile = new File("Main.java");
+						final File myFile = new File("Main.java");
 						Desktop.getDesktop().open(myFile);
-					} catch (IOException e2) {
+					} catch (final IOException e2) {
 						throw new RuntimeException(e2);
 					}
 				}
@@ -146,7 +146,7 @@ public class GUI {
 		jMenuItem = new JMenuItem("Player name");
 		jMenuItem.addActionListener(new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
 						null, null, config.name);
 				// save every modification
@@ -159,7 +159,7 @@ public class GUI {
 		jFrame.setVisible(true);
 	}
 
-	public void setState(State state) {
+	public void setState(final State state) {
 		switch (state) {
 			case Ingame:
 				jFrame.add(panel);

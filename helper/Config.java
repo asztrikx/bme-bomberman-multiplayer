@@ -52,32 +52,32 @@ public class Config {
 		}
 
 		// if file doesnt exists create
-		File configFile = new File(configFileName);
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		final File configFile = new File(configFileName);
+		final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		if (!configFile.exists()) {
-			String configJson = gson.toJson(config);
-			FileWriter fileWriter = new FileWriter(configFile);
+			final String configJson = gson.toJson(config);
+			final FileWriter fileWriter = new FileWriter(configFile);
 			fileWriter.write(configJson);
 			fileWriter.close();
 
 		} else {
-			String json = Files.readString(Path.of(configFileName));
+			final String json = Files.readString(Path.of(configFileName));
 			config = gson.fromJson(json, Config.class);
 		}
 		return config;
 	}
 
 	public static void saveConfig() {
-		Config config = (Config) DI.services.get(Config.class);
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		final Config config = (Config) DI.services.get(Config.class);
+		final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-		String configJson = gson.toJson(config);
+		final String configJson = gson.toJson(config);
 		FileWriter fileWriter;
 		try {
 			fileWriter = new FileWriter(configFileName);
 			fileWriter.write(configJson);
 			fileWriter.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

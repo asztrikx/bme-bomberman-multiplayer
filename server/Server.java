@@ -31,10 +31,10 @@ public class Server implements AutoCloseable {
 	// must be used for
 	// - userManager
 	// - worldServer
-	private Lock lock = new ReentrantLock();
+	private final Lock lock = new ReentrantLock();
 
 	// session based states
-	private WorldServer worldServer = new WorldServer();;
+	private final WorldServer worldServer = new WorldServer();;
 	private UserManager<UserServer> userManager;
 	private Listen listen;
 
@@ -43,23 +43,23 @@ public class Server implements AutoCloseable {
 	private Timer timer;
 	private final Phaser phaser = new Phaser(0);
 
-	public void listen(int port) throws InterruptedException {
+	public void listen(final int port) throws InterruptedException {
 		worldServer.generate();
 		userManager = new UserManager<>();
 		listen = new Listen();
 		listen.listen(port, (connection) -> {
 			try {
 				return handshake(connection);
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				logger.printf("server handshake exception with %s\n", connection.toString());
 				e.printStackTrace();
 				return false;
 			}
-		}, (Connection connection, Object object) -> {
+		}, (final Connection connection, final Object object) -> {
 			receive(connection, object);
-		}, (Connection connection) -> {
+		}, (final Connection connection) -> {
 			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-				UserServer userServer = userManager.getList().stream()
+				final UserServer userServer = userManager.getList().stream()
 						.filter(userServerCandidate -> userServerCandidate.connection.equals(connection)).findFirst()
 						.get();
 				userManager.remove(userServer);
@@ -70,7 +70,7 @@ public class Server implements AutoCloseable {
 		// tick start: world calc, connected user update
 		tick = new Tick(worldServer, new FirstExit());
 		timer = new Timer();
-		TimerTask timerTask = new TimerTask() {
+		final TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
 				boolean shouldContinue;
@@ -107,20 +107,20 @@ public class Server implements AutoCloseable {
 	 * Must be called with lock closed
 	 */
 	public void send() {
-		WorldClient worldClient = tick.getWorldClient();
+		final WorldClient worldClient = tick.getWorldClient();
 
-		for (UserServer userServer : userManager.getList()) {
+		for (final UserServer userServer : userManager.getList()) {
 			// state
 			worldClient.state = userServer.state;
 
 			// alter user character to be identifiable
 			Player playerYou = null;
-			for (Movable movable : worldClient.movables) {
+			for (final Movable movable : worldClient.movables) {
 				if (!(movable instanceof Player)) {
 					continue;
 				}
 
-				Player player = (Player) movable;
+				final Player player = (Player) movable;
 
 				if (player.owner.name.equals(userServer.name)) {
 					playerYou = player;
@@ -131,7 +131,7 @@ public class Server implements AutoCloseable {
 			// send
 			try {
 				listen.send(userServer.connection.objectOutputStream, worldClient);
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				logger.printf("Couldn't send update to client: %s\n", userServer.connection.toString());
 			}
 
@@ -143,15 +143,15 @@ public class Server implements AutoCloseable {
 	}
 
 	// registers new user connection, returns it with auth
-	public boolean handshake(Connection connection) throws ClassNotFoundException, IOException {
+	public boolean handshake(final Connection connection) throws ClassNotFoundException, IOException {
 		// get basic info
-		String name = (String) listen.receive(connection.objectInputStream);
+		final String name = (String) listen.receive(connection.objectInputStream);
 		if (name.length() > config.nameMaxLength) {
 			return false;
 		}
 
 		// add
-		UserServer userServer = new UserServer(connection);
+		final UserServer userServer = new UserServer(connection);
 		userServer.state = User.State.Playing;
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// unique name
@@ -169,10 +169,10 @@ public class Server implements AutoCloseable {
 			}
 
 			// spawn
-			Position position = worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
+			final Position position = worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
 
 			// character insert
-			Player player = new Player();
+			final Player player = new Player();
 			player.bombCount = config.bombCountStart;
 			player.owner = userServer;
 			player.position = position;
@@ -187,7 +187,7 @@ public class Server implements AutoCloseable {
 		}
 
 		// reply
-		User user = new User();
+		final User user = new User();
 		user.auth = userServer.auth;
 		user.name = userServer.name;
 		listen.send(connection.objectOutputStream, user);
@@ -195,8 +195,8 @@ public class Server implements AutoCloseable {
 		return true;
 	}
 
-	public void receive(Connection connection, Object object) {
-		User userUnsafe = (User) object;
+	public void receive(final Connection connection, final Object object) {
+		final User userUnsafe = (User) object;
 
 		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
 			// auth validate
@@ -205,20 +205,20 @@ public class Server implements AutoCloseable {
 				logger.printf("Too long auth from %s\n", connection.toString());
 				return;
 			}
-			UserServer userServer = userManager.findByAuth(userUnsafe.auth);
+			final UserServer userServer = userManager.findByAuth(userUnsafe.auth);
 			if (userServer == null) {
 				logger.printf("Auth unknown from %s\n", connection.toString());
 				return;
 			}
 
 			// get Player
-			Optional<Movable> movableOptional = worldServer.movables.stream()
-					.filter((Movable movable) -> movable.owner == userServer).findFirst();
+			final Optional<Movable> movableOptional = worldServer.movables.stream()
+					.filter((final Movable movable) -> movable.owner == userServer).findFirst();
 			// TODO dead state?
 			if (movableOptional.isEmpty()) {
 				return;
 			}
-			Movable movable = movableOptional.get();
+			final Movable movable = movableOptional.get();
 
 			// name change
 			// - length validation

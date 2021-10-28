@@ -3,9 +3,9 @@ package helper;
 import java.util.concurrent.locks.Lock;
 
 public class AutoClosableLock implements AutoCloseable {
-	private Lock lock;
+	private final Lock lock;
 
-	public AutoClosableLock(Lock lock) {
+	public AutoClosableLock(final Lock lock) {
 		this.lock = lock;
 
 		this.lock.lock();
@@ -15,7 +15,7 @@ public class AutoClosableLock implements AutoCloseable {
 	public void close() {
 		try {
 			lock.unlock();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new Error(e);
 		}
 	}

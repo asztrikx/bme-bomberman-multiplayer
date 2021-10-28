@@ -7,19 +7,19 @@ public class Auth implements Serializable {
 	private String value;
 
 	// creates a `length` character long auth key
-	public Auth(int length) {
+	public Auth(final int length) {
 		regenerate(length);
 	}
 
-	public void regenerate(int length) {
-		SecureRandom secureRandom = new SecureRandom();
+	public void regenerate(final int length) {
+		final SecureRandom secureRandom = new SecureRandom();
 
 		String auth = new String();
 		for (int i = 0; i < length; i++) {
-			char A = 'A';
-			char Z = 'Z';
+			final char A = 'A';
+			final char Z = 'Z';
 
-			int character = secureRandom.nextInt(Z - A + 1) + A;
+			final int character = secureRandom.nextInt(Z - A + 1) + A;
 			auth = auth + Character.toString(character);
 		}
 
@@ -28,12 +28,12 @@ public class Auth implements Serializable {
 
 	@Override
 	// AuthFind returns UserServer with that auth or NULL if does not exists
-	public boolean equals(Object object) {
+	public boolean equals(final Object object) {
 		if (!(object instanceof Auth)) {
 			throw new RuntimeException();
 		}
 
-		Auth auth = (Auth) object;
+		final Auth auth = (Auth) object;
 
 		// timing attack safe compare
 		// the length of auth is not a secret

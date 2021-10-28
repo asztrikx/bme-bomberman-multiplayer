@@ -22,19 +22,20 @@ public class Connect extends Network {
 	private final Phaser phaser = new Phaser(0);
 	private Connection connection;
 
-	public void connect(Function<Connection, Boolean> handshake, Consumer<Object> receive) throws Exception {
+	public void connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive)
+			throws Exception {
 		this.receive = receive;
 
 		try {
-			Socket socket = new Socket(config.ip, config.port);
-			InputStream inputStream = socket.getInputStream();
+			final Socket socket = new Socket(config.ip, config.port);
+			final InputStream inputStream = socket.getInputStream();
 			// ObjectInputStream has to be first as server has to send ObjectXXStream header
 			// first
-			ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-			OutputStream outputStream = socket.getOutputStream();
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+			final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+			final OutputStream outputStream = socket.getOutputStream();
+			final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 			connection = new Connection(objectInputStream, objectOutputStream, socket);
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			logger.printf("Couldn't connect to %s:%d\n", config.ip, config.port);
 			return;
 		}
@@ -45,7 +46,7 @@ public class Connect extends Network {
 		}
 
 		phaser.register();
-		Thread thread = new Thread(new Receive());
+		final Thread thread = new Thread(new Receive());
 		thread.start();
 	}
 
@@ -54,7 +55,7 @@ public class Connect extends Network {
 		public void run() {
 			while (true) {
 				try {
-					Object object = receive(connection.objectInputStream);
+					final Object object = receive(connection.objectInputStream);
 					receive.accept(object);
 				} catch (ClassNotFoundException | IOException e) {
 					logger.println("Couldn't receive from server or stream stopped...stopping");
@@ -66,7 +67,7 @@ public class Connect extends Network {
 		}
 	}
 
-	public void send(Object... objects) throws IOException {
+	public void send(final Object... objects) throws IOException {
 		super.send(connection.objectOutputStream, objects);
 	}
 

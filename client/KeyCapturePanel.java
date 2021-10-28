@@ -15,7 +15,7 @@ public class KeyCapturePanel extends JPanel {
 		public String name;
 		public int keysIndex;
 
-		public KeyMap(int keyEvent, String name, int keysIndex) {
+		public KeyMap(final int keyEvent, final String name, final int keysIndex) {
 			this.keyEvent = keyEvent;
 			this.name = name;
 			this.keysIndex = keysIndex;
@@ -24,20 +24,20 @@ public class KeyCapturePanel extends JPanel {
 
 	public boolean active = true;
 
-	public KeyCapturePanel(List<KeyMap> keyMaps, boolean[] keys, Runnable callback) {
-		InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
-		ActionMap actionMap = getActionMap();
-		boolean[] onreleases = { false, true };
-		String[] prefixes = { "press", "release" };
+	public KeyCapturePanel(final List<KeyMap> keyMaps, final boolean[] keys, final Runnable callback) {
+		final InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+		final ActionMap actionMap = getActionMap();
+		final boolean[] onreleases = { false, true };
+		final String[] prefixes = { "press", "release" };
 		for (int i = 0; i < onreleases.length; i++) {
-			boolean onrelease = onreleases[i];
-			String prefix = prefixes[i] + ".";
+			final boolean onrelease = onreleases[i];
+			final String prefix = prefixes[i] + ".";
 
-			for (KeyMap keyMap : keyMaps) {
+			for (final KeyMap keyMap : keyMaps) {
 				inputMap.put(KeyStroke.getKeyStroke(keyMap.keyEvent, 0, onrelease), prefix + keyMap.name);
 				actionMap.put(prefix + keyMap.name, new AbstractAction() {
 					@Override
-					public void actionPerformed(ActionEvent e) {
+					public void actionPerformed(final ActionEvent e) {
 						// TODO thread safe
 						if (!active) {
 							return;

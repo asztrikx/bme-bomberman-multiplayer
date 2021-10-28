@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -11,18 +12,29 @@ import server.Server;
 import world.element.AnimationStore;
 
 public class Main {
-	public static void main(String[] args) throws Exception {
-		DI.put(new Config());
-		DI.put(new Logger(System.out));
-		DI.put(new AnimationStore());
+	public static class Foo {
+		public int id;
+		public String name;
 
-		Config config = (Config) DI.services.get(Config.class);
-		if (config.ip == null) {
-			config.ip = config.defaultIP;
+		public Foo(int id, String name) {
+			this.id = id;
+			this.name = name;
 		}
-		if (config.name == null) {
-			config.name = config.defaultName;
+	}
+
+	public static void main(String[] args) throws Exception {
+		Logger logger = new Logger(System.out);
+		Config config;
+		try {
+			config = Config.getConfig();
+		} catch (IOException e) {
+			logger.printf("Could not read %s. Please try to fix this by deleting the file\n", Config.configFileName);
+			return;
 		}
+
+		DI.put(config);
+		DI.put(logger);
+		DI.put(new AnimationStore());
 
 		// parse cli
 		Map<String, Flag.Entry> commands = new HashMap<>();

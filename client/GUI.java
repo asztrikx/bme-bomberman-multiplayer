@@ -83,8 +83,11 @@ public class GUI {
 				config.ip = cols[0];
 				config.port = Integer.parseInt(cols[1]);
 				if (config.name.equals("")) {
-					config.name = config.defaultName;
+					config.name = Config.defaultName;
 				}
+				// save every modification
+				Config.saveConfig();
+
 				try {
 					connect.run();
 				} catch (Exception e1) {
@@ -95,10 +98,13 @@ public class GUI {
 		jMenu.add(jMenuItem);
 
 		JCheckBoxMenuItem jCheckBoxMenuItem = new JCheckBoxMenuItem("Auto reconnect");
-		jMenuItem.addActionListener(new AbstractAction() {
+		jCheckBoxMenuItem.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				config.autoreconnect = jCheckBoxMenuItem.getState();
+
+				// save every modification
+				Config.saveConfig();
 			}
 		});
 		jMenu.add(jCheckBoxMenuItem);
@@ -143,6 +149,8 @@ public class GUI {
 			public void actionPerformed(ActionEvent e) {
 				config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
 						null, null, config.name);
+				// save every modification
+				Config.saveConfig();
 			}
 		});
 		jMenu.add(jMenuItem);

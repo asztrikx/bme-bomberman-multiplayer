@@ -117,28 +117,6 @@ public class GUI {
 		});
 		jMenu.add(jMenuItem);
 
-		// server
-		jMenu = new JMenu("Server");
-		jMenuBar.add(jMenu);
-
-		jMenuItem = new JMenuItem("Start server");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				return;
-			}
-		});
-		jMenu.add(jMenuItem);
-
-		jMenuItem = new JMenuItem("Stop server");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				return;
-			}
-		});
-		jMenu.add(jMenuItem);
-
 		// settings
 		jMenu = new JMenu("Settings");
 		jMenuBar.add(jMenu);

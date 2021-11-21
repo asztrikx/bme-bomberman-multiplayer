@@ -4,7 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import di.DI;
+import helper.Logger;
+
 public class Flag {
+	private static Logger logger = (Logger) DI.services.get(Logger.class);
+
 	Map<String, Flag.Entry> commands;
 
 	public Flag(final Map<String, Flag.Entry> commands) {
@@ -27,9 +32,9 @@ public class Flag {
 	}
 
 	public void printHelp() {
-		System.out.println("Available commands");
+		logger.println("Available commands");
 		commands.forEach((final String name, final Entry entry) -> {
-			System.out.println(String.format("%s: %s", name, entry.helpMessage));
+			logger.println(String.format("%s: %s", name, entry.helpMessage));
 		});
 	}
 
@@ -45,13 +50,13 @@ public class Flag {
 		for (int i = 0; i < args.length; i++) {
 			final String arg = args[i];
 			if (!commands.containsKey(arg)) {
-				System.out.println(String.format("Unknown command: %s", arg));
+				logger.println(String.format("Unknown command: %s", arg));
 				return Optional.empty();
 			}
 
 			final Entry entry = commands.get(arg);
 			if (!entry.noParam && i + 1 == args.length) {
-				System.out.println(String.format("Missing parameter for: %s", arg));
+				logger.println(String.format("Missing parameter for: %s", arg));
 				return Optional.empty();
 			}
 
@@ -74,12 +79,11 @@ public class Flag {
 			if (!parsed.containsKey(name)) {
 				if (entry.defaultValue == null) {
 					if (entry.required) {
-						System.out
-								.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
+						logger.println(String.format("Missing required parameter: %s, %s", name, entry.helpMessage));
 						missing = true;
 					}
 				} else {
-					System.out.println(String.format("Using default value %s for %s", entry.defaultValue, name));
+					logger.println(String.format("Using default value %s for %s", entry.defaultValue, name));
 					parsed.put(name, entry.defaultValue);
 				}
 			}
@@ -95,7 +99,7 @@ public class Flag {
 		boolean missing = false;
 		for (final String requiredName : requiredNames) {
 			if (!parsed.containsKey(requiredName)) {
-				System.out.println(String.format("Missing required parameter: %s, %s", requiredName,
+				logger.println(String.format("Missing required parameter: %s, %s", requiredName,
 						commands.get(requiredName).helpMessage));
 				missing = true;
 			}

@@ -1,10 +1,8 @@
 package client;
 
 import java.io.IOException;
-import java.util.concurrent.locks.ReentrantLock;
 
 import di.DI;
-import helper.AutoClosableLock;
 import helper.Config;
 import helper.Logger;
 import network.Connect;
@@ -17,8 +15,7 @@ public class Client implements AutoCloseable {
 
 	private final UserClient userClient = new UserClient();
 	private Connect connect;
-	private final ReentrantLock lock = new ReentrantLock();
-	private boolean active;
+	private ClientModel model = new ClientModel();
 	private final GUI gui = new GUI(() -> {
 		try {
 			connect();
@@ -29,7 +26,7 @@ public class Client implements AutoCloseable {
 
 	public void connect() throws Exception {
 		userClient.name = config.name;
-		active = true;
+		model.active = true;
 
 		// connect
 		connect = new Connect();
@@ -59,7 +56,6 @@ public class Client implements AutoCloseable {
 
 		// apply changes
 		// - name could be occupied
-		// TODO string len limits
 		userClient.auth = user.auth;
 		userClient.name = user.name;
 
@@ -71,7 +67,7 @@ public class Client implements AutoCloseable {
 		final WorldClient worldClient = (WorldClient) object;
 		gui.draw.setWorldClient(worldClient);
 		if (worldClient.state != User.State.Playing) {
-			// otherwise this would wait for a deregister which would happeend after this
+			// otherwise this would wait for a deregister which would happened after this
 			// line finished
 			new Thread(() -> {
 				disconnect();
@@ -98,12 +94,12 @@ public class Client implements AutoCloseable {
 	}
 
 	private void disconnect() {
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-			if (!active) {
+		synchronized (model.active) {
+			if (!model.active) {
 				return;
 			}
 
-			active = false;
+			model.active = false;
 
 			gui.setState(GUI.State.Lobby);
 			try {

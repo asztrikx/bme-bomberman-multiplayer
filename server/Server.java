@@ -5,15 +5,12 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import client.WorldClient;
 import di.DI;
 import engine.Tick;
 import engine.gameend.FirstExit;
 import helper.Auth;
-import helper.AutoClosableLock;
 import helper.Config;
 import helper.Key;
 import helper.Logger;
@@ -28,14 +25,9 @@ import world.element.movable.Player;
 public class Server implements AutoCloseable {
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
-	// must be used for
-	// - userManager
-	// - worldServer
-	private final Lock lock = new ReentrantLock();
 
 	// session based states
-	private final WorldServer worldServer = new WorldServer();;
-	private UserManager<UserServer> userManager;
+	private ServerModel model = new ServerModel();
 	private Listen listen;
 
 	// calculate next state of worldServer
@@ -44,8 +36,8 @@ public class Server implements AutoCloseable {
 	private final Phaser phaser = new Phaser(0);
 
 	public void listen(final int port) throws InterruptedException {
-		worldServer.generate();
-		userManager = new UserManager<>();
+		model.worldServer.generate();
+		model.userManager = new UserManager<>();
 		listen = new Listen();
 		listen.listen(port, (connection) -> {
 			try {
@@ -58,23 +50,23 @@ public class Server implements AutoCloseable {
 		}, (final Connection connection, final Object object) -> {
 			receive(connection, object);
 		}, (final Connection connection) -> {
-			try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
-				final UserServer userServer = userManager.getList().stream()
+			synchronized (model) {
+				final UserServer userServer = model.userManager.getList().stream()
 						.filter(userServerCandidate -> userServerCandidate.connection.equals(connection)).findFirst()
 						.get();
-				userManager.remove(userServer);
-				worldServer.movables.removeIf(movable -> movable.owner == userServer);
+				model.userManager.remove(userServer);
+				model.worldServer.movables.removeIf(movable -> movable.owner == userServer);
 			}
 		});
 
 		// tick start: world calc, connected user update
-		tick = new Tick(worldServer, new FirstExit());
+		tick = new Tick(model.worldServer, new FirstExit());
 		timer = new Timer();
 		final TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
 				boolean shouldContinue;
-				try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+				synchronized (model) {
 					shouldContinue = tick.nextState();
 					send();
 				}
@@ -109,7 +101,7 @@ public class Server implements AutoCloseable {
 	public void send() {
 		final WorldClient worldClient = tick.getWorldClient();
 
-		for (final UserServer userServer : userManager.getList()) {
+		for (final UserServer userServer : model.userManager.getList()) {
 			// state
 			worldClient.state = userServer.state;
 
@@ -153,23 +145,23 @@ public class Server implements AutoCloseable {
 		// add
 		final UserServer userServer = new UserServer(connection);
 		userServer.state = User.State.Playing;
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+		synchronized (model) {
 			// unique name
 			int nameSuffix = 1;
 			userServer.name = name;
-			while (userManager.findByName(userServer.name) != null) {
+			while (model.userManager.findByName(userServer.name) != null) {
 				userServer.name = name + nameSuffix;
 				nameSuffix++;
 			}
 
 			// auth generate
 			userServer.auth = new Auth(config.authLength);
-			while (userManager.findByAuth(userServer.auth) != null) {
+			while (model.userManager.findByAuth(userServer.auth) != null) {
 				userServer.auth.regenerate(config.authLength);
 			}
 
 			// spawn
-			final Position position = worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
+			final Position position = model.worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
 
 			// character insert
 			final Player player = new Player();
@@ -177,13 +169,13 @@ public class Server implements AutoCloseable {
 			player.owner = userServer;
 			player.position = position;
 			player.velocity = config.velocityPlayer;
-			worldServer.movables.add(player);
+			model.worldServer.movables.add(player);
 
 			// add after
 			// - unique name generation
 			// - unique auth generation
 			// - unique spawn generation
-			userManager.add(userServer);
+			model.userManager.add(userServer);
 		}
 
 		// reply
@@ -198,21 +190,21 @@ public class Server implements AutoCloseable {
 	public void receive(final Connection connection, final Object object) {
 		final User userUnsafe = (User) object;
 
-		try (AutoClosableLock autoClosableLock = new AutoClosableLock(lock)) {
+		synchronized (model) {
 			// auth validate
 			// - length validation
 			if (userUnsafe.auth.length() != config.authLength) {
 				logger.printf("Too long auth from %s\n", connection.toString());
 				return;
 			}
-			final UserServer userServer = userManager.findByAuth(userUnsafe.auth);
+			final UserServer userServer = model.userManager.findByAuth(userUnsafe.auth);
 			if (userServer == null) {
 				logger.printf("Auth unknown from %s\n", connection.toString());
 				return;
 			}
 
 			// get Player
-			final Optional<Movable> movableOptional = worldServer.movables.stream()
+			final Optional<Movable> movableOptional = model.worldServer.movables.stream()
 					.filter((final Movable movable) -> movable.owner == userServer).findFirst();
 			// TODO dead state?
 			if (movableOptional.isEmpty()) {

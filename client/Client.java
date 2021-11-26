@@ -22,7 +22,7 @@ public class Client {
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
-	}, () -> disconnect(), () -> send(), userClient.keys);
+	}, this::disconnect, this::send, userClient.keys);
 
 	public void connect() throws Exception {
 		userClient.name = config.name;

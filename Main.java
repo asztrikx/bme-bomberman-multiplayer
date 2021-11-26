@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -7,9 +6,7 @@ import client.Client;
 import di.DI;
 import flag.Flag;
 import helper.Config;
-import helper.Logger;
 import server.Server;
-import world.element.AnimationStore;
 
 public class Main {
 	public static class Foo {
@@ -23,18 +20,8 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Logger logger = new Logger(System.out);
-		Config config;
-		try {
-			config = Config.getConfig();
-		} catch (IOException e) {
-			logger.printf("Could not read %s. Please try to fix this by deleting the file\n", Config.configFileName);
-			return;
-		}
-
-		DI.put(config);
-		DI.put(logger);
-		DI.put(new AnimationStore());
+		DI.init();
+		Config config = (Config) DI.services.get(Config.class);
 
 		// parse cli
 		Map<String, Flag.Entry> commands = new HashMap<>();

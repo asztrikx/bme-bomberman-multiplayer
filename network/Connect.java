@@ -28,6 +28,7 @@ public class Connect extends Network {
 
 		try {
 			final Socket socket = new Socket();
+			socket.setSoTimeout(1000);
 			socket.connect(new InetSocketAddress(ip, port), 2000);
 			final InputStream inputStream = socket.getInputStream();
 			// ObjectInputStream has to be first as server has to send ObjectXXStream header

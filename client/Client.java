@@ -84,6 +84,7 @@ public class Client {
 			connect.send((User) userClient);
 		} catch (final IOException e) {
 			logger.println("Client couldn't send update");
+			disconnect();
 		}
 	}
 

@@ -28,6 +28,7 @@ public class Listen extends Network {
 	private Consumer<Connection> disconnect;
 	private final Phaser phaser = new Phaser(0);
 
+	// TODO ctor?
 	public void listen(final int port, final Function<Connection, Boolean> handshake,
 			final BiConsumer<Connection, Object> receive, final Consumer<Connection> disconnect) {
 		listenModel.connections = new LinkedList<>();
@@ -38,7 +39,12 @@ public class Listen extends Network {
 
 		// blocking accept => new thread
 		phaser.register();
-		final Thread thread = new Thread(new Handshake());
+		try {
+			listenModel.serverSocket = new ServerSocket(port);
+		} catch (final IOException e1) {
+			throw new Error(e1);
+		}
+		final Thread thread = new Thread(this::handshake);
 		thread.start();
 	}
 
@@ -82,70 +88,60 @@ public class Listen extends Network {
 		}
 	}
 
-	private class Handshake implements Runnable {
-		@Override
-		public void run() {
+	public void handshake() {
+		while (!listenModel.serverSocket.isClosed()) {
+			Socket socket;
 			try {
-				listenModel.serverSocket = new ServerSocket(port);
+				socket = listenModel.serverSocket.accept();
 			} catch (final IOException e1) {
-				throw new Error(e1);
+				// serverSocket closed
+				if (listenModel.serverSocket.isClosed()) {
+					break;
+				} else {
+					logger.printf("Socket accept failed");
+					e1.printStackTrace();
+					continue;
+				}
 			}
 
-			while (!listenModel.serverSocket.isClosed()) {
-				Socket socket;
+			// do not stop if a clients fails to connect => try here
+			// server might be stopping => closing sockets => lock before accepting new
+			synchronized (listenModel) {
+				// between this and previous block lock could have been used
+				if (listenModel.serverSocket.isClosed()) {
+					break;
+				}
+
 				try {
-					socket = listenModel.serverSocket.accept();
-				} catch (final IOException e1) {
-					// serverSocket closed
-					if (listenModel.serverSocket.isClosed()) {
-						break;
+					// ObjectOutputStream has to be first as server has to send ObjectXXStream
+					// header first
+					final OutputStream outputStream = socket.getOutputStream();
+					final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+					final InputStream inputStream = socket.getInputStream();
+					final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+					final Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
+					listenModel.connections.add(connection);
+
+					if (handshake.apply(connection)) {
+						logger.printf("Handshake with server successful %s\n", connection.toString());
+
+						phaser.register();
+						final Thread thread = new Thread(new Receive(connection));
+						thread.start();
 					} else {
-						logger.printf("Socket accept failed");
-						e1.printStackTrace();
-						continue;
+						logger.printf("Handshake with server failed %s\n", connection.toString());
+
+						socket.close();
 					}
-				}
-
-				// do not stop if a clients fails to connect => try here
-				// server might be stopping => closing sockets => lock before accepting new
-				synchronized (listenModel) {
-					// between this and previous block lock could have been used
-					if (listenModel.serverSocket.isClosed()) {
-						break;
-					}
-
-					try {
-						// ObjectOutputStream has to be first as server has to send ObjectXXStream
-						// header first
-						final OutputStream outputStream = socket.getOutputStream();
-						final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-						final InputStream inputStream = socket.getInputStream();
-						final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-						final Connection connection = new Connection(objectInputStream, objectOutputStream, socket);
-						listenModel.connections.add(connection);
-
-						if (handshake.apply(connection)) {
-							logger.printf("Handshake with server successful %s\n", connection.toString());
-
-							phaser.register();
-							final Thread thread = new Thread(new Receive(connection));
-							thread.start();
-						} else {
-							logger.printf("Handshake with server failed %s\n", connection.toString());
-
-							socket.close();
-						}
-					} catch (final Exception e) {
-						logger.printf("Client failed to connect: %s:%d\n", Network.getIP(socket),
-								Network.getPort(socket));
-						e.printStackTrace();
-					}
+				} catch (final Exception e) {
+					logger.printf("Client failed to connect: %s:%d\n", Network.getIP(socket), Network.getPort(socket));
+					e.printStackTrace();
 				}
 			}
-
-			// has to be outside of exception handle to always decrement
-			phaser.arriveAndDeregister();
 		}
+
+		// has to be outside of exception handle to always decrement
+		phaser.arriveAndDeregister();
 	}
 
 	@Override

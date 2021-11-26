@@ -11,23 +11,22 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import di.DI;
-import helper.Config;
 import helper.Logger;
 
 public class Connect extends Network {
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
-	private static Config config = (Config) DI.services.get(Config.class);
 
 	private Consumer<Object> receive;
 	private final Phaser phaser = new Phaser(0);
 	private Connection connection;
+	private Thread thread;
 
-	public void connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive)
-			throws Exception {
+	public void connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive, String ip,
+			int port) throws Exception {
 		this.receive = receive;
 
 		try {
-			final Socket socket = new Socket(config.ip, config.port);
+			final Socket socket = new Socket(ip, port);
 			final InputStream inputStream = socket.getInputStream();
 			// ObjectInputStream has to be first as server has to send ObjectXXStream header
 			// first
@@ -36,7 +35,7 @@ public class Connect extends Network {
 			final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 			connection = new Connection(objectInputStream, objectOutputStream, socket);
 		} catch (final IOException e) {
-			logger.printf("Couldn't connect to %s:%d\n", config.ip, config.port);
+			logger.printf("Couldn't connect to %s:%d\n", ip, port);
 			return;
 		}
 
@@ -46,7 +45,7 @@ public class Connect extends Network {
 		}
 
 		phaser.register();
-		final Thread thread = new Thread(new Receive());
+		thread = new Thread(new Receive());
 		thread.start();
 	}
 
@@ -73,6 +72,14 @@ public class Connect extends Network {
 
 	public Object receive() throws ClassNotFoundException, IOException {
 		return super.receive(connection.objectInputStream);
+	}
+
+	public void join() {
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

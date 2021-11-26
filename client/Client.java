@@ -44,7 +44,7 @@ public class Client implements AutoCloseable {
 			return true;
 		}, (final Object object) -> {
 			receive(object);
-		});
+		}, config.ip, config.port);
 	}
 
 	private boolean handshake() throws IOException, ClassNotFoundException {

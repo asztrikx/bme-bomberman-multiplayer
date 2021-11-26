@@ -10,7 +10,7 @@ import helper.Auth;
 import world.element.WorldElement;
 
 public class UserManager<U extends User> {
-	Map<U, List<WorldElement>> userPossession = new HashMap<>();
+	private Map<U, List<WorldElement>> userPossession = new HashMap<>();
 
 	public void add(final U user) {
 		userPossession.put(user, new ArrayList<>());

@@ -12,7 +12,7 @@ import java.util.Optional;
  * @formatter:on
  */
 public class Flag {
-	Map<String, Flag.Entry> commands;
+	private Map<String, Flag.Entry> commands;
 
 	public Flag(final Map<String, Flag.Entry> commands) {
 		this.commands = commands;

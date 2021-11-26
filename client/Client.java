@@ -9,7 +9,7 @@ import network.Connect;
 import network.Network.Connection;
 import user.User;
 
-public class Client implements AutoCloseable {
+public class Client {
 	private static Config config = (Config) DI.services.get(Config.class);
 	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
@@ -107,17 +107,6 @@ public class Client implements AutoCloseable {
 			} catch (final Exception e) {
 				throw new RuntimeException();
 			}
-		}
-	}
-
-	@Override
-	public void close() throws Exception {
-		disconnect();
-	}
-
-	public void waitUntilWin() {
-		while (true) {
-			// TODO get state
 		}
 	}
 }

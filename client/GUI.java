@@ -3,6 +3,8 @@ package client;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,9 +23,11 @@ import client.KeyCapturePanel.KeyMap;
 import di.DI;
 import helper.Config;
 import helper.Key;
+import helper.Logger;
 
 public class GUI {
 	private static Config config = (Config) DI.services.get(Config.class);
+	private static Logger logger = (Logger) DI.services.get(Logger.class);
 
 	public Draw draw = new Draw();
 	public JFrame jFrame;
@@ -37,10 +41,17 @@ public class GUI {
 
 	public GUI(final Runnable connect, final Runnable disconnect, final Runnable send, final boolean[] keys) {
 		jFrame = new JFrame();
-		// add extra height
+		// add back height used by menu
 		jFrame.setSize(config.windowWidth, config.windowHeight + 50);
 		jFrame.setResizable(false);
 		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		jFrame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				logger.println("GUI closed, closing any open connection...");
+				disconnect.run();
+			}
+		});
 
 		final List<KeyMap> keyMaps = new ArrayList<>();
 		keyMaps.add(new KeyMap(KeyEvent.VK_W, "up", Key.KeyType.KeyUp.getValue()));
@@ -48,13 +59,16 @@ public class GUI {
 		keyMaps.add(new KeyMap(KeyEvent.VK_S, "down", Key.KeyType.KeyDown.getValue()));
 		keyMaps.add(new KeyMap(KeyEvent.VK_A, "left", Key.KeyType.KeyLeft.getValue()));
 		keyMaps.add(new KeyMap(KeyEvent.VK_SPACE, "bomb", Key.KeyType.KeyBomb.getValue()));
-		panel = new KeyCapturePanel(keyMaps, keys, () -> {
-			send.run();
-		});
+		panel = new KeyCapturePanel(keyMaps, keys, send::run);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.setSize(config.windowWidth, config.windowHeight);
 		panel.active = false;
 
+		jFrame.setJMenuBar(createMenu(connect, disconnect));
+		jFrame.setVisible(true);
+	}
+
+	public JMenuBar createMenu(final Runnable connect, final Runnable disconnect) {
 		// menu
 		final JMenuBar jMenuBar = new JMenuBar();
 		JMenu jMenu;
@@ -133,10 +147,10 @@ public class GUI {
 			public void actionPerformed(final ActionEvent e) {
 				if (Desktop.isDesktopSupported()) {
 					try {
-						final File myFile = new File("Main.java");
+						final File myFile = new File("config.json");
 						Desktop.getDesktop().open(myFile);
 					} catch (final IOException e2) {
-						throw new RuntimeException(e2);
+						logger.println("Could not open config.json");
 					}
 				}
 			}
@@ -155,8 +169,7 @@ public class GUI {
 		});
 		jMenu.add(jMenuItem);
 
-		jFrame.setJMenuBar(jMenuBar);
-		jFrame.setVisible(true);
+		return jMenuBar;
 	}
 
 	public void setState(final State state) {

@@ -58,7 +58,11 @@ public class WorldServer extends World {
 
 		// exit
 		final Exit exit = new Exit();
-		exit.position = lastBoxPosition;
+		if (lastBoxPosition == null) {
+			exit.position = getSpawn(1);
+		} else {
+			exit.position = lastBoxPosition;
+		}
 		unmovables.add(exit);
 		this.exit = exit;
 

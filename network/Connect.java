@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.Phaser;
 import java.util.function.Consumer;
@@ -21,12 +22,13 @@ public class Connect extends Network {
 	private Connection connection;
 	private Thread thread;
 
-	public void connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive, String ip,
-			int port) throws Exception {
+	public boolean connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive, String ip,
+			int port) {
 		this.receive = receive;
 
 		try {
-			final Socket socket = new Socket(ip, port);
+			final Socket socket = new Socket();
+			socket.connect(new InetSocketAddress(ip, port), 2000);
 			final InputStream inputStream = socket.getInputStream();
 			// ObjectInputStream has to be first as server has to send ObjectXXStream header
 			// first
@@ -36,17 +38,22 @@ public class Connect extends Network {
 			connection = new Connection(objectInputStream, objectOutputStream, socket);
 		} catch (final IOException e) {
 			logger.printf("Couldn't connect to %s:%d\n", ip, port);
-			return;
+			return false;
 		}
 
 		if (!handshake.apply(connection)) {
-			connection.close();
-			return;
+			try {
+				connection.close();
+			} catch (Exception e) {
+				logger.println("Could not close connection after unsuccessful handshake");
+			}
+			return false;
 		}
 
 		phaser.register();
 		thread = new Thread(new Receive());
 		thread.start();
+		return true;
 	}
 
 	private class Receive implements Runnable {

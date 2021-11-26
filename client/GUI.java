@@ -1,7 +1,6 @@
 package client;
 
 import java.awt.Desktop;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -9,8 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
-import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -39,7 +38,7 @@ public class GUI {
 
 	private State state = State.Lobby;
 
-	public GUI(final Runnable connect, final Runnable disconnect, final Runnable send, final boolean[] keys) {
+	public GUI(final BooleanSupplier connect, final Runnable disconnect, final Runnable send, final boolean[] keys) {
 		jFrame = new JFrame();
 		// add back height used by menu
 		jFrame.setSize(config.windowWidth, config.windowHeight + 50);
@@ -68,7 +67,7 @@ public class GUI {
 		jFrame.setVisible(true);
 	}
 
-	public JMenuBar createMenu(final Runnable connect, final Runnable disconnect) {
+	public JMenuBar createMenu(final BooleanSupplier connect, final Runnable disconnect) {
 		// menu
 		final JMenuBar jMenuBar = new JMenuBar();
 		JMenu jMenu;
@@ -79,61 +78,51 @@ public class GUI {
 		jMenuBar.add(jMenu);
 
 		jMenuItem = new JMenuItem("Connect");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				final String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
-						JOptionPane.PLAIN_MESSAGE, null, null, String.format("%s:%d", config.ip, config.port));
-				final String[] cols = address.split(":");
-				if (address == null || cols[0].length() == 0 || cols[1].length() == 0) {
-					JOptionPane.showMessageDialog(jFrame, "Wrong format");
-					return;
-				}
+		jMenuItem.addActionListener(e -> {
+			final String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
+					JOptionPane.PLAIN_MESSAGE, null, null, String.format("%s:%d", config.ip, config.port));
+			final String[] cols = address.split(":");
+			if (address == null || cols[0].length() == 0 || cols[1].length() == 0) {
+				JOptionPane.showMessageDialog(jFrame, "Wrong format");
+				return;
+			}
 
-				if (state == State.Ingame) {
-					disconnect.run();
-				}
+			if (state == State.Ingame) {
+				disconnect.run();
+			}
 
-				config.ip = cols[0];
-				config.port = Integer.parseInt(cols[1]);
-				if (config.name.equals("")) {
-					config.name = Config.defaultName;
-				}
-				// save every modification
-				Config.saveConfig();
+			config.ip = cols[0];
+			config.port = Integer.parseInt(cols[1]);
+			if (config.name.equals("")) {
+				config.name = Config.defaultName;
+			}
+			// save every modification
+			Config.saveConfig();
 
-				try {
-					connect.run();
-				} catch (final Exception e1) {
-					throw new RuntimeException(e1);
-				}
+			if (!connect.getAsBoolean()) {
+				JOptionPane.showMessageDialog(jFrame,
+						String.format("Could not connect to %s:%d", config.ip, config.port));
 			}
 		});
 		jMenu.add(jMenuItem);
 
 		final JCheckBoxMenuItem jCheckBoxMenuItem = new JCheckBoxMenuItem("Auto reconnect");
-		jCheckBoxMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				config.autoreconnect = jCheckBoxMenuItem.getState();
+		jCheckBoxMenuItem.addActionListener(e -> {
+			config.autoreconnect = jCheckBoxMenuItem.getState();
 
-				// save every modification
-				Config.saveConfig();
-			}
+			// save every modification
+			Config.saveConfig();
 		});
 		jMenu.add(jCheckBoxMenuItem);
 
 		jMenuItem = new JMenuItem("Disconnect");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (state != State.Ingame) {
-					JOptionPane.showMessageDialog(jFrame, "Not in game");
-					return;
-				}
-
-				disconnect.run();
+		jMenuItem.addActionListener(e -> {
+			if (state != State.Ingame) {
+				JOptionPane.showMessageDialog(jFrame, "Not in game");
+				return;
 			}
+
+			disconnect.run();
 		});
 		jMenu.add(jMenuItem);
 
@@ -142,30 +131,24 @@ public class GUI {
 		jMenuBar.add(jMenu);
 
 		jMenuItem = new JMenuItem("Open settings");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (Desktop.isDesktopSupported()) {
-					try {
-						final File myFile = new File("config.json");
-						Desktop.getDesktop().open(myFile);
-					} catch (final IOException e2) {
-						logger.println("Could not open config.json");
-					}
+		jMenuItem.addActionListener(e -> {
+			if (Desktop.isDesktopSupported()) {
+				try {
+					final File myFile = new File("config.json");
+					Desktop.getDesktop().open(myFile);
+				} catch (final IOException e2) {
+					logger.println("Could not open config.json");
 				}
 			}
 		});
 		jMenu.add(jMenuItem);
 
 		jMenuItem = new JMenuItem("Player name");
-		jMenuItem.addActionListener(new AbstractAction() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
-						null, null, config.name);
-				// save every modification
-				Config.saveConfig();
-			}
+		jMenuItem.addActionListener(e -> {
+			config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
+					null, null, config.name);
+			// save every modification
+			Config.saveConfig();
 		});
 		jMenu.add(jMenuItem);
 

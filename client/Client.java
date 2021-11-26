@@ -16,21 +16,15 @@ public class Client {
 	private final UserClient userClient = new UserClient();
 	private Connect connect;
 	private ClientModel model = new ClientModel();
-	private final GUI gui = new GUI(() -> {
-		try {
-			connect();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-	}, this::disconnect, this::send, userClient.keys);
+	private final GUI gui = new GUI(this::connect, this::disconnect, this::send, userClient.keys);
 
-	public void connect() throws Exception {
+	public boolean connect() {
 		userClient.name = config.name;
 		model.active = true;
 
 		// connect
 		connect = new Connect();
-		connect.connect((final Connection connection) -> {
+		return connect.connect((final Connection connection) -> {
 			try {
 				handshake();
 			} catch (ClassNotFoundException | IOException e) {

@@ -26,7 +26,7 @@ public class Listen extends Network {
 	private Function<Connection, Boolean> handshake;
 	private BiConsumer<Connection, Object> receive;
 	private Consumer<Connection> disconnect;
-	private final Phaser phaser = new Phaser(0);
+	private Phaser phaser;
 
 	public void listen(final int port, final Function<Connection, Boolean> handshake,
 			final BiConsumer<Connection, Object> receive, final Consumer<Connection> disconnect) {
@@ -37,6 +37,7 @@ public class Listen extends Network {
 		this.disconnect = disconnect;
 
 		// blocking accept => new thread
+		phaser = new Phaser(0);
 		phaser.register();
 		try {
 			listenModel.serverSocket = new ServerSocket(port);

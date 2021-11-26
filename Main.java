@@ -12,6 +12,9 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		// parse cli
 		Map<String, String> parsed = parseCLI(args);
+		if (parsed == null) {
+			return;
+		}
 		String configFileName = parsed.get("--config-file");
 
 		// DI init

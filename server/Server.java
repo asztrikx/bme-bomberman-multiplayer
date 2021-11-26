@@ -33,7 +33,16 @@ public class Server implements AutoCloseable {
 	// calculate next state of worldServer
 	private Tick tick;
 	private Timer timer;
-	private final Phaser phaser = new Phaser(0);
+	private Phaser phaser;
+
+	public Server() throws Exception {
+		while (true) {
+			phaser = new Phaser(0);
+			listen(config.port);
+			waitUntilWin();
+			close();
+		}
+	}
 
 	public void listen(final int port) throws InterruptedException {
 		model.worldServer.generate();
@@ -59,9 +68,11 @@ public class Server implements AutoCloseable {
 			}
 		});
 
-		// tick start: world calc, connected user update
+		// tick start: calculate world, update connected users
 		tick = new Tick(model.worldServer, new FirstExit());
 		timer = new Timer();
+		// java can not create TimerTask as lambda
+		// https://stackoverflow.com/questions/37970682/passing-lambda-to-a-timer-instead-of-timertask
 		final TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
@@ -92,7 +103,7 @@ public class Server implements AutoCloseable {
 	public void close() throws Exception {
 		listen.close();
 		timer.cancel();
-		phaser.awaitAdvance(phaser.getPhase());
+		// phaser might not be deregistered as we cancel the timer
 	}
 
 	/**

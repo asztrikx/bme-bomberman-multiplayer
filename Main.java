@@ -20,29 +20,10 @@ public class Main {
 
 		// start appropriate mode
 		if (parsed.containsKey("--server") && parsed.containsKey("--client")) {
-			Server server = new Server();
-			server.listen(config.port); // TODO move to ctor
-
 			new Client();
-
-			// TODO move inside
-			while (true) {
-				server.waitUntilWin();
-				server.close();
-				server.listen(config.port);
-			}
-
-			// client.close(); // TODO is this needed
+			new Server();
 		} else if (parsed.containsKey("--server")) {
-			Server server = new Server();
-			server.listen(config.port); // TODO move to ctor
-
-			while (true) {
-				// TODO this goes without stop
-				server.waitUntilWin();
-				server.close();
-				server.listen(config.port);
-			}
+			new Server();
 		} else {
 			new Client();
 		}

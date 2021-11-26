@@ -10,12 +10,13 @@ import server.Server;
 
 public class Main {
 	public static void main(String[] args) throws Exception {
-		// DI init
-		DI.init();
-		Config config = (Config) DI.services.get(Config.class);
-
 		// parse cli
 		Map<String, String> parsed = parseCLI(args);
+		String configFileName = parsed.get("--config-file");
+
+		// DI init
+		DI.init(configFileName);
+		Config config = (Config) DI.get(Config.class);
 		config.port = Integer.parseInt(parsed.get("--server-port"));
 
 		// start appropriate mode
@@ -34,6 +35,7 @@ public class Main {
 		commands.put("--server", new Flag.Entry("", true, false, null));
 		commands.put("--client", new Flag.Entry("", true, false, null));
 		commands.put("--server-port", new Flag.Entry("", false, true, String.valueOf(Config.defaultPort)));
+		commands.put("--config-file", new Flag.Entry("", false, false, String.valueOf(Config.defaultConfigFileName)));
 
 		Flag flag = new Flag(commands);
 		Optional<Map<String, String>> parsedOrError = flag.parse(args);

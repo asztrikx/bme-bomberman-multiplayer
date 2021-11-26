@@ -25,13 +25,13 @@ public class DI {
 		return services.get(c);
 	}
 
-	public static void init() {
+	public static void init(String configFileName) {
 		Logger logger = new Logger(System.out);
 		Config config;
 		try {
-			config = Config.getConfig();
+			config = Config.getConfig(configFileName);
 		} catch (IOException e) {
-			logger.printf("Could not read %s. Please try to fix this by deleting the file\n", Config.configFileName);
+			logger.printf("Could not read %s. Please try to fix this by deleting the file\n", configFileName);
 			return;
 		}
 

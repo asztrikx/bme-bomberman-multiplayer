@@ -12,11 +12,9 @@ import com.google.gson.GsonBuilder;
 import di.DI;
 
 public class Config {
-	// TODO should be same between server and client
 	public int squaresize = 50;
 	public int velocityPlayer = 6;
 	public int velocityEnemy = 1;
-	// TODO make position etc for others, optimize after like offset variable
 	public int windowHeight = 480;
 	public int windowWidth = 640;
 	public int worldHeight = 9;
@@ -32,24 +30,19 @@ public class Config {
 	public int spawnSquareDistanceFromOthers = 3;
 	public int spawnPlayerSquareFreeSpace = 3;
 	public boolean autoreconnect = false;
-	public String ip;
-	public int port;
-	public String name;
+	public String ip = Config.defaultIP;
+	public int port = Config.defaultPort;
+	public String name = Config.defaultName;
+	public transient String configFileName = Config.defaultConfigFileName;
 	public boolean debug;
 
 	public static String defaultIP = "127.0.0.1";
 	public static int defaultPort = 32469;
 	public static String defaultName = "player";
-	public static String configFileName = "config.json";
+	public static String defaultConfigFileName = "config.json";
 
-	public static Config getConfig() throws IOException {
+	public static Config getConfig(String configFileName) throws IOException {
 		Config config = new Config();
-		if (config.ip == null) {
-			config.ip = Config.defaultIP;
-		}
-		if (config.name == null) {
-			config.name = Config.defaultName;
-		}
 
 		// if file doesnt exists create
 		final File configFile = new File(configFileName);
@@ -74,7 +67,7 @@ public class Config {
 		final String configJson = gson.toJson(config);
 		FileWriter fileWriter;
 		try {
-			fileWriter = new FileWriter(configFileName);
+			fileWriter = new FileWriter(config.configFileName);
 			fileWriter.write(configJson);
 			fileWriter.close();
 		} catch (final IOException e) {

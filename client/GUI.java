@@ -65,7 +65,6 @@ public class GUI {
 		panel.active = false;
 
 		jFrame.setJMenuBar(createMenu(connect, disconnect));
-		jFrame.pack();
 		jFrame.setVisible(true);
 	}
 

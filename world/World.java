@@ -8,7 +8,8 @@ import world.element.movable.Movable;
 import world.element.unmovable.Unmovable;
 
 public abstract class World implements Serializable {
-	// won't be more child class logically
+	// won't be more child class logically => no need to use heterogeneous
+	// collection
 	public List<Unmovable> unmovables = new LinkedList<>();
 	public List<Movable> movables = new LinkedList<>();
 

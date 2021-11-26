@@ -17,7 +17,7 @@ import world.element.unmovable.Unmovable;
 import world.element.unmovable.Wall;
 
 public abstract class Movable extends WorldElement {
-	private static Config config = (Config) DI.services.get(Config.class);
+	private static Config config = (Config) DI.get(Config.class);
 
 	public int velocity = 0;
 	public int bombCount = 0;

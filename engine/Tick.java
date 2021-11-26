@@ -26,7 +26,7 @@ import world.element.unmovable.Unmovable;
  * Must be called with lock closed
  */
 public class Tick {
-	Logger logger = (Logger) DI.services.get(Logger.class);
+	Logger logger = (Logger) DI.get(Logger.class);
 
 	private final WorldServer worldServer;
 	public long tickCount = 0;

@@ -8,7 +8,7 @@ import di.DI;
 import helper.Logger;
 
 public class Flag {
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	Map<String, Flag.Entry> commands;
 

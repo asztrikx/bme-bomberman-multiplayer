@@ -6,7 +6,7 @@ import java.io.Serializable;
 import di.DI;
 
 public class Animation implements Serializable {
-	private static AnimationStore animationStore = (AnimationStore) DI.services.get(AnimationStore.class);
+	private static AnimationStore animationStore = (AnimationStore) DI.get(AnimationStore.class);
 
 	private long state = 0;
 	private long stateDelayTick = 0;

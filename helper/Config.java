@@ -68,7 +68,7 @@ public class Config {
 	}
 
 	public static void saveConfig() {
-		final Config config = (Config) DI.services.get(Config.class);
+		final Config config = (Config) DI.get(Config.class);
 		final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 		final String configJson = gson.toJson(config);

@@ -9,7 +9,7 @@ import helper.Logger;
 import world.element.AnimationStore;
 
 public class DI {
-	public static Map<Class<? extends Object>, Object> services = new HashMap<>();
+	private static Map<Class<? extends Object>, Object> services = new HashMap<>();
 
 	/**
 	 * Injected classes may depend on each other so they already have to be on list
@@ -19,6 +19,10 @@ public class DI {
 	 */
 	public static void put(final Object object) {
 		services.put(object.getClass(), object);
+	}
+
+	public static Object get(final Class<? extends Object> c) {
+		return services.get(c);
 	}
 
 	public static void init() {

@@ -26,8 +26,8 @@ import helper.Key;
 import helper.Logger;
 
 public class GUI {
-	private static Config config = (Config) DI.services.get(Config.class);
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Config config = (Config) DI.get(Config.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	public Draw draw = new Draw();
 	public JFrame jFrame;

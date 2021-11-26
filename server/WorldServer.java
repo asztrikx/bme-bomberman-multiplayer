@@ -17,8 +17,8 @@ import world.element.unmovable.Exit;
 import world.element.unmovable.Wall;
 
 public class WorldServer extends World {
-	private static Config config = (Config) DI.services.get(Config.class);
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Config config = (Config) DI.get(Config.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	public void generate() {
 		movables = new LinkedList<>();

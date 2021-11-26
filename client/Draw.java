@@ -17,8 +17,8 @@ import world.element.movable.Player;
 import world.element.unmovable.Unmovable;
 
 public class Draw extends Canvas {
-	private static Config config = (Config) DI.services.get(Config.class);
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Config config = (Config) DI.get(Config.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	private WorldClient worldClient;
 	private BufferStrategy strategy;

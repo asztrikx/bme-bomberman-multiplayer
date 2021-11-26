@@ -10,7 +10,7 @@ import server.WorldServer;
 import world.element.Animation;
 
 public class Bomb extends Unmovable {
-	private static Config config = (Config) DI.services.get(Config.class);
+	private static Config config = (Config) DI.get(Config.class);
 
 	public Bomb() {
 		super(new Animation(15, "resource/unmovable/bomb"));

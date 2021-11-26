@@ -14,7 +14,7 @@ import di.DI;
 import helper.Logger;
 
 public class Connect extends Network {
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	private Consumer<Object> receive;
 	private final Phaser phaser = new Phaser(0);

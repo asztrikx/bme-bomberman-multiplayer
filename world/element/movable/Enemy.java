@@ -9,7 +9,7 @@ import server.WorldServer;
 import world.element.Animation;
 
 public class Enemy extends Movable {
-	private static Config config = (Config) DI.services.get(Config.class);
+	private static Config config = (Config) DI.get(Config.class);
 
 	public Enemy() {
 		super(new Animation(10, "resource/movable/enemy"));

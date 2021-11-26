@@ -13,7 +13,7 @@ import world.element.movable.Movable;
 import world.element.unmovable.Unmovable;
 
 public class Collision {
-	private static Config config = (Config) DI.services.get(Config.class);
+	private static Config config = (Config) DI.get(Config.class);
 
 	// Collision tells whether there's a collision between objects at positions
 	public static boolean doCollide(final Position position1, final Position position2) {

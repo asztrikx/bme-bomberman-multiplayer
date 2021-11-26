@@ -23,8 +23,8 @@ import world.element.movable.Movable;
 import world.element.movable.Player;
 
 public class Server implements AutoCloseable {
-	private static Config config = (Config) DI.services.get(Config.class);
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Config config = (Config) DI.get(Config.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	// session based states
 	private ServerModel model = new ServerModel();

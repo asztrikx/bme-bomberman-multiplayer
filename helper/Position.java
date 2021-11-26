@@ -6,7 +6,7 @@ import di.DI;
 
 public class Position implements Serializable {
 	public int y, x;
-	private static Config config = (Config) DI.services.get(Config.class);
+	private static Config config = (Config) DI.get(Config.class);
 
 	public Position(final int y, final int x) {
 		this.y = y;

@@ -17,7 +17,7 @@ import di.DI;
 import helper.Logger;
 
 public class Listen extends Network {
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	private ListenModel listenModel = new ListenModel();
 

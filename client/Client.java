@@ -10,8 +10,8 @@ import network.Network.Connection;
 import user.User;
 
 public class Client {
-	private static Config config = (Config) DI.services.get(Config.class);
-	private static Logger logger = (Logger) DI.services.get(Logger.class);
+	private static Config config = (Config) DI.get(Config.class);
+	private static Logger logger = (Logger) DI.get(Logger.class);
 
 	private final UserClient userClient = new UserClient();
 	private Connect connect;

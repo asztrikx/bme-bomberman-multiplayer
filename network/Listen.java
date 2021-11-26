@@ -28,7 +28,6 @@ public class Listen extends Network {
 	private Consumer<Connection> disconnect;
 	private final Phaser phaser = new Phaser(0);
 
-	// TODO ctor?
 	public void listen(final int port, final Function<Connection, Boolean> handshake,
 			final BiConsumer<Connection, Object> receive, final Consumer<Connection> disconnect) {
 		listenModel.connections = new LinkedList<>();

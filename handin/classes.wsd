@@ -1,0 +1,441 @@
+@startuml
+
+class Animation {
+  -{static} animationStore: AnimationStore
+  -state: long
+  -stateDelayTick: long
+  +stateDelayTickEnd: long
+  +stateEnd: long
+  +path: String
+  +increase()
+  +reset()
+}
+
+class AnimationStore {
+  -framesByPath: Map<String, List<Image>>
+  -add(string:String)
+  +get(string:String): List<Image>
+}
+
+class Auth {
+  -value: String
+  +Auth(length: int)
+  +length(): int
+  +regenerate(length:int)
+  +equals(object:Object)
+}
+
+class Bomb {
+  -{static} config: Config
+  +destroy(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+}
+
+class BombFire {
+  +nextState(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+}
+
+class Box
+
+class Client {
+  -{static} config: Config
+  -{static} logger: Logger
+  -userClient: UserClient
+  -connect: Connect
+  -model: ClientModel
+  -gui: GUI
+  +connect(): boolean
+  -disconnect()
+  -handshake(): boolean
+  -receive(object:Object)
+  -send()
+}
+
+class ClientModel {
+  +active: Boolean
+}
+
+class Collision {
+  -{static} config: Config
+  -{static} collisionFreeCountObjectGetMemory: boolean[][]
+  +{static} doCollide(position1:Position, position2:Position): boolean
+  +{static} getCollisions(worldElements:List<E>, position:Position, worldElementRelative:E2, collisionDecide:BiFunction<E2, E, Boolean>): List<E>
+  +{static} getFreeSpaceCount(worldserver:WorldServer, position:Position): int
+  -{static} getFreeSpaceCountRecursion(worldserver:WorldServer, positionCompress:Position): int
+  +{static} getValidPositionOnLine(worldserver:WorldServer, from:Position, to:Position, we:E, collisionDecideObjectFunction:BiFunction<E, Unmovable, Boolean>, collisionDecideCharacterFunction:BiFunction<E, Movable, Boolean>): Position
+}
+
+class Config {
+  +squaresize: int
+  +velocityPlayer: int
+  +velocityEnemy: int
+  +windowHeight: int
+  +windowWidth: int
+  +worldHeight: int
+  +worldWidth: int
+  +boxRatio: double
+  +enemyRatio: double
+  +enemyKeyChangePossibility: double
+  +tickRate: long
+  +tickSecond: long
+  +authLength: int
+  +nameMaxLength: int
+  +bombCountStart: int
+  +spawnSquareDistanceFromOthers: int
+  +spawnPlayerSquareFreeSpace: int
+  +autoreconnect: boolean
+  +ip: String
+  +port: int
+  +name: String
+  +configFileName: String
+  +debug: boolean
+  +{static} defaultIP: String
+  +{static} defaultPort: int
+  +{static} defaultName: String
+  +{static} defaultConfigFileName: String
+  +{static} getConfig(configFileName:String): Config
+  +{static} saveConfig()
+}
+
+class Connect {
+  -{static} logger: Logger
+  -receive: Consumer<Object>
+  -phaser: Phaser
+  -connection: Connection
+  -thread: Thread
+  +close()
+  +connect(handshake:Function<Connection, Boolean>, receive:Consumer<Object>, ip:String, port:int): boolean
+  +join()
+  +receive(): Object
+  +send(objects:Object...)
+}
+
+class DI {
+  -{static} services: Map<Class<?>, Object>
+  +{static} get(class<?>:Class<?>): Object
+  +{static} init(string:String)
+  +{static} put(object:Object)
+}
+
+class Draw {
+  -{static} config: Config
+  -{static} logger: Logger
+  -worldClient: WorldClient
+  -strategy: BufferStrategy
+  -clear(graphics:Graphics, r:int, g:int, b:int)
+  -exit(graphics:Graphics, offset:Position)
+  -gameEnd(graphics:Graphics)
+  +init()
+  +movable(graphics:Graphics, offset:Position)
+  +render(): boolean
+  -render(graphics:Graphics)
+  +unmovable(graphics:Graphics, offset:Position)
+  +setWorldClient(worldClient: WorldClient)
+}
+
+class Enemy {
+  -{static} config: Config
+  +nextState(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +randomKeys()
+}
+
+class Exit
+
+class FirstExit {
+  +shouldEnd(worldserver:WorldServer, tickCount:long): boolean
+}
+
+class Flag {
+  -commands: Map<String, Flag.Entry>
+  +Flag(commands:Map<String,Flag.Entry>)
+  +parse(args:String[]): Optional<Map<String, String>>
+  +printHelp()
+  +required(parsed:Map<String, String>, requiredNames:String...): boolean
+}
+
+class GUI {
+  -{static} config: Config
+  -{static} logger: Logger
+  +draw: Draw
+  +jFrame: JFrame
+  +panel: KeyCapturePanel
+  -state: State
+  +GUI(connect:BooleanSupplier, disconnect:Runnable, send:Runnable, keys:boolean[])
+  +createMenu(connect:BooleanSupplier, disconnect:Runnable): JMenuBar
+  +setState(state: State)
+}
+
+interface Gameend {
+  +{static} enemiesAlive(worldserver:WorldServer): boolean
+  +{static} playersAtExit(worldserver:WorldServer): List<Player>
+  {abstract} shouldEnd(worldserver:WorldServer, tickCount:long): boolean
+}
+
+enum Gamestate {
+  +{static} GamestateRunning
+  +{static} GamestateDead
+  +{static} GamestateWon
+  +{static} valueOf(string:String): Gamestate
+  +{static} values(): Gamestate[]
+}
+
+class KeyCapturePanel {
+  +active: boolean
+  +KeyCapturePanel(keyMaps:List<Keymap>, keys:boolean[], callback:Runnable)
+}
+
+class Listen {
+  -{static} logger: Logger
+  -listenModel: ListenModel
+  +port: int
+  -handshake: Function<Connection, Boolean>
+  -receive: BiConsumer<Connection, Object>
+  -disconnect: Consumer<Connection>
+  -phaser: Phaser
+  +close()
+  +handshake()
+  +listen(port:int, handshake:Function<Connection, Boolean>, receive:BiConsumer<Connection, Object>, disconnect:Consumer<Connection>)
+  +send(objects:Object...)
+}
+
+class ListenModel {
+  +connections: List<Connection>
+  +serverSocket: ServerSocket
+}
+
+class Logger {
+  +Logger(outputStream:OutputStream)
+}
+
+class Main {
+  +{static} main(string[]:String[])
+  +{static} parseCLI(string[]:String[]): Map<String, String>
+}
+
+abstract class Movable {
+  -{static} config: Config
+  +velocity: int
+  +bombCount: int
+  +owner: User
+  +keys: boolean[]
+  +applyBombPlace(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +applyMovement(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +nextState(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+}
+
+abstract class Network {
+  +{abstract} close()
+  +{static} getIP(socket:Socket): String
+  +{static} getPort(socket:Socket): int
+  +receive(objectinputstream:ObjectInputStream): Object
+  +send(objectoutputstream:ObjectOutputStream, objects:Object...)
+}
+
+class Never {
+  +shouldEnd(worldserver:WorldServer, long:long): boolean
+}
+
+class Player {
+  +you: boolean
+  +nextState(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +shouldDestroy(tickCount:long): boolean
+}
+
+class Position {
+  -{static} config: Config
+  +y: int
+  +x: int
+  +Position(y:int, x:int)
+  +Position(position:Position)
+  +shift(position:Position): Position
+  +sub(position:Position): Position
+  +getSquare(): Position
+  +equals(object: Object)
+}
+
+class Server {
+  -{static} config: Config
+  -{static} logger: Logger
+  -model: ServerModel
+  -listen: Listen
+  -tick: Tick
+  -timer: Timer
+  -phaser: Phaser
+  +close()
+  +handshake(connection:Connection): boolean
+  +listen(int:int)
+  +receive(connection:Connection, object:Object)
+  +send()
+  +waitUntilWin()
+}
+
+class ServerModel {
+  +worldServer: WorldServer
+  +userManager: UserManager<UserServer>
+}
+
+class Tick {
+  -logger: Logger
+  -worldServer: WorldServer
+  +tickCount: long
+  +gameend: Gameend
+  +Tick(worldServer:WorldServer, gameend:Gameend)
+  +nextState(): boolean
+  +nextStateAnimate()
+  +getWorldClient(): WorldClient
+}
+
+abstract class Unmovable {
+  +velocity: int
+  +owner: Movable
+  +movedOutOfBomb: boolean
+  +Unmovable(animation:Animation)
+}
+
+class User {
+  +keys: boolean[]
+  +name: String
+  +auth: Auth
+  +state: State
+}
+
+class UserClient {
+}
+
+class UserManager {
+  -userPossession: Map<U, List<WorldElement>>
+  +add(u:U)
+  +clear()
+  +findByAuth(auth:Auth): U
+  +findByName(string:String): U
+  +remove(u:U)
+  +remove(auth:Auth)
+  +getList(): List<U>
+}
+
+class UserServer {
+  +connection: Connection
+  +UserServer(connection:Connection)
+}
+
+class Wall
+
+abstract class World {
+  +unmovables: List<Unmovable>
+  +movables: List<Movable>
+  +height: int
+  +width: int
+  +exit: Unmovable
+}
+
+class WorldClient {
+  +state: State
+  +findMe(): Player
+}
+
+abstract class WorldElement {
+  +position: Position
+  +animation: Animation
+  +createdTick: long
+  +destroyTick: long
+  +WorldElement(animation:Animation)
+  +destroy(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +nextState(worldserver:WorldServer, nextWorldServer:WorldServer, tickCount:long)
+  +shouldDestroy(tickCount:long): boolean
+}
+
+class WorldServer {
+  -{static} config: Config
+  -{static} logger: Logger
+  +generate()
+  +getSpawn(minSpawnSquareFreeSpace:int): Position
+}
+
+"Animation" --> "AnimationStore" : animationStore
+"Bomb" --> "Config" : config
+"BombFire" -[dashed]-> "WorldServer"
+"Bomb" -[dashed]-> "WorldServer"
+"Client" --> "ClientModel" : model
+"Client" --> "Config" : config
+"Client" --> "Connect" : connect
+"Client" --> "GUI" : gui
+"Client" --> "Logger" : logger
+"Client" --> "UserClient"
+"Collision" --> "Config" : config
+"Collision" -[dashed]-> "Movable"
+"Collision" -[dashed]-> "Position"
+"Collision" -[dashed]-> "Unmovable"
+"Collision" -[dashed]-> "WorldElement"
+"Collision" -[dashed]-> "WorldServer"
+"Connect" --> "Logger" : logger
+"Draw" --> "Config" : config
+"Draw" --> "Logger" : logger
+"Draw" -[dashed]-> "Position"
+"Draw" --> "WorldClient" : worldClient
+"Enemy" --> "Config" : config
+"Enemy" -[dashed]-> "WorldServer"
+"FirstExit" -[dashed]-> "WorldServer"
+"GUI" --> "Config" : config
+"GUI" --> "Draw" : draw
+"GUI" --> "KeyCapturePanel" : panel
+"GUI" --> "Logger" : logger
+"Gameend" <|-[dashed]- "FirstExit"
+"Gameend" -[dashed]-> "Movable"
+"Gameend" <|-[dashed]- "Never"
+"Gameend" -[dashed]-> "*" "Player"
+"Gameend" -[dashed]-> "WorldServer"
+"Listen" --> "ListenModel" : listenModel
+"Listen" --> "Logger" : logger
+"Movable" --> "Config" : config
+"Movable" <|-- "Enemy"
+"Movable" <-> "Player"
+"Movable" <-> "Unmovable" : use, owner
+"Movable" --> "User" : owner
+"Movable" -[dashed]-> "WorldServer"
+"Network" <|-- "Connect"
+"Network" <|-- "Listen"
+"Never" -[dashed]-> "WorldServer"
+"Player" -[dashed]-> "WorldElement"
+"Player" -[dashed]-> "WorldServer"
+"Position" --> "Config" : config
+"Server" --> "Config" : config
+"Server" --> "Listen" : listen
+"Server" --> "Logger" : logger
+"ServerModel" --> "UserManager"
+"ServerModel" --> "WorldServer" : worldServer
+"Server" -[dashed]-> "Movable"
+"Server" --> "ServerModel" : model
+"Server" --> "Tick" : tick
+"Server" -[dashed]-> "UserServer"
+"Tick" --> "Gameend" : gameend
+"Tick" --> "Logger" : logger
+"Tick" --> "WorldServer" : worldServer
+"Unmovable" <-> "Bomb"
+"Unmovable" <|-- "BombFire"
+"Unmovable" <|-- "Box"
+"Unmovable" <|-- "Exit"
+"Unmovable" <|-- "Wall"
+"User" --> "Auth" : auth
+"UserManager" -[dashed]-> "Auth"
+"UserManager" -[dashed]-> "User"
+"User" <|-- "UserClient"
+"User" <|-- "UserServer"
+"WorldClient" -[dashed]-> "Player"
+"WorldElement" --> "Animation" : animation
+"WorldElement" <|-- "Movable"
+"WorldElement" --> "Position" : position
+"WorldElement" <|-- "Unmovable"
+"WorldElement" -[dashed]-> "WorldServer"
+"World" --> "*" "Movable" : movables
+"WorldServer" --> "Config" : config
+"WorldServer" --> "Logger" : logger
+"WorldServer" -[dashed]-> "Position"
+"World" --> "*" "Unmovable" : unmovables, exit
+"World" <|-- "WorldClient"
+"World" <|-- "WorldServer"
+"Main" -[dotted]-> "Client"
+"Main" -[dotted]-> "DI"
+"Main" -[dotted]-> "Flag"
+"Main" -[dotted]-> "Config"
+"Main" -[dotted]-> "Server"
+
+@enduml

@@ -17,6 +17,10 @@ public class AnimationStore {
 		try {
 			final File file = new File(path);
 			final File[] frameFiles = file.listFiles();
+			// when test do not fail because of wrong path
+			if (frameFiles == null) {
+				return;
+			}
 
 			final List<Image> frames = new ArrayList<>();
 			for (final File frame : frameFiles) {
@@ -32,6 +36,10 @@ public class AnimationStore {
 	public List<Image> get(final String path) {
 		if (!framesByPath.containsKey(path)) {
 			add(path);
+			// when test do not fail because of wrong path
+			if (framesByPath.size() == 0) {
+				return new ArrayList<Image>();
+			}
 		}
 		return framesByPath.get(path);
 	}

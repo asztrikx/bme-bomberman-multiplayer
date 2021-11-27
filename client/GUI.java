@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -51,6 +52,7 @@ public class GUI {
 				disconnect.run();
 			}
 		});
+		jFrame.setIconImage(new ImageIcon("resource/icon.png").getImage());
 
 		final List<KeyMap> keyMaps = new ArrayList<>();
 		keyMaps.add(new KeyMap(KeyEvent.VK_W, "up", Key.KeyType.KeyUp.getValue()));
@@ -81,8 +83,13 @@ public class GUI {
 		jMenuItem.addActionListener(e -> {
 			final String address = (String) JOptionPane.showInputDialog(jFrame, "Address (ip:port)", "Connect",
 					JOptionPane.PLAIN_MESSAGE, null, null, String.format("%s:%d", config.ip, config.port));
+			// cancelled
+			if (address == null) {
+				return;
+			}
+
 			final String[] cols = address.split(":");
-			if (address == null || cols[0].length() == 0 || cols[1].length() == 0) {
+			if (cols[0].length() == 0 || cols[1].length() == 0) {
 				JOptionPane.showMessageDialog(jFrame, "Wrong format");
 				return;
 			}
@@ -145,8 +152,14 @@ public class GUI {
 
 		jMenuItem = new JMenuItem("Player name");
 		jMenuItem.addActionListener(e -> {
-			config.name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
+			String name = (String) JOptionPane.showInputDialog(jFrame, "Name", "Connect", JOptionPane.PLAIN_MESSAGE,
 					null, null, config.name);
+			// cancelled
+			if (name == null) {
+				return;
+			}
+
+			config.name = name;
 			// save every modification
 			Config.saveConfig();
 		});

@@ -89,10 +89,12 @@ public class Client {
 	}
 
 	private void disconnect() {
-		synchronized (model.active) {
+		synchronized ((Boolean) model.active) {
 			if (!model.active) {
 				return;
 			}
+
+			logger.println("Disconnecting...");
 
 			model.active = false;
 

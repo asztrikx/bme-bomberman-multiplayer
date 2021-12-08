@@ -23,7 +23,7 @@ public class Config {
 	public double enemyRatio = 0.05;
 	public double enemyKeyChangePossibility = 0.0015;
 	public long tickRate = 1000 / 58;
-	public long tickSecond = 1000 / tickRate; // tick count in one second
+	public transient long tickSecond = 1000 / tickRate; // tick count in one second
 	public int authLength = 26;
 	public int nameMaxLength = 15;
 	public int bombCountStart = 1;

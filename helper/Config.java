@@ -35,6 +35,7 @@ public class Config {
 	public String name = Config.defaultName;
 	public transient String configFileName = Config.defaultConfigFileName;
 	public boolean debug;
+	public int fireMaxSpread = 5;
 
 	public static String defaultIP = "127.0.0.1";
 	public static int defaultPort = 32469;

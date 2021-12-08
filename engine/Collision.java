@@ -15,7 +15,14 @@ import world.element.unmovable.Unmovable;
 public class Collision {
 	private static Config config = (Config) DI.get(Config.class);
 
-	// Collision tells whether there's a collision between objects at positions
+	/**
+	 * @formatter:off
+	 * Tells whether there's a block size collision between positions
+	 * @param position1
+	 * @param position2
+	 * @return
+	 * @formatter:on
+	 */
 	public static boolean doCollide(final Position position1, final Position position2) {
 		if (Math.abs(position1.x - position2.x) >= config.squaresize) {
 			return false;
@@ -26,10 +33,18 @@ public class Collision {
 		return true;
 	}
 
-	// CollisionObjectSGet returns a List with Objects colliding with this
-	// collisionDecideObjectFunction decides for each object whether it should be
-	// taking into account
-	// if collisionDecideObjectFunction is NULL then it's treated as always true
+	/**
+	 * @formatter:off
+	 * Returns list of WorldElements colliding with given WorldElement
+	 * @param <E> worldElements type
+	 * @param <E2> worldElementRelative type
+	 * @param worldElements elements which should be checked for collision
+	 * @param position position which to we check collision (squaresize x squaresize dimension)
+	 * @param worldElementRelative elements which collision we check
+	 * @param collisionDecide filtering function for WorldElements colliding with position; nullable
+	 * @return
+	 * @formatter:on
+	 */
 	public static <E extends WorldElement, E2 extends WorldElement> List<E> getCollisions(final List<E> worldElements,
 			final Position position, final E2 worldElementRelative, final BiFunction<E2, E, Boolean> collisionDecide) {
 		final List<E> listCollision = new ArrayList<>();
@@ -53,16 +68,23 @@ public class Collision {
 		return listCollision;
 	}
 
-	// CollisionLinePositionGet calculates position taking collision into account in
-	// discrete line (from, to)
-	// from must not be equal to to
-	// we can be NULL
-	// if collisionDecideObjectFunction is NULL then it's treated as always true
-	// if collisionDecideCharacterFunction is NULL then it's treated as always true
+	/**
+	 * @formatter:off
+	 * Get first valid position on the line (from, to) from != to.
+	 * @param <E>
+	 * @param worldServer
+	 * @param from
+	 * @param to
+	 * @param worldElement we are moving this
+	 * @param collisionDecideUnmovable filter function for Unmovables colliding with worldElement; nullable 
+	 * @param collisionDecideMovable filter function for Movables colliding with worldElement; nullable
+	 * @return first valid position
+	 * @formatter:on
+	 */
 	public static <E extends WorldElement> Position getValidPositionOnLine(final WorldServer worldServer,
-			final Position from, final Position to, final E we,
-			final BiFunction<E, Unmovable, Boolean> collisionDecideObjectFunction,
-			final BiFunction<E, Movable, Boolean> collisionDecideCharacterFunction) {
+			final Position from, final Position to, final E worldElement,
+			final BiFunction<E, Unmovable, Boolean> collisionDecideUnmovable,
+			final BiFunction<E, Movable, Boolean> collisionDecideMovable) {
 		// position difference in abs is always same for y and x coordinate if none of
 		// them is zero
 		int step = Math.abs(to.y - from.y);
@@ -91,10 +113,10 @@ public class Collision {
 			// step y
 			current.y += unit.y;
 
-			List<Unmovable> unmovableCollisions = getCollisions(worldServer.unmovables, current, we,
-					collisionDecideObjectFunction);
-			List<Movable> movableCollisions = getCollisions(worldServer.movables, current, we,
-					collisionDecideCharacterFunction);
+			List<Unmovable> unmovableCollisions = getCollisions(worldServer.unmovables, current, worldElement,
+					collisionDecideUnmovable);
+			List<Movable> movableCollisions = getCollisions(worldServer.movables, current, worldElement,
+					collisionDecideMovable);
 			if (unmovableCollisions.size() != 0 || movableCollisions.size() != 0) {
 				current.y -= unit.y;
 			}
@@ -102,8 +124,9 @@ public class Collision {
 			// step x
 			current.x += unit.x;
 
-			unmovableCollisions = getCollisions(worldServer.unmovables, current, we, collisionDecideObjectFunction);
-			movableCollisions = getCollisions(worldServer.movables, current, we, collisionDecideCharacterFunction);
+			unmovableCollisions = getCollisions(worldServer.unmovables, current, worldElement,
+					collisionDecideUnmovable);
+			movableCollisions = getCollisions(worldServer.movables, current, worldElement, collisionDecideMovable);
 			if (unmovableCollisions.size() != 0 || movableCollisions.size() != 0) {
 				current.x -= unit.x;
 			}
@@ -112,49 +135,61 @@ public class Collision {
 		return current;
 	}
 
-	private static boolean[][] collisionFreeCountObjectGetMemory;
+	private static boolean[][] collisionFreeCountArray;
 
-	// CollisionFreeCountObjectGetRecursion is a helper function of
-	// CollisionFreeCountObjectGet
-	private static int getFreeSpaceCountRecursion(final WorldServer worldServer, final Position positionCompress) {
-		final Position position = new Position(positionCompress.y * config.squaresize,
-				positionCompress.x * config.squaresize);
+	/**
+	 * @formatter:off
+	 * Recursive helper function of getFreeSpaceCount
+	 * @param worldServer
+	 * @param positionCompressed position scaled to block size
+	 * @return
+	 * @formatter:on
+	 */
+	private static int getFreeSpaceCountRecursion(final WorldServer worldServer, final Position positionCompressed) {
+		final Position position = new Position(positionCompressed.y * config.squaresize,
+				positionCompressed.x * config.squaresize);
 
 		// in calculation or already calculated
-		if (collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x]) {
+		if (collisionFreeCountArray[positionCompressed.y][positionCompressed.x]) {
 			return 0;
 		}
 
 		// because of map border there will be no overindexing
 		// mark invalid positions also to save collision recalculation
-		collisionFreeCountObjectGetMemory[positionCompress.y][positionCompress.x] = true;
+		collisionFreeCountArray[positionCompressed.y][positionCompressed.x] = true;
 
 		// position is valid
-		final List<Unmovable> collisionObjectS = getCollisions(worldServer.unmovables, position, null, null);
-		final int collisionCount = collisionObjectS.size();
+		final List<Unmovable> collisionUnmovableS = getCollisions(worldServer.unmovables, position, null, null);
+		final int collisionCount = collisionUnmovableS.size();
 
 		if (collisionCount != 0) {
 			return 0;
 		}
 
 		// neighbour positions
-		int collisionFreeCountObject = 1; // current position
+		int count = 1; // current position
 		final int directionY[] = { 1, -1, 0, 0 };
 		final int directionX[] = { 0, 0, 1, -1 };
 		for (int i = 0; i < 4; i++) {
-			final Position positionCompressNew = new Position(positionCompress.y + directionY[i],
-					positionCompress.x + directionX[i]);
-			collisionFreeCountObject += getFreeSpaceCountRecursion(worldServer, positionCompressNew);
+			final Position positionCompressNew = new Position(positionCompressed.y + directionY[i],
+					positionCompressed.x + directionX[i]);
+			count += getFreeSpaceCountRecursion(worldServer, positionCompressNew);
 		}
 
-		return collisionFreeCountObject;
+		return count;
 	}
 
-	// CollisionFreeCountObjectGet returns how many square sized object-free area is
-	// reachable from (position - position % squaresize)
+	/**
+	 * @formatter:off
+	 * Determines the number of blocks (squaresize x squaresize) in which there is no WorldElement reachable from position
+	 * @param worldServer
+	 * @param positionCompressed position scaled to block size
+	 * @return
+	 * @formatter:on
+	 */
 	public static int getFreeSpaceCount(final WorldServer worldServer, final Position position) {
 		// memory alloc
-		collisionFreeCountObjectGetMemory = new boolean[config.worldHeight][config.windowWidth];
+		collisionFreeCountArray = new boolean[config.worldHeight][config.windowWidth];
 
 		// recursion
 		final Position positionCompress = new Position(position.y / config.squaresize, position.x / config.squaresize);

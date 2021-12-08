@@ -15,12 +15,19 @@ public abstract class WorldElement implements Serializable {
 		this.animation = animation;
 	}
 
+	/**
+	 * @formatter:off
+	 * If destroyTick is the current tick returns true
+	 * If destroyTick is lower then current tick (e.g. 0) then it will never be destroyed
+	 * @param tickCount
+	 * @return
+	 * @formatter:on
+	 */
 	public boolean shouldDestroy(final long tickCount) {
 		return tickCount == destroyTick;
 	}
 
 	public void destroy(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
-
 	}
 
 	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {

@@ -23,7 +23,9 @@ import world.element.unmovable.Exit;
 import world.element.unmovable.Unmovable;
 
 /**
+ * @formatter:off
  * Must be called with lock closed
+ * @formatter:on
  */
 public class Tick {
 	private Logger logger = (Logger) DI.get(Logger.class);
@@ -37,6 +39,11 @@ public class Tick {
 		this.gameend = gameend;
 	}
 
+	/**
+ 	 * @formatter:off
+	 * Handles animation state for Movables and Unmovables
+     * @formatter:on
+	 */
 	public void nextStateAnimate() {
 		// animate
 		for (final Unmovable unmovable : worldServer.unmovables) {
@@ -60,6 +67,14 @@ public class Tick {
 	}
 
 	// calculates next state from current
+
+	/**
+ 	 * @formatter:off
+	 * Calculates next state of WorldServer.
+	 * This includes: calling next state of Unmovables and Movables, destroying, animation, game end 
+	 * @return
+ 	 * @formatter:on
+	 */
 	public boolean nextState() {
 		final WorldServer nextWorldServer = new WorldServer();
 		nextWorldServer.movables = new LinkedList<>(worldServer.movables);
@@ -101,13 +116,19 @@ public class Tick {
 		return true;
 	}
 
+	/**
+ 	 * @formatter:off
+	 * Creates WorldClient which is secure to send to others
+	 * @return
+ 	 * @formatter:on
+	 */
 	public WorldClient getWorldClient() {
 		WorldClient worldClient = new WorldClient();
 
 		// remove exit if behind box
-		final List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables,
+		final List<Unmovable> collisionUnmovableS = Collision.getCollisions(worldServer.unmovables,
 				worldServer.exit.position, worldServer.exit, null);
-		if (collisionObjectS.size() == 0) {
+		if (collisionUnmovableS.size() == 0) {
 			worldClient.exit = worldServer.exit;
 		}
 

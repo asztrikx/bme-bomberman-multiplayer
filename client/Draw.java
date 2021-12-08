@@ -23,16 +23,32 @@ public class Draw extends Canvas {
 	private WorldClient worldClient;
 	private BufferStrategy strategy;
 
+	/**
+	 * @formatter:off
+	 * Initializes GUI drawing
+	 * @formatter:on
+	 */
 	public void init() {
 		super.createBufferStrategy(2);
 		strategy = super.getBufferStrategy();
 	}
 
+	/**
+	 * @formatter:off
+	 * Setter for worldClient
+	 * @param worldClient
+	 * @formatter:on
+	 */
 	public void setWorldClient(final WorldClient worldClient) {
 		this.worldClient = worldClient;
 	}
 
-	public boolean render() {
+	/**
+	 * @formatter:off
+	 * Manages Swing render, delegates render to render(Graphics)
+	 * @formatter:on
+	 */
+	public void render() {
 		do {
 			do {
 				final Graphics graphics = strategy.getDrawGraphics();
@@ -41,9 +57,15 @@ public class Draw extends Canvas {
 			} while (strategy.contentsRestored());
 			strategy.show();
 		} while (strategy.contentsLost());
-		return true;
 	}
 
+	/**
+	 * @formatter:off
+	 * Renders the current state
+	 * Draws gameend screen if win state is on worldClient
+	 * @param graphics
+	 * @formatter:on
+	 */
 	private void render(final Graphics graphics) {
 		// not yet connected
 		if (worldClient == null) {
@@ -56,15 +78,15 @@ public class Draw extends Canvas {
 			return;
 		}
 
-		final Player characterMe = worldClient.findMe();
-		if (characterMe == null) {
-			logger.println("Did not receive character from server");
+		final Player playerMe = worldClient.findMe();
+		if (playerMe == null) {
+			logger.println("Did not receive player from server");
 			throw new RuntimeException();
 		}
 
 		// offset
-		final Position offset = new Position(-characterMe.position.y + config.windowHeight / 2 - config.squaresize / 2,
-				-characterMe.position.x + config.windowWidth / 2 - config.squaresize / 2);
+		final Position offset = new Position(-playerMe.position.y + config.windowHeight / 2 - config.squaresize / 2,
+				-playerMe.position.x + config.windowWidth / 2 - config.squaresize / 2);
 
 		clear(graphics, 30, 30, 30);
 
@@ -84,6 +106,12 @@ public class Draw extends Canvas {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Draws game end screen
+	 * @param graphics
+	 * @formatter:on
+	 */
 	private void gameEnd(final Graphics graphics) {
 		int r = 0;
 		int g = 0;
@@ -105,11 +133,27 @@ public class Draw extends Canvas {
 		clear(graphics, r, g, b);
 	}
 
+	/**
+	 * @formatter:off
+	 * Clears with specified colors
+	 * @param graphics
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @formatter:on
+	 */
 	private void clear(final Graphics graphics, final int r, final int g, final int b) {
 		graphics.setColor(new Color(r, g, b));
 		graphics.fillRect(0, 0, config.windowWidth, config.windowHeight);
 	}
 
+	/**
+	 * @formatter:off
+	 * Renders exit
+	 * @param graphics
+	 * @param offset position which should be deduced from all points to centralize non origin points
+	 * @formatter:on
+	 */
 	private void exit(final Graphics graphics, final Position offset) {
 		if (worldClient.exit == null) {
 			return;
@@ -120,6 +164,13 @@ public class Draw extends Canvas {
 		graphics.drawImage(image, position.x, position.y, config.squaresize, config.squaresize, null);
 	}
 
+	/**
+	 * @formatter:off
+	 * Renders unmovables
+	 * @param graphics
+	 * @param offset position which should be deduced from all points to centralize non origin points
+	 * @formatter:on
+	 */
 	public void unmovable(final Graphics graphics, final Position offset) {
 		for (final Unmovable unmovable : worldClient.unmovables) {
 			final Image image = unmovable.animation.getImage();
@@ -128,6 +179,13 @@ public class Draw extends Canvas {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Renders movables
+	 * @param graphics
+	 * @param offset position which should be deduced from all points to centralize non origin points
+	 * @formatter:on
+	 */
 	public void movable(final Graphics graphics, final Position offset) {
 		for (final Movable movable : worldClient.movables) {
 			final Image image = movable.animation.getImage();

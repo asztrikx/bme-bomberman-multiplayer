@@ -15,8 +15,10 @@ public class BombFire extends Unmovable {
 		super(new Animation(2, "resource/unmovable/bombFire"));
 	}
 
+	/**
+	 * Destroys all colliding Box and Player
+	 */
 	@Override
-	// destroys all ObjectTypeBox and all Character in collision
 	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		final List<WorldElement> worldElements = new ArrayList<>();
 		worldElements.addAll(worldServer.unmovables);
@@ -29,7 +31,6 @@ public class BombFire extends Unmovable {
 			} else if (collisionWorldElement instanceof Bomb) {
 				// chain bomb explosion
 				// -
-				// bombExplode(objectItemCurrent->object);
 			} else if (collisionWorldElement instanceof Movable) {
 				final Movable movable = (Movable) collisionWorldElement;
 

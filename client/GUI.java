@@ -39,6 +39,15 @@ public class GUI {
 
 	private State state = State.Lobby;
 
+	/**
+	 * @formatter:off
+	 * Initializes swing gui
+	 * @param connect executed when connect popup is confirmed
+	 * @param disconnect executed when disconnect menu is clicked
+	 * @param send server update function which will be called on new key press
+	 * @param keys array which will be updated to reflect currently pressed keys
+	 * @formatter:on
+	 */
 	public GUI(final BooleanSupplier connect, final Runnable disconnect, final Runnable send, final boolean[] keys) {
 		jFrame = new JFrame();
 		// add back height used by menu
@@ -69,6 +78,14 @@ public class GUI {
 		jFrame.setVisible(true);
 	}
 
+	/**
+	 * @formatter:off
+	 * Creates JMenuBar based on supplied events
+	 * @param connect executed when connect popup is confirmed
+	 * @param disconnect executed when disconnect menu is clicked
+	 * @return menu based on connect and disconnect events
+	 * @formatter:on
+	 */
 	public JMenuBar createMenu(final BooleanSupplier connect, final Runnable disconnect) {
 		// menu
 		final JMenuBar jMenuBar = new JMenuBar();

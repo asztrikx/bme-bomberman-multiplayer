@@ -9,7 +9,6 @@ import world.element.Animation;
 import world.element.WorldElement;
 
 public class Player extends Movable {
-	// TODO eh
 	public boolean you = false;
 
 	public Player() {
@@ -21,8 +20,13 @@ public class Player extends Movable {
 		return owner.state == User.State.Dead;
 	}
 
+	/**
+	 * @formatter:off
+	 * Moves player
+	 * Check if should die, and marks them as dead if so
+	 * @formatter:on
+	 */
 	@Override
-	// checks if colliding with Enemy and kills them if so
 	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		super.nextState(worldServer, nextWorldServer, tickCount);
 

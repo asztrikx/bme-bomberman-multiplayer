@@ -18,6 +18,13 @@ public class Client {
 	private ClientModel model = new ClientModel();
 	private final GUI gui = new GUI(this::connect, this::disconnect, this::send, userClient.keys);
 
+	/**
+	 * @formatter:off
+	 * Create a connection to the address in Config
+	 * Updates GUI to reflex in game screen
+	 * @return boolean success
+	 * @formatter:on
+	 */
 	public boolean connect() {
 		userClient.name = config.name;
 		model.active = true;
@@ -41,6 +48,14 @@ public class Client {
 		}, config.ip, config.port);
 	}
 
+	/**
+	 * @formatter:off
+	 * Handshake used at connecting
+	 * @return boolean success
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @formatter:on
+	 */
 	private boolean handshake() throws IOException, ClassNotFoundException {
 		// send name
 		connect.send(userClient.name);
@@ -56,7 +71,12 @@ public class Client {
 		return true;
 	}
 
-	// gets updates from server
+	/**
+	 * @formatter:off
+	 * Function called when connection receives new data
+	 * @param object Received data supplied by connection
+	 * @formatter:on
+	 */
 	private void receive(final Object object) {
 		final WorldClient worldClient = (WorldClient) object;
 		gui.draw.setWorldClient(worldClient);
@@ -69,7 +89,7 @@ public class Client {
 					try {
 						connect();
 					} catch (final Exception e) {
-						throw new RuntimeException(e);
+						logger.println("Failed to autoreconnect");
 					}
 				}
 			}).start();
@@ -78,7 +98,12 @@ public class Client {
 		}
 	}
 
-	// Sends userClient to server as UserServer
+	/**
+	 * @formatter:off
+	 * Updates server about current state (userClient)
+	 * If can not send it will auto disconnect
+	 * @formatter:on
+	 */
 	private void send() {
 		try {
 			connect.send((User) userClient);
@@ -88,6 +113,12 @@ public class Client {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Disconnects from server
+	 * Sets gui to not connected state
+	 * @formatter:on
+	 */
 	private void disconnect() {
 		synchronized ((Boolean) model.active) {
 			if (!model.active) {

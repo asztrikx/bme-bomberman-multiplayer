@@ -22,6 +22,15 @@ public class Connect extends Network {
 	private Connection connection;
 	private Thread thread;
 
+	/**
+	 * @formatter:off
+	 * Connects to server starting with a 2way handshake
+	 * @param handshake functions which implements handshake Objects
+	 * @param ip 
+	 * @param port
+	 * @return
+	 * @formatter:on
+	 */
 	public boolean connect(final Function<Connection, Boolean> handshake, final Consumer<Object> receive, String ip,
 			int port) {
 		this.receive = receive;
@@ -57,6 +66,9 @@ public class Connect extends Network {
 		return true;
 	}
 
+	/**
+	 * Redirecter class to supplied receive handler
+	 */
 	private class Receive implements Runnable {
 		@Override
 		public void run() {
@@ -74,14 +86,32 @@ public class Connect extends Network {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Sends objects to connection without the need to specify connection
+	 * @param objects
+	 * @throws IOException
+	 * @formatter:on
+	 */
 	public void send(final Object... objects) throws IOException {
 		super.send(connection.objectOutputStream, objects);
 	}
 
+	/**
+	 * @formatter:off
+	 * Receives object without the need to specify connection
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 * @formatter:on
+	 */
 	public Object receive() throws ClassNotFoundException, IOException {
 		return super.receive(connection.objectInputStream);
 	}
 
+	/**
+	 * Waits until connection closes
+	 */
 	public void join() {
 		try {
 			thread.join();

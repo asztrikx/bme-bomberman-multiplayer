@@ -35,6 +35,13 @@ public class Server implements AutoCloseable {
 	private Timer timer;
 	private Phaser phaser;
 
+	/**
+	 * @formatter:off
+	 * Listens on port specified in config
+	 * After game ended it restarts 
+	 * @throws Exception
+	 * @formatter:on
+	 */
 	public Server() throws Exception {
 		while (true) {
 			phaser = new Phaser(0);
@@ -44,10 +51,20 @@ public class Server implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Start listening on port
+	 * Create ticker
+	 * @param port
+	 * @throws InterruptedException
+	 * @formatter:on
+	 */
 	public void listen(final int port) throws InterruptedException {
 		model.worldServer.generate();
 		model.userManager = new UserManager<>();
 		listen = new Listen();
+
+		// start listening
 		listen.listen(port, (connection) -> {
 			try {
 				return handshake(connection);
@@ -107,7 +124,10 @@ public class Server implements AutoCloseable {
 	}
 
 	/**
+	 * @formatter:off
+	 * Sends WorldClient (generated from WorldServer) to all connected clients
 	 * Must be called with lock closed
+	 * @formatter:on
 	 */
 	public void send() {
 		final WorldClient worldClient = tick.getWorldClient();
@@ -116,7 +136,7 @@ public class Server implements AutoCloseable {
 			// state
 			worldClient.state = userServer.state;
 
-			// alter user character to be identifiable
+			// alter user's player to be identifiable
 			Player playerYou = null;
 			for (final Movable movable : worldClient.movables) {
 				if (!(movable instanceof Player)) {
@@ -136,16 +156,28 @@ public class Server implements AutoCloseable {
 				listen.send(userServer.connection.objectOutputStream, worldClient);
 			} catch (final IOException e) {
 				logger.printf("Couldn't send update to client: %s\n", userServer.connection.toString());
+				// TODO dc here
 			}
 
-			// remove character alter
+			// remove player alter
 			if (playerYou != null) {
 				playerYou.you = false;
 			}
 		}
 	}
 
-	// registers new user connection, returns it with auth
+	/**
+	 * @formatter:off
+	 * Server side handshake
+	 * Based on given name give back unique name
+	 * Generate and send unique auth
+	 * Create and spawn player corresponding to client
+	 * @param connection
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 * @formatter:on
+	 */
 	public boolean handshake(final Connection connection) throws ClassNotFoundException, IOException {
 		// get basic info
 		final String name = (String) listen.receive(connection.objectInputStream);
@@ -174,7 +206,7 @@ public class Server implements AutoCloseable {
 			// spawn
 			final Position position = model.worldServer.getSpawn(config.spawnPlayerSquareFreeSpace);
 
-			// character insert
+			// player insert
 			final Player player = new Player();
 			player.bombCount = config.bombCountStart;
 			player.owner = userServer;
@@ -198,6 +230,15 @@ public class Server implements AutoCloseable {
 		return true;
 	}
 
+	/**
+	 * @formatter:off
+	 * Receive object from a connection
+	 * Validate auth, finc corresponding client, player
+	 * Apply pressed keys to the state of the WorldServer
+	 * @param connection
+	 * @param object
+	 * @formatter:on
+	 */
 	public void receive(final Connection connection, final Object object) {
 		final User userUnsafe = (User) object;
 

@@ -8,9 +8,13 @@ import di.DI;
 public class Animation implements Serializable {
 	private static AnimationStore animationStore = (AnimationStore) DI.get(AnimationStore.class);
 
+	// Current image id to be displayed
 	private long state = 0;
+	// Delay state
 	private long stateDelayTick = 0;
+	// Last delay state == how long should it delay between image changes
 	public long stateDelayTickEnd;
+	// Last image id to be displayed
 	public long stateEnd;
 
 	public String path;

@@ -18,6 +18,12 @@ public class Position implements Serializable {
 		this.x = position.x;
 	}
 
+	/**
+	 * @formatter:off
+	 * Scales to block size
+	 * @return
+	 * @formatter:on
+	 */
 	public Position getSquare() {
 		return new Position(y % config.squaresize, x % config.squaresize);
 	}
@@ -26,6 +32,13 @@ public class Position implements Serializable {
 		return new Position(y - position.y, x - position.x);
 	}
 
+	/**
+	 * @formatter:off
+	 * Shifts coordinates by offset
+	 * @param offset
+	 * @return
+	 * @formatter:on
+	 */
 	public Position shift(final Position offset) {
 		return new Position(y + offset.y, x + offset.x);
 	}

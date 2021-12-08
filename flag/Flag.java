@@ -33,6 +33,11 @@ public class Flag {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Prints help to stdin
+	 * @formatter:on
+	 */
 	public void printHelp() {
 		System.out.println("Available commands");
 		commands.forEach((final String name, final Entry entry) -> {
@@ -40,6 +45,13 @@ public class Flag {
 		});
 	}
 
+	/**
+	 * @formatter:off
+	 * Based on commands given in ctor gets given flags from args 
+	 * @param args
+	 * @return Optional Map of (Flag,Parameter)
+	 * @formatter:on
+	 */
 	public Optional<Map<String, String>> parse(final String[] args) {
 		for (final String arg : args) {
 			if (arg.equals("--help")) {
@@ -96,17 +108,5 @@ public class Flag {
 		}
 
 		return Optional.of(parsed);
-	}
-
-	public boolean required(final Map<String, String> parsed, final String... requiredNames) {
-		boolean missing = false;
-		for (final String requiredName : requiredNames) {
-			if (!parsed.containsKey(requiredName)) {
-				System.out.println(String.format("Missing required parameter: %s, %s", requiredName,
-						commands.get(requiredName).helpMessage));
-				missing = true;
-			}
-		}
-		return !missing;
 	}
 }

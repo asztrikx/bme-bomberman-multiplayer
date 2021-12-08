@@ -20,6 +20,9 @@ public class WorldServer extends World {
 	private static Config config = (Config) DI.get(Config.class);
 	private static Logger logger = (Logger) DI.get(Logger.class);
 
+	/**
+	 * Randomly generates new map based on config
+	 */
 	public void generate() {
 		movables = new LinkedList<>();
 		unmovables = new LinkedList<>();
@@ -43,12 +46,11 @@ public class WorldServer extends World {
 			}
 		}
 
-		final int collisionFreeCountObject = Collision.getFreeSpaceCount(this,
-				new Position(config.squaresize, config.squaresize));
+		final int count = Collision.getFreeSpaceCount(this, new Position(config.squaresize, config.squaresize));
 
 		// box generate randomly
 		Position lastBoxPosition = null;
-		for (int i = 0; i < (int) (config.boxRatio * collisionFreeCountObject); i++) {
+		for (int i = 0; i < (int) (config.boxRatio * count); i++) {
 			final Box box = new Box();
 			box.position = getSpawn(1);
 			unmovables.add(box);
@@ -67,22 +69,27 @@ public class WorldServer extends World {
 		this.exit = exit;
 
 		// enemy generate randomly
-		for (int i = 0; i < (int) (config.enemyRatio * collisionFreeCountObject); i++) {
+		for (int i = 0; i < (int) (config.enemyRatio * count); i++) {
 			final Enemy enemy = new Enemy();
 			enemy.position = getSpawn(3);
 			enemy.velocity = config.velocityEnemy;
-			// character.KeyMovementRandom();
+			// enemy.KeyMovementRandom();
 			movables.add(enemy);
 		}
 	}
 
-	// SpawnGet return a position where there's at least 3 free space reachable
-	// without action so player does not die instantly
+	/**
+	 * @formatter:off
+	 * Return a position where there's at least minSpawnSquareFreeSpace free space available
+	 * @param minSpawnSquareFreeSpace
+	 * @return
+	 * @formatter:on
+	 */
 	public Position getSpawn(final int minSpawnSquareFreeSpace) {
 		// position find
 		Position positionCompressed;
 		Position position;
-		int collisionCountCharacter;
+		int collisionCountMovable;
 		int spawnSquareFreeSpace;
 		boolean near = false;
 		final SecureRandom secureRandom = new SecureRandom();
@@ -95,8 +102,8 @@ public class WorldServer extends World {
 			position = new Position(positionCompressed.y * config.squaresize, positionCompressed.x * config.squaresize);
 
 			// collision check
-			final List<Movable> collisionCharacterS = Collision.getCollisions(movables, position, null, null);
-			collisionCountCharacter = collisionCharacterS.size();
+			final List<Movable> collisionMovableS = Collision.getCollisions(movables, position, null, null);
+			collisionCountMovable = collisionMovableS.size();
 
 			// distance check
 			near = false;
@@ -111,7 +118,7 @@ public class WorldServer extends World {
 
 			// position valid
 			spawnSquareFreeSpace = Collision.getFreeSpaceCount(this, position);
-		} while (collisionCountCharacter != 0 || spawnSquareFreeSpace < minSpawnSquareFreeSpace || near);
+		} while (collisionCountMovable != 0 || spawnSquareFreeSpace < minSpawnSquareFreeSpace || near);
 
 		return position;
 	}

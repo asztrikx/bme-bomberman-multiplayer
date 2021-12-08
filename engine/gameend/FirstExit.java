@@ -6,6 +6,9 @@ import server.WorldServer;
 import user.User;
 import world.element.movable.Player;
 
+/**
+ * Win is determined by first player touching exit when all enemies are dead
+ */
 public class FirstExit implements Gameend {
 	@Override
 	public boolean shouldEnd(final WorldServer worldServer, final long tickCount) {

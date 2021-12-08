@@ -24,6 +24,15 @@ public class KeyCapturePanel extends JPanel {
 
 	public boolean active = true;
 
+	/**
+	 * @formatter:off
+	 * Panel which solves capturing keys by giving a list of keys to be captured and a callback to be called when any key is pressed
+	 * 
+	 * @param keyMaps
+	 * @param keys
+	 * @param callback
+	 * @formatter:on
+	 */
 	public KeyCapturePanel(final List<KeyMap> keyMaps, final boolean[] keys, final Runnable callback) {
 		final InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
 		final ActionMap actionMap = getActionMap();

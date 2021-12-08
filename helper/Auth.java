@@ -6,11 +6,15 @@ import java.security.SecureRandom;
 public class Auth implements Serializable {
 	private String value;
 
-	// creates a `length` character long auth key
 	public Auth(final int length) {
 		regenerate(length);
 	}
 
+	/**
+	 * @formatter:off
+	 * Creates secure random string with length of supplied amount
+	 * @param length
+	 */
 	public void regenerate(final int length) {
 		final SecureRandom secureRandom = new SecureRandom();
 
@@ -27,7 +31,6 @@ public class Auth implements Serializable {
 	}
 
 	@Override
-	// AuthFind returns UserServer with that auth or NULL if does not exists
 	public boolean equals(final Object object) {
 		if (!(object instanceof Auth)) {
 			throw new RuntimeException();

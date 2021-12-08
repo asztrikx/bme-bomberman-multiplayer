@@ -28,6 +28,15 @@ public class Listen extends Network {
 	private Consumer<Connection> disconnect;
 	private Phaser phaser;
 
+	/**
+	 * @formatter:off
+	 * Creates listener for connections
+	 * @param port
+	 * @param handshake handshake handler function
+	 * @param receive receive handler function
+	 * @param disconnect client disconnect handler function
+	 * @formatter:on
+	 */
 	public void listen(final int port, final Function<Connection, Boolean> handshake,
 			final BiConsumer<Connection, Object> receive, final Consumer<Connection> disconnect) {
 		listenModel.connections = new LinkedList<>();
@@ -48,6 +57,13 @@ public class Listen extends Network {
 		thread.start();
 	}
 
+	/**
+	 * @formatter:off
+	 * Connection manager class
+	 * Each class is managed in a new thread
+	 * Disconnecting client is also managed here
+	 * @formatter:on
+	 */
 	private class Receive implements Runnable {
 		private final Connection connection;
 
@@ -88,6 +104,12 @@ public class Listen extends Network {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Listens for new connection then initiates handshake
+	 * If successful new Receive is created for connection
+	 * @formatter:on
+	 */
 	public void handshake() {
 		while (!listenModel.serverSocket.isClosed()) {
 			Socket socket;
@@ -157,6 +179,13 @@ public class Listen extends Network {
 		phaser.awaitAdvance(phaser.getPhase());
 	}
 
+	/**
+	 * @formatter:off
+	 * Send objects to all connected clients
+	 * @param objects
+	 * @throws IOException
+	 * @formatter:on
+	 */
 	public void send(final Object... objects) throws IOException {
 		synchronized (listenModel) {
 			for (final Connection connection : listenModel.connections) {

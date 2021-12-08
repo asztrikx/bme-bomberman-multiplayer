@@ -13,6 +13,12 @@ import javax.swing.ImageIcon;
 public class AnimationStore {
 	private final Map<String, List<Image>> framesByPath = new HashMap<>();
 
+	/**
+	 * @formatter:off
+	 * Adds image path to store
+	 * @param path
+	 * @formatter:on
+	 */
 	private void add(final String path) {
 		try {
 			final File file = new File(path);
@@ -33,6 +39,13 @@ public class AnimationStore {
 		}
 	}
 
+	/**
+	 * @formatter:off
+	 * Return animation (list of images) based on path
+	 * @param path
+	 * @return
+	 * @formatter:on
+	 */
 	public List<Image> get(final String path) {
 		if (!framesByPath.containsKey(path)) {
 			add(path);

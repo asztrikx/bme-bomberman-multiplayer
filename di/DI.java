@@ -12,10 +12,11 @@ public class DI {
 	private static Map<Class<?>, Object> services = new HashMap<>();
 
 	/**
-	 * Injected classes may depend on each other so they already have to be on list
-	 * when `new` is called
-	 * 
+	 * @formatter:off
+	 * Puts the class into a static store to be reachable as singleton.
+	 * Injected classes may depend on each other by DI so they already have to be on the list when `new` is calledú
 	 * @param Class instance
+	 * @formatter:on
 	 */
 	public static void put(final Object object) {
 		services.put(object.getClass(), object);
@@ -25,6 +26,12 @@ public class DI {
 		return services.get(c);
 	}
 
+	/**
+	 * @formatter:off
+	 * Fills DI with basic class instances
+	 * @param configFileName
+	 * @formatter:on
+	 */
 	public static void init(String configFileName) {
 		Logger logger = new Logger(System.out);
 		Config config;

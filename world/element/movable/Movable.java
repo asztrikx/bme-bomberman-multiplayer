@@ -28,7 +28,16 @@ public abstract class Movable extends WorldElement {
 		super(animation);
 	}
 
-	// moves character based on it's pressed keys
+	/**
+	 * @formatter:off
+	 * Moves based on keys array
+	 * Takes collision into account
+	 * Handles moving out of bomb
+	 * @param worldServer
+	 * @param nextWorldServer
+	 * @param tickCount
+	 * @formatter:on
+	 */
 	public void applyMovement(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		Position positionNew = new Position(position.y, position.x);
 		if (keys[Key.KeyType.KeyUp.getValue()]) {
@@ -45,31 +54,23 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		positionNew = Collision.getValidPositionOnLine(worldServer, position, positionNew, this,
+		position = Collision.getValidPositionOnLine(worldServer, position, positionNew, this,
 				(movableRelative, unmovable) -> {
 					return unmovable instanceof Wall || unmovable instanceof Box || (unmovable instanceof Bomb
 							&& (unmovable.owner != movableRelative || unmovable.movedOutOfBomb));
 				}, (movableRelative, movable) -> {
-					// CharacterTypeUser is solid for CharacterTypeUser
-					// CharacterTypeEnemy is not solid for CharacterTypeUser
-					// vice versa with CharacterTypeEnemy
-					// so only same type character is solid
+					// Player is solid for Player
+					// Enemy is not solid for Player
+					// vice versa with Enemy
+					// so only same type is solid
 					return movable instanceof Player && movableRelative instanceof Player
 							|| movable instanceof Enemy && movableRelative instanceof Enemy;
 				});
-
-		// enemy new one way direction
-		if (this instanceof Enemy && position.equals(positionNew)) {
-			final Enemy enemy = (Enemy) this;
-			enemy.randomKeys();
-		}
-		position = positionNew;
 
 		// moved out from a bomb with !bombOut
 		// in one move it is not possible that it moved out from bomb then moved back
 		// again
 		for (final Unmovable unmovable : worldServer.unmovables) {
-			// TODO only works for 1 bomb
 			if (unmovable instanceof Bomb && unmovable.owner == this && !unmovable.movedOutOfBomb
 					&& !Collision.doCollide(position, unmovable.position)) {
 				unmovable.movedOutOfBomb = true;
@@ -77,8 +78,14 @@ public abstract class Movable extends WorldElement {
 		}
 	}
 
-	// places a bomb to the nearest square in the grid relative to the
-	// character
+	/**
+	 * @formatter:off
+	 * Handles bomb place (in nearest block size) if no collision happens
+	 * @param worldServer
+	 * @param nextWorldServer
+	 * @param tickCount
+	 * @formatter:on
+	 */
 	public void applyBombPlace(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		// bomb available
 		if (bombCount == 0) {
@@ -102,30 +109,32 @@ public abstract class Movable extends WorldElement {
 		}
 
 		// collision
-		final List<Unmovable> collisionObjectS = Collision.getCollisions(worldServer.unmovables, positionNew, null,
+		final List<Unmovable> collisionUnmovables = Collision.getCollisions(worldServer.unmovables, positionNew, null,
 				null);
-		final List<Movable> collisionCharacterS = Collision.getCollisions(worldServer.movables, positionNew, this,
-				null);
+		final List<Movable> collisionMovables = Collision.getCollisions(worldServer.movables, positionNew, this, null);
 
-		if (collisionCharacterS.size() != 0 || collisionObjectS.size() != 0) {
+		if (collisionMovables.size() != 0 || collisionUnmovables.size() != 0) {
 			return;
 		}
 
 		// bomb insert
-		final Unmovable object = new Bomb();
-		object.createdTick = tickCount;
-		object.destroyTick = tickCount + 2 * config.tickSecond;
-		object.position = positionNew;
-		object.velocity = 0;
-		object.movedOutOfBomb = false;
-		object.owner = this;
-		object.animation.stateDelayTickEnd = 15;
-		nextWorldServer.unmovables.add(object);
+		final Unmovable bomb = new Bomb();
+		bomb.createdTick = tickCount;
+		bomb.destroyTick = tickCount + 2 * config.tickSecond;
+		bomb.position = positionNew;
+		bomb.velocity = 0;
+		bomb.movedOutOfBomb = false;
+		bomb.owner = this;
+		bomb.animation.stateDelayTickEnd = 15;
+		nextWorldServer.unmovables.add(bomb);
 
 		// bomb decrease
 		bombCount--;
 	}
 
+	/**
+	 * Moves and handles bomb place
+	 */
 	@Override
 	public void nextState(final WorldServer worldServer, final WorldServer nextWorldServer, final long tickCount) {
 		applyMovement(worldServer, nextWorldServer, tickCount);

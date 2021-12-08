@@ -51,7 +51,6 @@ public class Bomb extends Unmovable {
 
 				nextWorldServer.unmovables.add(fire);
 
-				++scalar;
 				// Middle position can't spread
 				if (j == 0) {
 					break;

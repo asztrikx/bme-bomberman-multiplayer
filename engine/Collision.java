@@ -183,7 +183,7 @@ public class Collision {
 	 * @formatter:off
 	 * Determines the number of blocks (squaresize x squaresize) in which there is no WorldElement reachable from position
 	 * @param worldServer
-	 * @param positionCompressed position scaled to block size
+	 * @param position position scaled to block size
 	 * @return
 	 * @formatter:on
 	 */

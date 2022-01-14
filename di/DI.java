@@ -14,8 +14,8 @@ public class DI {
 	/**
 	 * @formatter:off
 	 * Puts the class into a static store to be reachable as singleton.
-	 * Injected classes may depend on each other by DI so they already have to be on the list when `new` is calledú
-	 * @param Class instance
+	 * Injected classes may depend on each other by DI so they already have to be on the list when `new` is called
+	 * @param object instance
 	 * @formatter:on
 	 */
 	public static void put(final Object object) {
